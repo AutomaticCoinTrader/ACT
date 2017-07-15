@@ -81,3 +81,51 @@ git clone https://github.com/AutomaticCoinTrader/ACT.git act\src\github.com\Auto
 (set GOPATH=%CD%\act) && "C:\Program Files\JetBrains\Gogland 171.4694.61\bin\gogland64.exe"
 ```
 9. 起動したら、open projectで　act/src/github.com/AutomaticCoinTrader/ACT のパスを開く
+
+## Ubuntu 16.04
+
+1. jdkをインストール
+
+```
+sudo add-apt-repository -y ppa:webupd8team/java
+sudo apt update
+sudo apt install -y oracle-java8-installer oracle-java8-set-default
+```
+
+2. goをインストール
+
+```
+sudo add-apt-repository -y  ppa:longsleep/golang-backports
+sudo apt-get update
+sudo apt-get install -y golang-go
+```
+
+3. Goglandをインストール
+
+```
+wget https://download.jetbrains.com/go/gogland-171.4694.61.tar.gz
+tar -zxvf gogland-171.4694.61.tar.gz
+sudo mkdir /opt/Gogland
+sudo mv Gogland-171.4694.61 /opt/Gogland/
+sudo ln -s /opt/Gogland/Gogland-171.4694.61 /opt/Gogland/latest
+```
+
+4. GOPATHディレクトリを作っておく
+
+```
+mkdir -p act/src/github.com/AutomaticCoinTrader
+```
+
+5. githubからcloneする
+
+```
+git clone https://github.com/AutomaticCoinTrader/ACT.git act/src/github.com/AutomaticCoinTrader/ACT
+```
+
+6. GOPATH環境変数を指定しつつ、コマンドラインからgoglandを起動
+
+```
+GOPATH=$(pwd)/act /opt/Gogland/latest/bin/gogland.sh
+```
+
+7. 起動したら、open projectで　act/src/github.com/AutomaticCoinTrader/ACT のパスを開く
