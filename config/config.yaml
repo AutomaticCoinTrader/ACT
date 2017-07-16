@@ -1,0 +1,28 @@
+robot:
+  trade:
+    example:
+      enable: true
+  arbitrageTrade:
+    example:
+      enable: true
+integrator:
+  zaif:
+    key: "key"
+    secret: "secret"
+    currencyPairs:
+     - src: btc
+       dst: jpy
+    retry: 0
+    timeout: 0
+    readBufSize: 0
+    writeBufSize: 0
+notifier:
+  mail:
+    hostPort:
+    username:
+    password:
+    authType:
+    useTls:
+    useStartTls:
+    from:
+    to:
