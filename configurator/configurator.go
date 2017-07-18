@@ -18,7 +18,7 @@ func (c *Configurator) Load(data interface{}) (err error) {
 }
 
 func checkConfigFilePath(configFilePathPrefix string) (string, error) {
-	for _, extension := range []string{".yaml", ".yml", "toml", "tml", ".json", "jsn"} {
+	for _, extension := range []string{".yaml", ".yml", ".toml", ".tml", ".json", ".jsn"} {
 		configFilePath := path.Join(configFilePathPrefix + extension)
 		_, err := os.Stat(configFilePath)
 		if err != nil {

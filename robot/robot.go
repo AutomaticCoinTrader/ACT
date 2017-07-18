@@ -29,8 +29,8 @@ func (r *Robot) CreateTradeAlgorithms(tradeID string, tradeContext exchange.Trad
 		log.Printf("create %v algorithm (trade id = %v)", name, tradeID)
 		newTradeAlgoritm, err := registeredAlgorithm.TradeAlgorithmNewFunc(path.Join(r.configDir, algorithm.AlgorithmConfigDir))
 		if err != nil {
-			r.DestroyTradeAlgorithms(tradeID, tradeContext)
-			return errors.Wrap(err, fmt.Sprintf("can not create algorithm of %v (trade id = %v)", name, tradeID))
+			log.Printf("can not create algorithm of %v (trade id = %v, reason = %v)", name, tradeID, err)
+			continue
 		}
 		err = newTradeAlgoritm.Initialize(tradeContext, r.notifier)
 		if err != nil {
@@ -73,8 +73,8 @@ func (r *Robot) CreateArbitrageTradeAlgorithms(exchanges map[string]exchange.Exc
 		log.Printf("create %v arbitrage algorithm", name)
 		newArbitrageTradeAlgoritm, err := registeredAlgorithm.ArbitrageTradeAlgorithmNewFunc(path.Join(r.configDir, algorithm.AlgorithmConfigDir))
 		if err != nil {
-			r.DestroyArbitrageTradeAlgorithms(exchanges)
-			return errors.Wrap(err, fmt.Sprintf("can not create arbitrage algorithm of %v", name))
+			log.Printf("can not create arbitrage algorithm of %v (reason = %v)", name, err)
+			continue
 		}
 		err = newArbitrageTradeAlgoritm.Initialize(exchanges, r.notifier)
 		if err != nil {

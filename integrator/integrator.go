@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/braintree/manners"
 	"github.com/AutomaticCoinTrader/ACT/exchange"
+	"github.com/AutomaticCoinTrader/ACT/robot"
 	"log"
 	"time"
 	"fmt"
@@ -29,13 +30,7 @@ type Integrator struct {
 	gracefulServer          *gracefulServer
 	exchanges               map[string]exchange.Exchange
 	arbitrageLoopFinishChan chan bool
-	startStreamingCallback  StartStreamingCallback
-	updateStreamingCallback UpdateStreamingCallback
-	stopStreamingCallback   StopStreamingCallback
-	startArbitrageCallback  StartArbitrageCallback
-	updateArbitrageCallback UpdateArbitrageCallback
-	stopArbitrageCallback   StopArbitrageCallback
-	userCallbackData        interface{}
+	robot                   *robot.Robot
 }
 
 func (i *Integrator) setupRouting(engine *gin.Engine) {
@@ -80,8 +75,13 @@ func (i *Integrator) initHttpServer() (error) {
 }
 
 func (i *Integrator) streamingCallback(tradeContext exchange.TradeContext, userCallbackData interface{}) (error) {
-	// bypassするだけ
-	return i.updateStreamingCallback(tradeContext, i.userCallbackData)
+	// トレード処理を期待
+	tradeID := tradeContext.GetID()
+	err := i.robot.UpdateTradeAlgorithms(tradeID, tradeContext)
+	if err != nil {
+		log.Printf("can not run algorithm (reason = %v)", err)
+	}
+	return nil
 }
 
 func (i *Integrator) Initialize() (error) {
@@ -128,7 +128,7 @@ func (i *Integrator) Finalize() (error) {
 	return nil
 }
 
-func (i *Integrator) StartStreaming() (error) {
+func (i *Integrator) startStreaming() (error) {
 	for _, ex := range i.exchanges {
 		tradeContextCursor := ex.GetTradeContextCursor()
 		for {
@@ -136,17 +136,17 @@ func (i *Integrator) StartStreaming() (error) {
 			if !ok {
 				break
 			}
-			// callbackを呼び出す
 			// streamingを始める前の前処理を期待
-			err := i.startStreamingCallback(tradeContext, i.userCallbackData)
+			tradeID := tradeContext.GetID()
+			err := i.robot.CreateTradeAlgorithms(tradeID, tradeContext)
 			if err != nil {
-				i.StopStreaming()
-				return errors.Wrap(err, fmt.Sprintf("start straming callback error (name = %v)", ex.GetName()))
+				i.stopStreaming()
+				return errors.Wrap(err, fmt.Sprintf("can not create algorithm  (name = %v)", ex.GetName()))
 			}
 			// ストリーミングを開始
 			err = ex.StartStreaming(tradeContext)
 			if err != nil {
-				i.StopStreaming()
+				i.stopStreaming()
 				return errors.Wrap(err, fmt.Sprintf("can not start streaming (name = %v)", ex.GetName()))
 			}
 		}
@@ -155,7 +155,7 @@ func (i *Integrator) StartStreaming() (error) {
 	return nil
 }
 
-func (i *Integrator) StopStreaming() (error) {
+func (i *Integrator) stopStreaming() (error) {
 	// 取引所を停止する処理
 	for _, ex := range i.exchanges {
 		tradeContextCursor := ex.GetTradeContextCursor()
@@ -169,11 +169,11 @@ func (i *Integrator) StopStreaming() (error) {
 			if err != nil {
 				log.Printf("can not stop streaming (name = %v)", ex.GetName())
 			}
-			// callbackを呼び出す
 			// straming止めた後の終了処理を期待
-			err = i.stopStreamingCallback(tradeContext, i.userCallbackData)
+			tradeID := tradeContext.GetID()
+			err = i.robot.DestroyTradeAlgorithms(tradeID, tradeContext)
 			if err != nil {
-				log.Printf("stop straming callback error (name = %v)", ex.GetName())
+				log.Printf("can not destroy algorithm (name = %v, reason = %v)", ex.GetName(), err)
 			}
 		}
 	}
@@ -186,25 +186,52 @@ func (i *Integrator) ArbitrageLoop (){
 		case <- i.arbitrageLoopFinishChan:
 			return
 		case <- time.After(500 * time.Millisecond):
-			i.updateArbitrageCallback(i.exchanges, i.userCallbackData)
+			err := i.robot.UpdateArbitrageTradeAlgorithms(i.exchanges)
+			if err != nil {
+				log.Printf("can not update arbitrage algorithm (reason = %v)", err)
+			}
 		}
 	}
 }
 
-func (i *Integrator) StartArbitrage() (error) {
-	err := i.startArbitrageCallback(i.exchanges, i.userCallbackData )
+func (i *Integrator) startArbitrage() (error) {
+	err := i.robot.CreateArbitrageTradeAlgorithms(i.exchanges)
 	if err != nil {
-		return errors.Wrap(err,"start arbitrage callback error")
+		return errors.Wrap(err,"can not create arbitrage algorithm")
 	}
 	go i.ArbitrageLoop()
 	return nil
 }
 
-func (i *Integrator) StopArbitrageTrade() (error) {
+func (i *Integrator) stopArbitrageTrade() (error) {
 	close(i.arbitrageLoopFinishChan)
-	err := i.stopArbitrageCallback(i.exchanges, i.userCallbackData )
+	err := i.robot.DestroyArbitrageTradeAlgorithms(i.exchanges)
 	if err != nil {
-		log.Printf("stop arbitrage callback error")
+		log.Printf("can not destroy arbitrage algorithm (reason = %v)", err)
+	}
+	return nil
+}
+
+func (i *Integrator) Start() (error) {
+	err := i.startStreaming()
+	if err != nil {
+		return errors.Wrap(err, "can not start streaming")
+	}
+	err = i.startArbitrage()
+	if err != nil {
+		return errors.Wrap(err, "can not start arbitarage")
+	}
+	return nil
+}
+
+func (i *Integrator) Stop() (error) {
+	err := i.stopArbitrageTrade()
+	if err != nil {
+		log.Printf("can not stop arbitarage (reason = %v)", err)
+	}
+	err = i.stopStreaming()
+	if err != nil {
+		log.Printf("can not stop streaming (reason = %v)", err)
 	}
 	return nil
 }
@@ -215,25 +242,12 @@ type Config struct {
 	Exchanges *ExchangesConfig `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
 }
 
-func NewIntegrator(config *Config,
-	startStreamingCallback StartStreamingCallback,
-	updateStreamingCallback UpdateStreamingCallback,
-	stopStreamingCallback StopStreamingCallback,
-	startArbitrageCallback StartArbitrageCallback,
-	updateArbitrageCallback UpdateArbitrageCallback,
-	stopArbitrageCallback StopArbitrageCallback,
-	userCallbackData interface{}) (*Integrator, error) {
+func NewIntegrator(config *Config, robot *robot.Robot) (*Integrator, error) {
 	return &Integrator{
 		config: config,
 		exchanges: make(map[string]exchange.Exchange),
 		arbitrageLoopFinishChan: make(chan bool),
-		startStreamingCallback: startStreamingCallback,
-		updateStreamingCallback: updateStreamingCallback,
-		stopStreamingCallback: stopStreamingCallback,
-		startArbitrageCallback: startArbitrageCallback,
-		updateArbitrageCallback: updateArbitrageCallback,
-		stopArbitrageCallback: stopArbitrageCallback,
-		userCallbackData: userCallbackData,
+		robot: robot,
 	}, nil
 }
 

@@ -53,10 +53,13 @@ func newExample(configDir string) (algorithm.TradeAlgorithm, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix)
 	if err != nil {
-		errors.Errorf("can not load config file (config file path prefix = %v)", configFilePathPrefix)
+		return nil, errors.Errorf("can not create configurator (config file path prefix = %v)", configFilePathPrefix)
 	}
 	config := new(Config)
-	cf.Load(config)
+	err = cf.Load(config)
+	if err != nil {
+		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
+	}
 	return &Example{
 		name:           algorithmName,
 		config:         config.Trade,
@@ -90,10 +93,13 @@ func newArbitrageExample(configDir string) (algorithm.ArbitrageTradeAlgorithm, e
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix)
 	if err != nil {
-		errors.Errorf("can not load config file (config file path prefix = %v)", configFilePathPrefix)
+		return nil, errors.Errorf("can not create configurator (config file path prefix = %v)", configFilePathPrefix)
 	}
 	config := new(Config)
-	cf.Load(config)
+	err = cf.Load(config)
+	if err != nil {
+		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
+	}
 	return &ArbitrageExample{
 		name:           algorithmName,
 		config:         config.ArbitrageTrade,

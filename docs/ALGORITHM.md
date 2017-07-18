@@ -108,10 +108,13 @@ func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix)
 	if err != nil {
-		errors.Errorf("can not load config file (config file path prefix = %v)", configFilePathPrefix)
+		return nil, errors.Errorf("can not create configurator  (config file path prefix = %v)", configFilePathPrefix)
 	}
 	config := new(Config)
-	cf.Load(config)
+	err = cf.Load(config)
+	if err != nil {
+		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
+	}
 	return &My{
 	    name: "my",
 	    config: config.Trade,
@@ -122,10 +125,13 @@ func newArbitrageMy(config interface{}) (algorithm.ArbitrageTradeAlgorithmContex
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix)
 	if err != nil {
-		errors.Errorf("can not load config file (config file path prefix = %v)", configFilePathPrefix)
+		return nil, errors.Errorf("can not create configurator (config file path prefix = %v)", configFilePathPrefix)
 	}
 	config := new(Config)
-	cf.Load(config)
+	err = cf.Load(config)
+	if err != nil {
+		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
+	}
 	return &ArbitrageMy{
 	    name: "my",
 	    config: config.ArbitrageTrade,

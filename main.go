@@ -5,7 +5,6 @@ import (
 	"github.com/AutomaticCoinTrader/ACT/notifier"
 	"github.com/AutomaticCoinTrader/ACT/robot"
 	"github.com/AutomaticCoinTrader/ACT/integrator"
-	"github.com/AutomaticCoinTrader/ACT/exchange"
 	"github.com/AutomaticCoinTrader/ACT/configurator"
 	"log"
 	"runtime"
@@ -48,91 +47,22 @@ Loop:
 	}
 }
 
-type actCallbackData struct  {
-	robot *robot.Robot
-}
-
-func startStreamingCallback(tradeContext exchange.TradeContext, userCallbackData interface{}) (error) {
-	actCallbackData := userCallbackData.(*actCallbackData)
-	tradeID := tradeContext.GetID()
-	err := actCallbackData.robot.CreateTradeAlgorithms(tradeID, tradeContext)
-	if err != nil {
-		log.Printf("can not create algorithm (reason = %v)", err)
-	}
-	return nil
-}
-
-func updateStreamingCallback(tradeContext exchange.TradeContext, userCallbackData interface{}) (error) {
-	actCallbackData := userCallbackData.(*actCallbackData)
-	tradeID := tradeContext.GetID()
-	err := actCallbackData.robot.UpdateTradeAlgorithms(tradeID, tradeContext)
-	if err != nil {
-		log.Printf("can not run algorithm (reason = %v)", err)
-	}
-	return nil
-}
-
-func stopStreamingCallback(tradeContext exchange.TradeContext, userCallbackData interface{}) (error) {
-	actCallbackData := userCallbackData.(*actCallbackData)
-	tradeID := tradeContext.GetID()
-	err := actCallbackData.robot.DestroyTradeAlgorithms(tradeID, tradeContext)
-	if err != nil {
-		log.Printf("can not destroy algorithm (reason = %v)", err)
-	}
-	return nil
-}
-
-func startArbitrageCallback(exchanges map[string]exchange.Exchange, userCallbackData interface{}) (error) {
-	actCallbackData := userCallbackData.(*actCallbackData)
-	err := actCallbackData.robot.CreateArbitrageTradeAlgorithms(exchanges)
-	if err != nil {
-		log.Printf("can not create algorithm (reason = %v)", err)
-	}
-	return nil
-}
-
-func updateArbitrageCallback(exchanges map[string]exchange.Exchange, userCallbackData interface{}) (error) {
-	actCallbackData := userCallbackData.(*actCallbackData)
-	err := actCallbackData.robot.UpdateArbitrageTradeAlgorithms(exchanges)
-	if err != nil {
-		log.Printf("can not run algorithm (reason = %v)", err)
-	}
-	return nil
-}
-
-func stopArbitrageCallback(exchanges map[string]exchange.Exchange, userCallbackData interface{}) (error) {
-	actCallbackData := userCallbackData.(*actCallbackData)
-	err := actCallbackData.robot.DestroyArbitrageTradeAlgorithms(exchanges)
-	if err != nil {
-		log.Printf("can not destroy algorithm (reason = %v)", err)
-	}
-	return nil
-}
-
 func actStart(integrator *integrator.Integrator) (error){
 	err := integrator.Initialize()
 	if err != nil {
 		return errors.Wrap(err, "initalize error of integrator")
 	}
-	err = integrator.StartArbitrage()
+	err = integrator.Start()
 	if err != nil {
-		return errors.Wrap(err, "can not start arbitarage")
-	}
-	err = integrator.StartStreaming()
-	if err != nil {
-		return errors.Wrap(err, "can not start streaming")
+		return errors.Wrap(err, "can not start intergrator")
 	}
 	return nil
 }
 
 func actStop(integrator *integrator.Integrator) (error) {
-	err := integrator.StopStreaming()
+	err := integrator.Stop()
 	if err != nil {
-		log.Printf("can not stop streaming (reason = %v)", err)
-	}
-	err = integrator.StopArbitrageTrade()
-	if err != nil {
-		log.Printf("can not stop arbitarage (reason = %v)", err)
+		log.Printf("can not stop integrator (reason = %v)", err)
 	}
 	err = integrator.Finalize()
 	if err != nil {
@@ -167,18 +97,9 @@ func main() {
 		log.Printf("can not create robot (config dir = %v, reason = %v)", *configDir, err)
 		return
 	}
-	actCallbackData := &actCallbackData{
-		robot: rbt,
-	}
 	it, err := integrator.NewIntegrator(
 		newConfig.Integrator,
-		startStreamingCallback,
-		updateStreamingCallback,
-		stopStreamingCallback,
-		startArbitrageCallback,
-		updateArbitrageCallback,
-		stopArbitrageCallback,
-		actCallbackData)
+		rbt)
 	if err != nil {
 		log.Printf("can not create exchangers (config dir = %v, reason = %v)", *configDir, err)
 		return
