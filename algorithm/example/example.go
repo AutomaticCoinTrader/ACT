@@ -55,11 +55,11 @@ func newExample(configDir string) (algorithm.TradeAlgorithm, error) {
 	if err != nil {
 		errors.Errorf("can not load config file (config file path prefix = %v)", configFilePathPrefix)
 	}
-	config := new(TradeConfig)
+	config := new(Config)
 	cf.Load(config)
 	return &Example{
 		name:           algorithmName,
-		config:         config,
+		config:         config.Trade,
 	}, nil
 }
 
@@ -92,11 +92,11 @@ func newArbitrageExample(configDir string) (algorithm.ArbitrageTradeAlgorithm, e
 	if err != nil {
 		errors.Errorf("can not load config file (config file path prefix = %v)", configFilePathPrefix)
 	}
-	config := new(ArbitrageTradeConfig)
+	config := new(Config)
 	cf.Load(config)
 	return &ArbitrageExample{
 		name:           algorithmName,
-		config:         config,
+		config:         config.ArbitrageTrade,
 	}, nil
 }
 
