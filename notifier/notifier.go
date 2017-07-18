@@ -3,14 +3,14 @@ package notifier
 import "github.com/AutomaticCoinTrader/ACT/utility"
 
 type Notifier struct {
-	mailClient *utility.MailClient
+	smtpClient *utility.SMTPClient
 }
 
 func (n *Notifier) SendMail(subject string, body string) (error) {
-	if n.mailClient == nil {
+	if n.smtpClient == nil {
 		return nil
 	}
-	return n.mailClient.SendMail(subject, body)
+	return n.smtpClient.SendMail(subject, body)
 }
 
 type MailConfig struct {
@@ -29,13 +29,13 @@ type Config struct {
 }
 
 func NewNotifier(config *Config) (*Notifier, error) {
-	var mailClient *utility.MailClient
+	var smtpClient *utility.SMTPClient
 	if config != nil {
-		mailClient = utility.NewMailClient(config.Mail.HostPort, config.Mail.Username,
+		smtpClient = utility.NewSMTPClient(config.Mail.HostPort, config.Mail.Username,
 			config.Mail.Password, utility.GetSMTPAuthType(config.Mail.AuthType),
 			config.Mail.UseTLS, config.Mail.UseStartTLS, config.Mail.From, config.Mail.To)
 	}
 	return &Notifier{
-		mailClient: mailClient,
+		smtpClient: smtpClient,
 	}, nil
 }

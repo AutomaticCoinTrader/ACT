@@ -34,8 +34,8 @@ func GetSMTPAuthType(authType string) (SMTPAuthType) {
 	}
 }
 
-// MailClient is mail clinet
-type MailClient struct {
+// SMTPClient is smtp clinet
+type SMTPClient struct {
 	hostPort    string
 	username    string
 	password    string
@@ -46,67 +46,67 @@ type MailClient struct {
     to          string
 }
 
-func (n *MailClient) SendMail(subject string, body string) (error) {
+func (s *SMTPClient) SendMail(subject string, body string) (error) {
 	from := mail.Address{
-		Address: n.from,
+		Address: s.from,
 	}
-	toList, err := mail.ParseAddressList(n.to)
+	toList, err := mail.ParseAddressList(s.to)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not parse mail address list (to = %v)", n.to))
+		return errors.Wrap(err, fmt.Sprintf("can not parse mail address list (to = %v)", s.to))
 	}
 	message := ""
-	message += fmt.Sprintf("From: %s\r\n", n.from)
-	message += fmt.Sprintf("To: %s\r\n", n.to)
+	message += fmt.Sprintf("From: %s\r\n", s.from)
+	message += fmt.Sprintf("To: %s\r\n", s.to)
 	message += fmt.Sprintf("Subject: %s\r\n", subject)
 	message += "\r\n" + body
 
-	host, _, _ := net.SplitHostPort(n.hostPort)
+	host, _, _ := net.SplitHostPort(s.hostPort)
 
 	var auth smtp.Auth = nil
-	if n.username != "" {
-		if n.authType == SMTPAuthPLAIN {
-			auth = smtp.PlainAuth("", n.username, n.password, host)
-		} else if n.authType == AMTPAuthCRAMMD5 {
-			auth = smtp.CRAMMD5Auth(n.username, n.password)
+	if s.username != "" {
+		if s.authType == SMTPAuthPLAIN {
+			auth = smtp.PlainAuth("", s.username, s.password, host)
+		} else if s.authType == AMTPAuthCRAMMD5 {
+			auth = smtp.CRAMMD5Auth(s.username, s.password)
 		}
 	}
 
 	var conn net.Conn
-	if n.useTLS {
+	if s.useTLS {
 		tlsContext := &tls.Config {
 			ServerName: host,
 			InsecureSkipVerify: false,
 		}
-		conn, err = tls.Dial("tcp", n.hostPort, tlsContext)
+		conn, err = tls.Dial("tcp", s.hostPort, tlsContext)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("can not connect mail host with tls (host port = %v, use tls = %v)", n.hostPort, n.useTLS))
+			return errors.Wrap(err, fmt.Sprintf("can not connect mail host with tls (host port = %v, use tls = %v)", s.hostPort, s.useTLS))
 		}
 	} else {
-		conn, err = net.Dial("tcp", n.hostPort)
+		conn, err = net.Dial("tcp", s.hostPort)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("can not connect mail host (host port = %v)", n.hostPort))
+			return errors.Wrap(err, fmt.Sprintf("can not connect mail host (host port = %v)", s.hostPort))
 		}
 	}
 	defer conn.Close()
 
 	client, err := smtp.NewClient(conn, host)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not create smtp client (host port = %v)", n.hostPort))
+		return errors.Wrap(err, fmt.Sprintf("can not create smtp client (host port = %v)", s.hostPort))
 	}
 
-	if n.useStartTLS {
+	if s.useStartTLS {
 		tlsconfig := &tls.Config {
 			ServerName: host,
 			InsecureSkipVerify: false,
 		}
 		if err := client.StartTLS(tlsconfig); err != nil {
-			return errors.Wrap(err, fmt.Sprintf("can not start tls (host port = %v, use start tls = %v)", n.hostPort, n.useStartTLS))
+			return errors.Wrap(err, fmt.Sprintf("can not start tls (host port = %v, use start tls = %v)", s.hostPort, s.useStartTLS))
 		}
 	}
 
 	if auth != nil {
 		if err = client.Auth(auth); err != nil {
-			return errors.Wrap(err, fmt.Sprintf("can not authentication (host port = %v authType = %v, username = %v password = %v)", n.hostPort, n.authType, n.username, n.password))
+			return errors.Wrap(err, fmt.Sprintf("can not authentication (host port = %v authType = %v, username = %v password = %v)", s.hostPort, s.authType, s.username, s.password))
 		}
 	}
 
@@ -147,9 +147,9 @@ func (n *MailClient) SendMail(subject string, body string) (error) {
 	return nil
 }
 
-// New is create mail client
-func NewMailClient(hostPort string, username string, password string, authtype SMTPAuthType, useTLS bool, useStartTLS bool, from string, to string) (n *MailClient) {
-	return &MailClient{
+// NewSMTPClient is create smtp client
+func NewSMTPClient(hostPort string, username string, password string, authtype SMTPAuthType, useTLS bool, useStartTLS bool, from string, to string) (n *SMTPClient) {
+	return &SMTPClient{
 		hostPort: hostPort,
 		username: username,
 		password: password,
