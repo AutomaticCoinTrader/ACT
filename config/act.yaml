@@ -1,0 +1,25 @@
+robot:
+integrator:
+  debug: true
+  addrPort: 127.0.0.1:38080
+  exchanges:
+    zaif:
+      key: "key"
+      secret: "secret"
+      currencyPairs:
+       - src: btc
+         dst: jpy
+      retry: 0
+      timeout: 0
+      readBufSize: 0
+      writeBufSize: 0
+notifier:
+  mail:
+    hostPort:
+    username:
+    password:
+    authType:
+    useTls:
+    useStartTls:
+    from:
+    to:

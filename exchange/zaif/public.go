@@ -2,13 +2,13 @@ package zaif
 
 import (
 	"github.com/pkg/errors"
+	"github.com/gorilla/websocket"
+	"github.com/AutomaticCoinTrader/ACT/utility"
 	"path"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"encoding/json"
 	"log"
-	"github.com/AutomaticCoinTrader/ACT/utility"
 )
 
 // PublicCurrenciesResponse is response of currencies

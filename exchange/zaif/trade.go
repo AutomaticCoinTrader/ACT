@@ -3,12 +3,12 @@ package zaif
 import (
 	"github.com/pkg/errors"
 	"github.com/google/go-querystring/query"
+	"github.com/AutomaticCoinTrader/ACT/utility"
 	"fmt"
 	"math"
 	"time"
 	"strconv"
 	"net/http"
-	"github.com/AutomaticCoinTrader/ACT/utility"
 )
 
 type TradeCommonResponse struct {

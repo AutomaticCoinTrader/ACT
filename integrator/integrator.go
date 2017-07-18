@@ -2,11 +2,14 @@ package integrator
 
 import (
 	"github.com/pkg/errors"
+	"github.com/gin-gonic/gin"
+	"github.com/braintree/manners"
 	"github.com/AutomaticCoinTrader/ACT/exchange"
 	"log"
 	"time"
 	"fmt"
 	"reflect"
+	"net/http"
 )
 
 type StartStreamingCallback func(tradeContext exchange.TradeContext, userCallbackData interface{}) (error)
@@ -16,8 +19,14 @@ type StartArbitrageCallback func(exchanges map[string]exchange.Exchange, userCal
 type UpdateArbitrageCallback func(exchanges map[string]exchange.Exchange, userCallbackData interface{}) (error)
 type StopArbitrageCallback func(exchanges map[string]exchange.Exchange, userCallbackData interface{}) (error)
 
+type gracefulServer struct {
+	server    *manners.GracefulServer
+	startChan chan error
+}
+
 type Integrator struct {
 	config                  *Config
+	gracefulServer          *gracefulServer
 	exchanges               map[string]exchange.Exchange
 	arbitrageLoopFinishChan chan bool
 	startStreamingCallback  StartStreamingCallback
@@ -29,20 +38,65 @@ type Integrator struct {
 	userCallbackData        interface{}
 }
 
+func (i *Integrator) setupRouting(engine *gin.Engine) {
+	engine.HEAD( "/", i.index)
+	engine.GET( "/", i.index)
+}
+
+func (i *Integrator) runHttpServer() {
+	err := i.gracefulServer.server.ListenAndServe()
+	if err != nil {
+		i.gracefulServer.startChan <- err
+	}
+}
+
+func (i *Integrator) initHttpServer() (error) {
+	if i.config.AddrPort == "" {
+		return nil
+	}
+	if !i.config.Debug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	engine := gin.Default()
+	i.setupRouting(engine)
+	server := manners.NewWithServer(&http.Server{
+		Addr:    i.config.AddrPort,
+		Handler: engine,
+		ReadTimeout:    60 * time.Second,
+		WriteTimeout:   60 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	})
+	i.gracefulServer = &gracefulServer{
+		server: server,
+		startChan: make(chan error),
+	}
+	go i.runHttpServer()
+	select {
+	case err := <- i.gracefulServer.startChan:
+		return errors.Wrap(err, fmt.Sprintf("can not start http server (%s)", i.gracefulServer.server.Addr))
+	case <-time.After(time.Second):
+	}
+	return nil
+}
+
 func (i *Integrator) streamingCallback(tradeContext exchange.TradeContext, userCallbackData interface{}) (error) {
 	// bypassするだけ
 	return i.updateStreamingCallback(tradeContext, i.userCallbackData)
 }
 
 func (i *Integrator) Initialize() (error) {
+	err := i.initHttpServer()
+	if err != nil {
+		errors.Errorf("can not initalize of http server (reason = %v)", err)
+	}
 	for name, exchangeNewFunc := range exchange.GetRegisterdExchanges() {
-		t := reflect.TypeOf(i.config).Elem()
+		t := reflect.TypeOf(i.config.Exchanges).Elem()
 		for idx := 0; idx < t.NumField(); idx++ {
 			f := t.Field(idx)
 			if f.Tag.Get("config") != name {
 				continue
 			}
-			v := reflect.ValueOf(i.config)
+			v := reflect.ValueOf(i.config.Exchanges)
 			if v.IsNil() {
 				continue
 			}
@@ -70,6 +124,7 @@ func (i *Integrator) Initialize() (error) {
 }
 
 func (i *Integrator) Finalize() (error) {
+	i.gracefulServer.server.BlockingClose()
 	return nil
 }
 
@@ -152,6 +207,12 @@ func (i *Integrator) StopArbitrageTrade() (error) {
 		log.Printf("stop arbitrage callback error")
 	}
 	return nil
+}
+
+type Config struct {
+	Debug bool                 `json:"debug"     yaml:"debug"     toml:"debug"`
+	AddrPort string            `json:"addrPort"  yaml:"addrPort"  toml:"addrPort"`
+	Exchanges *ExchangesConfig `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
 }
 
 func NewIntegrator(config *Config,

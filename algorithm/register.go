@@ -2,12 +2,12 @@ package algorithm
 
 var registeredAlgorithms map[string]*registeredAlgorithm = make(map[string]*registeredAlgorithm)
 
-type TradeAlgorithmNewFunc func(config interface{}) (TradeAlgorithm, error)
-type ArbitrageTradeAlgorithmNewFunc func(config interface{}) (ArbitrageTradeAlgorithm, error)
+type TradeAlgorithmNewFunc func(configDir string) (TradeAlgorithm, error)
+type ArbitrageTradeAlgorithmNewFunc func(configDir string) (ArbitrageTradeAlgorithm, error)
 
 type registeredAlgorithm struct {
-	TradeAlgorithmNewFunc func(config interface{}) (TradeAlgorithm, error)
-	ArbitrageTradeAlgorithmNewFunc func(config interface{}) (ArbitrageTradeAlgorithm, error)
+	TradeAlgorithmNewFunc TradeAlgorithmNewFunc
+	ArbitrageTradeAlgorithmNewFunc ArbitrageTradeAlgorithmNewFunc
 }
 
 func RegisterAlgorithm(name string, tradeAlgorithmNewFunc TradeAlgorithmNewFunc, arbitrageTradeAlgorithmNewFunc ArbitrageTradeAlgorithmNewFunc) {

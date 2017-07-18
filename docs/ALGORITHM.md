@@ -22,13 +22,19 @@ touch ACT/algorithm/my/my.go
   - tomlとyamlとjsonで解釈できるように定義をしておく
 
 ```
-type Config struct {
+type TradeConfig struct {
 	message string `json:"message" yaml:"message" toml:"message"`
 }
 
-type ArbitrageConfig struct {
+type ArbitrageTradeConfig struct {
 	message string `json:"message" yaml:"message" toml:"message"`
 }
+
+type Config struct {
+	Trade          *TradeConfig          `json:"trade"          yaml:"trade"          toml:"trade"`
+    ArbitrageTrade *ArbitrageTradeConfig `json:"arbitrageTrade" yaml:"arbitrageTrade" toml:"arbitrageTrade"`
+}
+
 
 ```
 
@@ -36,7 +42,7 @@ type ArbitrageConfig struct {
 
 ```
 type My struct {
-	config         *Config
+	config         *TradeConfig
 	name           string
 }
 
@@ -65,7 +71,7 @@ func (m *My) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Not
 
 
 type ArbitrageMy struct {
-	config         *Config
+	config         *ArbitrageTradeConfig
 	name           string
 }
 
@@ -99,18 +105,30 @@ func (m *ArbitrageMy) Finalize(exchanges map[string]exchange.Exchange, notifier 
 
 ```
 func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
-    myConfig := config.(*Config) // interface{} でくるので自分の構造体にキャストする
+	configFilePathPrefix := path.Join(configDir, algorithmName)
+	cf, err := configurator.NewConfigurator(configFilePathPrefix)
+	if err != nil {
+		errors.Errorf("can not load config file (config file path prefix = %v)", configFilePathPrefix)
+	}
+	config := new(Config)
+	cf.Load(config)
 	return &My{
 	    name: "my",
-	    config: myConfig,
+	    config: config.Trade,
 	}, nil
 }
 
 func newArbitrageMy(config interface{}) (algorithm.ArbitrageTradeAlgorithmContext, error) {
-    myConfig := config.(*ArbitrageConfig) // interface{} でくるので自分の構造体にキャストする
+	configFilePathPrefix := path.Join(configDir, algorithmName)
+	cf, err := configurator.NewConfigurator(configFilePathPrefix)
+	if err != nil {
+		errors.Errorf("can not load config file (config file path prefix = %v)", configFilePathPrefix)
+	}
+	config := new(Config)
+	cf.Load(config)
 	return &ArbitrageMy{
 	    name: "my",
-	    config: myConfig,
+	    config: config.ArbitrageTrade,
 	}, nil
 }
 ```
@@ -125,18 +143,13 @@ func init() {
 
 ## 設定にに組み込む
 
-### 1. ACT/robot/config.goにmy.goを作成の(2)で作った設定情報の構造体を追加
+### 1. ACT/robot/import.goにmyパッケージを登録する
 
 ```
-type TradeConfig struct {
-	Example *example.Config `json:"example" yaml:"example" toml:"example" config:"example"` 
-    My      *my.Config      `json:"my"      yaml:"my"      toml:"my"      config:"my"` // myという名前で登録したのでconfigをmyにする
-}
-
-type ArbitrageTradeConfig struct {
-	Example *example.ArbitrageConfig `json:"example" yaml:"example" toml:"example" config:"example"`
-    My      *my.ArbitrageConfig      `json:"my"      yaml:"my"      toml:"my"      config:"my"` // myという名前で登録したのでconfigをmyにする
-}
+import (
+	_ "github.com/AutomaticCoinTrader/ACT/algorithm/example"
+	_ "github.com/AutomaticCoinTrader/ACT/algorithm/my"
+)
 
 ```
 
