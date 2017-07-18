@@ -101,8 +101,9 @@ type TradeContext interface {
 	GetSrcCurrencyName() (string)
 	GetDstCurrencyName() (string)
 	GetPrice() (float64, error)
-	GetBuyHistoryCursor() (HistoryCursor, error)
-	GetSellHistoryCursor() (HistoryCursor, error)
+	GetBuyBoardCursor() (BoardCursor, error)
+	GetSellBoardCursor() (BoardCursor, error)
+	GetTradeHistoryCursor() (TradeHistoryCursor, error)
 	GetActiveOrderCursor() (OrderCursor, error)
 	GetMinPriceUnit() (float64)
 	GetMinAmountUnit() (float64)
@@ -131,12 +132,15 @@ type TradeContext interface {
   - dstCurrencyの名前を返す (例. jpy)
 - GetPrice
   - srcCurrencyで指定されているもののdstcurrency換算の現在の価格を返す
-- GetBuyHistoryCursor
-  - 買いの履歴を返すイテレーションオブジェクト
-  - 取引所によってどの程度の量の履歴を返すか違うため、データ量は取引所依存になる
-- GetSellHistoryCursor
-  - 売りの履歴を返すイテレーションオブジェクト
-  - 取引所によってどの程度の量の履歴を返すか違うため、データ量は取引所依存になる
+- GetBuyBoardCursor
+  - 買いの板情報を返すイテレーションオブジェクト
+  - 取引所によってどの程度の量を返すか違うため、データ量は取引所依存になる
+- GetSellBoardCursor
+  - 売りの板情報を返すイテレーションオブジェクト
+  - 取引所によってどの程度の量を返すか違うため、データ量は取引所依存になる
+- GetTradeHistoryCursor
+  - 約定履歴を返すイテレーションオブジェクト
+  - 取引所によってどの程度の量を返すか違うため、データ量は取引所依存になる
 - GetMinPriceUnit
   - 最小の価格の単位を返す (例. 5円)
 - GetMinAmountUnit
@@ -155,8 +159,16 @@ type OrderCursor interface {
 ```
 
 ```
-type HistoryCursor interface {
+type BoardCursor interface {
 	Next() (price float64, amount float64, ok bool)
+	Reset()
+	Len() int
+}
+```
+
+```
+type TradeHistoryCursor interface {
+	Next() (time int64, peice float64, amount float64, tradeType string, ok bool)
 	Reset()
 	Len() int
 }

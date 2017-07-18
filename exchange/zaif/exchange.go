@@ -30,28 +30,49 @@ func updateFunds(exchangeName string, requester *Requester, funds *ExchageFunds)
 	return nil
 }
 
-type HistoryCursor struct {
+type BoardCursor struct {
 	index int
 	values [][]float64
 }
 
-func (h *HistoryCursor) Next() (float64, float64, bool) {
-	if h.index >= len(h.values) {
+func (b *BoardCursor) Next() (float64, float64, bool) {
+	if b.index >= len(b.values) {
 		return 0, 0, false
 	}
-	value := h.values[h.index]
-	h.index++
+	value := b.values[b.index]
+	b.index++
 	return value[0], value[1], true
 }
 
-func (h *HistoryCursor) Reset() {
-	h.index = 0
+func (b *BoardCursor) Reset() {
+	b.index = 0
 }
 
-func (h *HistoryCursor) Len() int {
-	return len(h.values)
+func (b *BoardCursor) Len() int {
+	return len(b.values)
 }
 
+type TradeHistoryCursor struct {
+	index int
+	values []*StreamingTradesResponse
+}
+
+func (t *TradeHistoryCursor) Next() (time int64, peice float64, amount float64, tradeType string, ok bool) {
+	if t.index >= len(t.values) {
+		return 0, 0, 0, "", false
+	}
+	value := t.values[t.index]
+	t.index++
+	return value.Date, value.Price, value.Amount, value.TradeType, true
+}
+
+func (t *TradeHistoryCursor) Reset() {
+	t.index = 0
+}
+
+func (t *TradeHistoryCursor) Len() int {
+	return len(t.values)
+}
 
 type OrderCursor struct {
 	index int
@@ -98,6 +119,7 @@ type TradeContext struct {
 	currencyDatPrice     float64
 	bids			 	 [][]float64
 	asks			 	 [][]float64
+	trades               []*StreamingTradesResponse
 }
 
 func (t *TradeContext) GetID() (string) {
@@ -184,17 +206,24 @@ func (t *TradeContext) GetPrice() (float64, error) {
 	return t.currencyDatPrice, nil
 }
 
-func (t *TradeContext) GetBuyHistoryCursor() (exchange.HistoryCursor, error) {
-	return &HistoryCursor{
+func (t *TradeContext) GetBuyBoardCursor() (exchange.BoardCursor, error) {
+	return &BoardCursor{
 		index:  0,
 		values: t.bids,
 	}, nil
 }
 
-func (t *TradeContext) GetSellHistoryCursor() (exchange.HistoryCursor, error) {
-	return &HistoryCursor{
+func (t *TradeContext) GetSellBoardCursor() (exchange.BoardCursor, error) {
+	return &BoardCursor{
 		index:  0,
 		values: t.asks,
+	}, nil
+}
+
+func (t *TradeContext) GetTradeHistoryCursor() (exchange.TradeHistoryCursor, error) {
+	return &TradeHistoryCursor{
+		index: 0,
+		values: t.trades,
 	}, nil
 }
 
@@ -304,6 +333,7 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 	tradeContext.currencyDatPrice = streamingResponse.LastPrice.Price
 	tradeContext.bids = streamingResponse.Bids
 	tradeContext.asks = streamingResponse.Asks
+	tradeContext.trades = streamingResponse.Trades
 	err := tradeContext.streamingCallback(tradeContext, tradeContext.userCallbackData)
 	if err != nil {
 		return errors.Wrap(err,"trade update callback error")

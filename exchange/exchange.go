@@ -13,8 +13,14 @@ type OrderCursor interface {
 	Len() int
 }
 
-type HistoryCursor interface {
+type BoardCursor interface {
 	Next() (price float64, amount float64, ok bool)
+	Reset()
+	Len() int
+}
+
+type TradeHistoryCursor interface {
+	Next() (time int64, peice float64, amount float64, tradeType string, ok bool)
 	Reset()
 	Len() int
 }
@@ -36,8 +42,9 @@ type TradeContext interface {
 	GetSrcCurrencyName() (string)
 	GetDstCurrencyName() (string)
 	GetPrice() (float64, error)
-	GetBuyHistoryCursor() (HistoryCursor, error)
-	GetSellHistoryCursor() (HistoryCursor, error)
+	GetBuyBoardCursor() (BoardCursor, error)
+	GetSellBoardCursor() (BoardCursor, error)
+	GetTradeHistoryCursor() (TradeHistoryCursor, error)
 	GetActiveOrderCursor() (OrderCursor, error)
 	GetMinPriceUnit() (float64)
 	GetMinAmountUnit() (float64)

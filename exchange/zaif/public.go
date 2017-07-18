@@ -168,14 +168,16 @@ type StreamingResponse struct {
 		Price  float64 `json:"price"`
 	} `json:"last_price"`
 	Timestamp string `json:"timestamp"`
-	Trades    []struct {
-		Amount       float64 `json:"amount"`
-		CurrentyPair string  `json:"currenty_pair"`
-		Date         int64   `json:"date"`
-		Price        float64 `json:"price"`
-		Tid          int64   `json:"tid"`
-		TradeType    string  `json:"trade_type"`
-	} `json:"trades"`
+	Trades    []*StreamingTradesResponse `json:"trades"`
+}
+
+type StreamingTradesResponse struct {
+	Amount       float64 `json:"amount"`
+	CurrentyPair string  `json:"currenty_pair"`
+	Date         int64   `json:"date"`
+	Price        float64 `json:"price"`
+	Tid          int64   `json:"tid"`
+	TradeType    string  `json:"trade_type"`
 }
 
 type streaminCallbackData struct {
