@@ -4,16 +4,31 @@ import (
 	"github.com/AutomaticCoinTrader/ACT/algorithm"
 	"github.com/AutomaticCoinTrader/ACT/exchange"
 	"github.com/AutomaticCoinTrader/ACT/notifier"
+	"github.com/AutomaticCoinTrader/ACT/configurator"
+	"github.com/pkg/errors"
 	"log"
+	"path"
 )
 
 const (
 	algorithmName string = "example"
 )
 
+
+type TradeConfig struct {
+}
+
+type ArbitrageTradeConfig struct {
+}
+
+type Config struct {
+	Trade          *TradeConfig          `json:"trade"          yaml:"trade"          toml:"trade"`
+	ArbitrageTrade *ArbitrageTradeConfig `json:"arbitrageTrade" yaml:"arbitrageTrade" toml:"arbitrageTrade"`
+}
+
 type Example struct {
 	name           string
-	config         *Config
+	config         *TradeConfig
 }
 
 func (l *Example) GetName() (string) {
@@ -34,20 +49,23 @@ func (l *Example) Finalize(tradeContext exchange.TradeContext, notifier *notifie
 	return nil
 }
 
-type Config struct {
-}
-
-func newExample(config interface{}) (algorithm.TradeAlgorithm, error) {
-	myConfig := config.(*Config)
+func newExample(configDir string) (algorithm.TradeAlgorithm, error) {
+	configFilePathPrefix := path.Join(configDir, algorithmName)
+	cf, err := configurator.NewConfigurator(configFilePathPrefix)
+	if err != nil {
+		errors.Errorf("can not load config file (config file path prefix = %v)", configFilePathPrefix)
+	}
+	config := new(TradeConfig)
+	cf.Load(config)
 	return &Example{
 		name:           algorithmName,
-		config:         myConfig,
+		config:         config,
 	}, nil
 }
 
 type ArbitrageExample struct {
 	name           string
-	config         *ArbitrageConfig
+	config         *ArbitrageTradeConfig
 }
 
 func (l *ArbitrageExample) GetName() (string) {
@@ -68,17 +86,23 @@ func (l *ArbitrageExample) Finalize(exchanges map[string]exchange.Exchange, noti
 	return nil
 }
 
-type ArbitrageConfig struct {
-}
-
-func newArbitrageExample(config interface{}) (algorithm.ArbitrageTradeAlgorithm, error) {
-	myConfig := config.(*ArbitrageConfig)
+func newArbitrageExample(configDir string) (algorithm.ArbitrageTradeAlgorithm, error) {
+	configFilePathPrefix := path.Join(configDir, algorithmName)
+	cf, err := configurator.NewConfigurator(configFilePathPrefix)
+	if err != nil {
+		errors.Errorf("can not load config file (config file path prefix = %v)", configFilePathPrefix)
+	}
+	config := new(ArbitrageTradeConfig)
+	cf.Load(config)
 	return &ArbitrageExample{
 		name:           algorithmName,
-		config:         myConfig,
+		config:         config,
 	}, nil
 }
 
 func init() {
 	algorithm.RegisterAlgorithm(algorithmName, newExample, newArbitrageExample)
 }
+
+
+

@@ -5,6 +5,10 @@ import (
 	"github.com/AutomaticCoinTrader/ACT/notifier"
 )
 
+const (
+	AlgorithmConfigDir = "algorithm"
+)
+
 type TradeAlgorithm interface {
 	GetName() (string)
 	Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)

@@ -1,9 +1,9 @@
 package utility
 
 import (
-	"time"
 	"github.com/pkg/errors"
 	"github.com/gorilla/websocket"
+	"time"
 	"net/http"
 	"net/url"
 	"fmt"

@@ -2,6 +2,7 @@ package zaif
 
 import (
 	"github.com/pkg/errors"
+	"github.com/AutomaticCoinTrader/ACT/utility"
 	"net/url"
 	"crypto/hmac"
 	"crypto/sha512"
@@ -11,7 +12,6 @@ import (
 	"fmt"
 	"net/http"
 	"encoding/json"
-	"github.com/AutomaticCoinTrader/ACT/utility"
 )
 
 type Requester struct {

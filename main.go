@@ -1,18 +1,23 @@
 package main
 
 import (
-	"log"
-	"runtime"
-	"flag"
+	"github.com/pkg/errors"
+	"github.com/AutomaticCoinTrader/ACT/notifier"
 	"github.com/AutomaticCoinTrader/ACT/robot"
 	"github.com/AutomaticCoinTrader/ACT/integrator"
 	"github.com/AutomaticCoinTrader/ACT/exchange"
 	"github.com/AutomaticCoinTrader/ACT/configurator"
+	"log"
+	"runtime"
+	"flag"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/pkg/errors"
-	"github.com/AutomaticCoinTrader/ACT/notifier"
+	"path"
+)
+
+const (
+	actConfigPrefix string = "act"
 )
 
 type config struct {
@@ -138,28 +143,28 @@ func actStop(integrator *integrator.Integrator) (error) {
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	configPath := flag.String("config", "", "config")
+	configDir := flag.String("confdir", "", "config directory")
 	flag.Parse()
-	cf, err := configurator.NewConfigurator(*configPath)
+	cf, err := configurator.NewConfigurator(path.Join(*configDir, actConfigPrefix))
 	if err != nil {
-		log.Printf("can not create configurator (config = %v, reason = %v)", *configPath, err)
+		log.Printf("can not create configurator (config dir = %v, reason = %v)", *configDir, err)
 		return
 	}
 	newConfig := new(config)
 	err = cf.Load(newConfig)
 	if err != nil {
-		log.Printf("can not load config (config = %v, reason = %v)", *configPath, err)
+		log.Printf("can not load config (config dir = %v, reason = %v)", *configDir, err)
 		return
 
 	}
 	ntf, err := notifier.NewNotifier(newConfig.Notifier)
 	if err != nil {
-		log.Printf("can not create notifier (config = %v, reason = %v)", *configPath, err)
+		log.Printf("can not create notifier (config dir = %v, reason = %v)", *configDir, err)
 		return
 	}
-	rbt, err := robot.NewRobot(newConfig.Robot, ntf)
+	rbt, err := robot.NewRobot(newConfig.Robot, *configDir, ntf)
 	if err != nil {
-		log.Printf("can not create robot (config = %v, reason = %v)", *configPath, err)
+		log.Printf("can not create robot (config dir = %v, reason = %v)", *configDir, err)
 		return
 	}
 	actCallbackData := &actCallbackData{
@@ -175,7 +180,7 @@ func main() {
 		stopArbitrageCallback,
 		actCallbackData)
 	if err != nil {
-		log.Printf("can not create exchangers (config = %v, reason = %v)", *configPath, err)
+		log.Printf("can not create exchangers (config dir = %v, reason = %v)", *configDir, err)
 		return
 	}
 	err = actStart(it)

@@ -1,10 +1,4 @@
 robot:
-  trade:
-    example:
-      enable: true
-  arbitrageTrade:
-    example:
-      enable: true
 integrator:
   debug: true
   addrPort: 127.0.0.1:38080
