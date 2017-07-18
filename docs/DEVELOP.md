@@ -20,6 +20,12 @@
 
  - [今後の開発予定](/docs/FUTUREWORK.md)
 
+
+## 開発チャット
+ 
+ - slack
+   - https://join.slack.com/t/automaticcointrader/shared_invite/MjE0NTQ2NDU0MjkyLTE1MDA0MDk0NTMtNjg1ZDYzYzFiNA
+
 ## その他
 
   - jsonをgoのデータ構造へ変換してくれるサイト
