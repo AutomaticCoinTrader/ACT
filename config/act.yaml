@@ -1,4 +1,5 @@
 robot:
+  algorithmPluginDir: "plugin"
 integrator:
   debug: true
   addrPort: 127.0.0.1:38080

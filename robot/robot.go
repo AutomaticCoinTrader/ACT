@@ -10,8 +10,6 @@ import (
 	"path"
 )
 
-
-
 type Robot struct {
 	config                   *Config
 	configDir                string
@@ -107,14 +105,17 @@ func (r *Robot) DestroyArbitrageTradeAlgorithms(exchanges map[string]exchange.Ex
 }
 
 type Config struct {
+	AlgorithmPluginDir string `json:"algorithmPluginDir" yaml:"algorithmPluginDir" toml:"algorithmPluginDir"`
 }
 
 func NewRobot(config *Config, configDir string, notifier *notifier.Notifier) (*Robot, error) {
-	return &Robot{
+	r := &Robot{
 		config:                   config,
 		configDir:                configDir,
 		notifier:                 notifier,
 		tradeAlgorithms:          make(map[string][]algorithm.TradeAlgorithm),
 		arbitrageTradeAlgorithms: make([]algorithm.ArbitrageTradeAlgorithm, 0),
-	}, nil
+	}
+	r.loadPluginFiles()
+	return r, nil
 }
