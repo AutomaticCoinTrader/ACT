@@ -31,21 +31,21 @@ type Example struct {
 	config         *TradeConfig
 }
 
-func (l *Example) GetName() (string) {
-	return l.name
+func (e *Example) GetName() (string) {
+	return e.name
 }
 
-func (l *Example) Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (e *Example) Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
-func (l *Example) Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (e *Example) Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	// trade
 	log.Printf("trade")
 	return nil
 }
 
-func (l *Example) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (e *Example) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
@@ -71,21 +71,21 @@ type ArbitrageExample struct {
 	config         *ArbitrageTradeConfig
 }
 
-func (l *ArbitrageExample) GetName() (string) {
-	return l.name
+func (a *ArbitrageExample) GetName() (string) {
+	return a.name
 }
 
-func (l *ArbitrageExample) Initialize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (a *ArbitrageExample) Initialize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
-func (l *ArbitrageExample) Update(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (a *ArbitrageExample) Update(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
 	// arbitrage trade
 	log.Printf("arbitrage trade")
 	return nil
 }
 
-func (l *ArbitrageExample) Finalize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (a *ArbitrageExample) Finalize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
