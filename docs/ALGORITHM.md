@@ -22,17 +22,17 @@ touch ACT/algorithm/my/my.go
   - tomlとyamlとjsonで解釈できるように定義をしておく
 
 ```
-type TradeConfig struct {
+type tradeConfig struct {
 	message string `json:"message" yaml:"message" toml:"message"`
 }
 
-type ArbitrageTradeConfig struct {
+type arbitrageTradeConfig struct {
 	message string `json:"message" yaml:"message" toml:"message"`
 }
 
-type Config struct {
-	Trade          *TradeConfig          `json:"trade"          yaml:"trade"          toml:"trade"`
-    ArbitrageTrade *ArbitrageTradeConfig `json:"arbitrageTrade" yaml:"arbitrageTrade" toml:"arbitrageTrade"`
+type config struct {
+	Trade          *tradeConfig          `json:"trade"          yaml:"trade"          toml:"trade"`
+    ArbitrageTrade *arbitrageTradeConfig `json:"arbitrageTrade" yaml:"arbitrageTrade" toml:"arbitrageTrade"`
 }
 
 
@@ -42,7 +42,7 @@ type Config struct {
 
 ```
 type My struct {
-	config         *TradeConfig
+	config         *tradeConfig
 	name           string
 }
 
@@ -71,7 +71,7 @@ func (m *My) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Not
 
 
 type ArbitrageMy struct {
-	config         *ArbitrageTradeConfig
+	config         *arbitrageTradeConfig
 	name           string
 }
 
@@ -110,14 +110,14 @@ func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
 	if err != nil {
 		return nil, errors.Errorf("can not create configurator  (config file path prefix = %v)", configFilePathPrefix)
 	}
-	config := new(Config)
-	err = cf.Load(config)
+	conf := new(Config)
+	err = cf.Load(conf)
 	if err != nil {
 		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
 	}
 	return &My{
 	    name: "my",
-	    config: config.Trade,
+	    config: conf.Trade,
 	}, nil
 }
 
@@ -127,14 +127,14 @@ func newArbitrageMy(config interface{}) (algorithm.ArbitrageTradeAlgorithmContex
 	if err != nil {
 		return nil, errors.Errorf("can not create configurator (config file path prefix = %v)", configFilePathPrefix)
 	}
-	config := new(Config)
-	err = cf.Load(config)
+	conf := new(Config)
+	err = cf.Load(conf)
 	if err != nil {
 		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
 	}
 	return &ArbitrageMy{
 	    name: "my",
-	    config: config.ArbitrageTrade,
+	    config: conf.ArbitrageTrade,
 	}, nil
 }
 ```
@@ -159,29 +159,13 @@ import (
 
 ```
 
-## 2. config.yamlの設定を追加する
+## 2. algorithmディレクトリの下にmy.yamlを追加する
 
 ```
-robot:
-  trade:
-    my:
-      message: "hello!!"
-  arbitrageTrade:
-    my:
-      message: "hello!!"
-integrator:
-  zaif:
-    key: "key"
-    secret: "secret"
-    currencyPairs:
-     - src: btc
-       dst: jpy
-    retry: 0
-    timeout: 0
-    readBufSize: 0
-    writeBufSize: 0
-notifiler:
-   Mail:
+trade:
+  message: "hello!!"
+arbitrageTrade:
+  message: "hello!!"
 ```
 
 ## 起動
@@ -189,7 +173,7 @@ notifiler:
 ### 1. 設定ファイルを指定して起動する
 
 ```
-go run main.go -config ./config/config.yaml
+go run main.go -confdir ./config
 ```
 
 

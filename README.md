@@ -50,16 +50,11 @@ go build
 ```
 
 ## 設定例
- - config/config.yaml
+ - config/act.yaml
 
 ```
 robot:
-  trade:
-    example:
-      enable: true
-  arbitrageTrade:
-    example:
-      enable: true
+  algorithmPluginDir: "plugin"
 integrator:
   zaif:
     key: "key"
@@ -81,13 +76,12 @@ notifier:
     useStartTls: "false"
     from: "exmaple@gmail.com"
     to: "exmaple@gmail.com"
-
 ```
 
 ## 起動
 
 ```
-act -config ./config/config.yaml
+act -confdir ./config
 ```
 
 ## 停止
