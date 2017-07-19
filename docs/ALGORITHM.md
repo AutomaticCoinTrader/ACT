@@ -336,13 +336,17 @@ func GetRegistrationInfo() (string, algorithm.TradeAlgorithmNewFunc, algorithm.A
 ```
 
 ### pluginでビルドする
+  - できたものをpluginディレクトリに配置する
 
+```
 go build -buildmode=plugin
+```
+
 
 
 ## 設定を追加
 
-## 1. confDirで指定したコンフィグディレクトリ以下のact.yamlにpluginのパスを追加する
+## 1. confDirで指定したコンフィグディレクトリ以下のact.yamlにpluginディレクトリのパスを追加する
 
 ```
 robot:
