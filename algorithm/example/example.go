@@ -15,37 +15,37 @@ const (
 )
 
 
-type TradeConfig struct {
+type tradeConfig struct {
 }
 
-type ArbitrageTradeConfig struct {
+type arbitrageTradeConfig struct {
 }
 
-type Config struct {
-	Trade          *TradeConfig          `json:"trade"          yaml:"trade"          toml:"trade"`
-	ArbitrageTrade *ArbitrageTradeConfig `json:"arbitrageTrade" yaml:"arbitrageTrade" toml:"arbitrageTrade"`
+type config struct {
+	Trade          *tradeConfig          `json:"trade"          yaml:"trade"          toml:"trade"`
+	ArbitrageTrade *arbitrageTradeConfig `json:"arbitrageTrade" yaml:"arbitrageTrade" toml:"arbitrageTrade"`
 }
 
-type Example struct {
+type example struct {
 	name           string
-	config         *TradeConfig
+	config         *tradeConfig
 }
 
-func (e *Example) GetName() (string) {
+func (e *example) GetName() (string) {
 	return e.name
 }
 
-func (e *Example) Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (e *example) Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
-func (e *Example) Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (e *example) Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	// trade
 	log.Printf("trade")
 	return nil
 }
 
-func (e *Example) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (e *example) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
@@ -55,37 +55,37 @@ func newExample(configDir string) (algorithm.TradeAlgorithm, error) {
 	if err != nil {
 		return nil, errors.Errorf("can not create configurator (config file path prefix = %v)", configFilePathPrefix)
 	}
-	config := new(Config)
-	err = cf.Load(config)
+	conf := new(config)
+	err = cf.Load(conf)
 	if err != nil {
 		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
 	}
-	return &Example{
+	return &example{
 		name:           algorithmName,
-		config:         config.Trade,
+		config:         conf.Trade,
 	}, nil
 }
 
-type ArbitrageExample struct {
+type arbitrageExample struct {
 	name           string
-	config         *ArbitrageTradeConfig
+	config         *arbitrageTradeConfig
 }
 
-func (a *ArbitrageExample) GetName() (string) {
+func (a *arbitrageExample) GetName() (string) {
 	return a.name
 }
 
-func (a *ArbitrageExample) Initialize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (a *arbitrageExample) Initialize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
-func (a *ArbitrageExample) Update(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (a *arbitrageExample) Update(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
 	// arbitrage trade
 	log.Printf("arbitrage trade")
 	return nil
 }
 
-func (a *ArbitrageExample) Finalize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (a *arbitrageExample) Finalize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
@@ -95,14 +95,14 @@ func newArbitrageExample(configDir string) (algorithm.ArbitrageTradeAlgorithm, e
 	if err != nil {
 		return nil, errors.Errorf("can not create configurator (config file path prefix = %v)", configFilePathPrefix)
 	}
-	config := new(Config)
-	err = cf.Load(config)
+	conf := new(config)
+	err = cf.Load(conf)
 	if err != nil {
 		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
 	}
-	return &ArbitrageExample{
+	return &arbitrageExample{
 		name:           algorithmName,
-		config:         config.ArbitrageTrade,
+		config:         conf.ArbitrageTrade,
 	}, nil
 }
 
