@@ -35,8 +35,8 @@ func (i *Integrator) index(context *gin.Context) {
   - template,CSS,javascript,imageのようなアセット関連は https://github.com/jteeuwen/go-bindata を使ってコンパイル時にバイナリに組み込む 
 
 ```
-    cd integrator && go-bindata -pkg integrator asset/...
-	go build
+cd integrator && go-bindata -pkg integrator asset/...
+go build
 ```
 
 
