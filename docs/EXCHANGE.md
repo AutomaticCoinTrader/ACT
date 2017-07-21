@@ -33,6 +33,7 @@ vi ACT/exchange/myexchange/requester.go
   - requester.goは実装した全てのAPIを呼すことができるもの
     - newをしてオブジェクトを生成してオブジェクトの各メソッドを呼び出すことでapiを利用できるようにする
     - streaming系の処理がある場合は、callback等を用いる
+    - テストのことを考えて、requester単体で利用できるようにしておく
     - 実装イメージは以下を参照
   
 ```
