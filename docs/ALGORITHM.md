@@ -9,16 +9,21 @@ mkdir ACT/algorithm/my
 touch ACT/algorithm/my/my.go
 ```
   
-## my.goの作成
+## 実装
 
-### 1. パッケージ名を決める
+### 1. ディレクトリ名と同じ名前のパッケージ名にする
 
 ```
     package my
 ```
 
+### 2. my.goを作成
 
-### 2. 設定情報を保持する構造体を作る
+```
+   vi ACT/algorithm/my/my.go
+```
+
+### 3. 設定情報を保持する構造体を作る
   - tomlとyamlとjsonで解釈できるように定義をしておく
 
 ```
@@ -38,7 +43,7 @@ type config struct {
 
 ```
 
-### 3.TradeAlgorithmContextインターフェイスを備えた構造体を作る
+### 4.TradeAlgorithmContextインターフェイスを備えた構造体を作る
 
 ```
 type my struct {
@@ -101,7 +106,7 @@ func (m *arbitrageMy) Finalize(exchanges map[string]exchange.Exchange, notifier 
 
 ```
 
-### 4. (3)で作ったTradeAlgorithmContextインターフェイスを備えた構造体のポインタを返す関数を作る
+### 5. (4)で作ったTradeAlgorithmContextインターフェイスを備えた構造体のポインタを返す関数を作る
 
 ```
 func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
@@ -139,7 +144,7 @@ func newArbitrageMy(config interface{}) (algorithm.ArbitrageTradeAlgorithmContex
 }
 ```
 
-### 5. (4)で作った関数を登録する
+### 6. (5)で作った関数を登録する
 
 ```
 func init() {
@@ -190,7 +195,7 @@ mkdir my/
 touch my/my.go
 ```
   
-## my.goの作成
+## 実装
 
 ### 1. パッケージ名はmainで良い
 
@@ -198,8 +203,13 @@ touch my/my.go
     package main
 ```
 
+### 2. my.goの作成
 
-### 2. 設定情報を保持する構造体を作る
+```
+    vi my/my.go
+```
+
+### 3. 設定情報を保持する構造体を作る
   - tomlとyamlとjsonで解釈できるように定義をしておく
 
 ```
@@ -219,7 +229,7 @@ type config struct {
 
 ```
 
-### 3.TradeAlgorithmContextインターフェイスを備えた構造体を作る
+### 4.TradeAlgorithmContextインターフェイスを備えた構造体を作る
 
 ```
 type my struct {
@@ -282,7 +292,7 @@ func (m *arbitrageMy) Finalize(exchanges map[string]exchange.Exchange, notifier 
 
 ```
 
-### 4. (3)で作ったTradeAlgorithmContextインターフェイスを備えた構造体のポインタを返す関数を作る
+### 5. (4)で作ったTradeAlgorithmContextインターフェイスを備えた構造体のポインタを返す関数を作る
 
 ```
 func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
@@ -320,14 +330,14 @@ func newArbitrageMy(config interface{}) (algorithm.ArbitrageTradeAlgorithmContex
 }
 ```
 
-### 5. pluginの初期化はinit関数で行う
+### 6. pluginの初期化はinit関数で行う
 
 ```
 func init() {
 }
 ```
 
-### 6. (4)で作った関数やアルゴリズム名を返すGetRegistrationInfo関数を作成する
+### 7. (5)で作った関数やアルゴリズム名を返すGetRegistrationInfo関数を作成する
 
 ```
 func GetRegistrationInfo() (string, algorithm.TradeAlgorithmNewFunc, algorithm.ArbitrageTradeAlgorithmNewFunc)
@@ -341,8 +351,6 @@ func GetRegistrationInfo() (string, algorithm.TradeAlgorithmNewFunc, algorithm.A
 ```
 go build -buildmode=plugin
 ```
-
-
 
 ## 設定を追加
 
