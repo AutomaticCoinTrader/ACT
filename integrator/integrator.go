@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"reflect"
 	"net/http"
+	"github.com/AutomaticCoinTrader/ACT/notifier"
 )
 
 type StartStreamingCallback func(tradeContext exchange.TradeContext, userCallbackData interface{}) (error)
@@ -30,6 +31,7 @@ type Integrator struct {
 	gracefulServer          *gracefulServer
 	exchanges               map[string]exchange.Exchange
 	arbitrageLoopFinishChan chan bool
+	notifier                *notifier.Notifier
 	robot                   *robot.Robot
 }
 
@@ -242,12 +244,21 @@ type Config struct {
 	Exchanges *ExchangesConfig `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
 }
 
-func NewIntegrator(config *Config, robot *robot.Robot) (*Integrator, error) {
+func NewIntegrator(integratorConfig *Config, notifierConfig *notifier.Config, robotConfig *robot.Config, configDir string) (*Integrator, error) {
+	ntf, err := notifier.NewNotifier(notifierConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("can not create notifier (config dir = %v, reason = %v)", configDir, err))
+	}
+	rbt, err := robot.NewRobot(robotConfig, configDir, ntf)
+	if err != nil {
+		return nil, errors.Wrap(err,fmt.Sprintf("can not create robot (config dir = %v, reason = %v)", configDir, err))
+	}
 	return &Integrator{
-		config: config,
+		config: integratorConfig,
 		exchanges: make(map[string]exchange.Exchange),
 		arbitrageLoopFinishChan: make(chan bool),
-		robot: robot,
+		notifier: ntf,
+		robot: rbt,
 	}, nil
 }
 

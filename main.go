@@ -87,19 +87,11 @@ func main() {
 		return
 
 	}
-	ntf, err := notifier.NewNotifier(newConfig.Notifier)
-	if err != nil {
-		log.Printf("can not create notifier (config dir = %v, reason = %v)", *configDir, err)
-		return
-	}
-	rbt, err := robot.NewRobot(newConfig.Robot, *configDir, ntf)
-	if err != nil {
-		log.Printf("can not create robot (config dir = %v, reason = %v)", *configDir, err)
-		return
-	}
 	it, err := integrator.NewIntegrator(
 		newConfig.Integrator,
-		rbt)
+		newConfig.Notifier,
+		newConfig.Robot,
+		*configDir)
 	if err != nil {
 		log.Printf("can not create exchangers (config dir = %v, reason = %v)", *configDir, err)
 		return
