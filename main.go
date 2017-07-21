@@ -2,8 +2,6 @@ package main
 
 import (
 	"github.com/pkg/errors"
-	"github.com/AutomaticCoinTrader/ACT/notifier"
-	"github.com/AutomaticCoinTrader/ACT/robot"
 	"github.com/AutomaticCoinTrader/ACT/integrator"
 	"github.com/AutomaticCoinTrader/ACT/configurator"
 	"log"
@@ -18,12 +16,6 @@ import (
 const (
 	actConfigPrefix string = "act"
 )
-
-type config struct {
-	Integrator *integrator.Config `json:"integrator" yaml:"integrator" toml:"integrator"`
-	Robot      *robot.Config      `json:"robot"      yaml:"robot"      toml:"robot"`
-	Notifier   *notifier.Config   `json:"notifier"   yaml:"notifier"   toml:"notifier"`
-}
 
 func signalWait() {
 	sigChan := make(chan os.Signal, 1)
@@ -80,18 +72,14 @@ func main() {
 		log.Printf("can not create configurator (config dir = %v, reason = %v)", *configDir, err)
 		return
 	}
-	newConfig := new(config)
+	newConfig := new(integrator.Config)
 	err = cf.Load(newConfig)
 	if err != nil {
 		log.Printf("can not load config (config dir = %v, reason = %v)", *configDir, err)
 		return
 
 	}
-	it, err := integrator.NewIntegrator(
-		newConfig.Integrator,
-		newConfig.Notifier,
-		newConfig.Robot,
-		*configDir)
+	it, err := integrator.NewIntegrator(newConfig, *configDir)
 	if err != nil {
 		log.Printf("can not create exchangers (config dir = %v, reason = %v)", *configDir, err)
 		return

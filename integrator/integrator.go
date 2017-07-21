@@ -48,16 +48,16 @@ func (i *Integrator) runHttpServer() {
 }
 
 func (i *Integrator) initHttpServer() (error) {
-	if i.config.AddrPort == "" {
+	if i.config.Server.AddrPort == "" {
 		return nil
 	}
-	if !i.config.Debug {
+	if !i.config.Server.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	engine := gin.Default()
 	i.setupRouting(engine)
 	server := manners.NewWithServer(&http.Server{
-		Addr:    i.config.AddrPort,
+		Addr:    i.config.Server.AddrPort,
 		Handler: engine,
 		ReadTimeout:    60 * time.Second,
 		WriteTimeout:   60 * time.Second,
@@ -238,23 +238,29 @@ func (i *Integrator) Stop() (error) {
 	return nil
 }
 
-type Config struct {
+type serverConfig struct {
 	Debug bool                 `json:"debug"     yaml:"debug"     toml:"debug"`
 	AddrPort string            `json:"addrPort"  yaml:"addrPort"  toml:"addrPort"`
-	Exchanges *ExchangesConfig `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
 }
 
-func NewIntegrator(integratorConfig *Config, notifierConfig *notifier.Config, robotConfig *robot.Config, configDir string) (*Integrator, error) {
-	ntf, err := notifier.NewNotifier(notifierConfig)
+type Config struct {
+	Server    *serverConfig     `json:"server"    yaml:"server"    toml:"server"`
+	Exchanges *exchangesConfig  `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
+	Robot      *robot.Config    `json:"robot"     yaml:"robot"     toml:"robot"`
+	Notifier   *notifier.Config `json:"notifier"  yaml:"notifier"  toml:"notifier"`
+}
+
+func NewIntegrator(config *Config, configDir string) (*Integrator, error) {
+	ntf, err := notifier.NewNotifier(config.Notifier)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("can not create notifier (config dir = %v, reason = %v)", configDir, err))
 	}
-	rbt, err := robot.NewRobot(robotConfig, configDir, ntf)
+	rbt, err := robot.NewRobot(config.Robot, configDir, ntf)
 	if err != nil {
 		return nil, errors.Wrap(err,fmt.Sprintf("can not create robot (config dir = %v, reason = %v)", configDir, err))
 	}
 	return &Integrator{
-		config: integratorConfig,
+		config: config,
 		exchanges: make(map[string]exchange.Exchange),
 		arbitrageLoopFinishChan: make(chan bool),
 		notifier: ntf,
