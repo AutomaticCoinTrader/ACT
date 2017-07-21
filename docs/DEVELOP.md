@@ -17,6 +17,11 @@
 
  - [取引所の追加の仕方](/docs/EXCHANGE.md)
 
+## WEBUIの作り方
+
+ - [WEBUIの作り方](/docs/WEBUI.md)
+
+
 ## インターフェイス
 
  - [インターフェイスの説明](/docs/INTERFACE.md)
