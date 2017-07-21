@@ -10,8 +10,11 @@ import (
 	"path"
 )
 
-// Stochastic RSI Oscillator と DMI を併用したアルゴリズム
+// Stochastic RSI と DMI を併用したアルゴリズム
 // 買い -> 売りのみ
+// https://www.nomura.co.jp/learn/chart/page10.html
+// https://www.moneypartners.co.jp/support/tech/rsi.html
+// https://www.moneypartners.co.jp/support/tech/sct.html
 // https://www.moneypartners.co.jp/support/tech/sctrsi.html
 // https://www.moneypartners.co.jp/support/tech/dmi-adx.html
 
