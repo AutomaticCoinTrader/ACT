@@ -111,7 +111,7 @@ func (m *arbitrageMy) Finalize(exchanges map[string]exchange.Exchange, notifier 
 ```
 func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
-	cf, err := configurator.NewConfigurator(configFilePathPrefix)
+	cf, err := configurator.NewConfigurator(configFilePathPrefix)　// NewConfigratorに渡すパスは拡張子を含まないプレフィックス指定なので注意
 	if err != nil {
 		return nil, errors.Errorf("can not create configurator  (config file path prefix = %v)", configFilePathPrefix)
 	}
@@ -128,7 +128,7 @@ func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
 
 func newArbitrageMy(config interface{}) (algorithm.ArbitrageTradeAlgorithmContext, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
-	cf, err := configurator.NewConfigurator(configFilePathPrefix)
+	cf, err := configurator.NewConfigurator(configFilePathPrefix) // NewConfigratorに渡すパスは拡張子を含まないプレフィックス指定なので注意
 	if err != nil {
 		return nil, errors.Errorf("can not create configurator (config file path prefix = %v)", configFilePathPrefix)
 	}
@@ -297,7 +297,7 @@ func (m *arbitrageMy) Finalize(exchanges map[string]exchange.Exchange, notifier 
 ```
 func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
-	cf, err := configurator.NewConfigurator(configFilePathPrefix)
+	cf, err := configurator.NewConfigurator(configFilePathPrefix) // NewConfigratorに渡すパスは拡張子を含まないプレフィックス指定なので注意
 	if err != nil {
 		return nil, errors.Errorf("can not create configurator  (config file path prefix = %v)", configFilePathPrefix)
 	}
@@ -314,7 +314,7 @@ func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
 
 func newArbitrageMy(config interface{}) (algorithm.ArbitrageTradeAlgorithmContext, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
-	cf, err := configurator.NewConfigurator(configFilePathPrefix)
+	cf, err := configurator.NewConfigurator(configFilePathPrefix) // NewConfigratorに渡すパスは拡張子を含まないプレフィックス指定なので注意
 	if err != nil {
 		return nil, errors.Errorf("can not create configurator (config file path prefix = %v)", configFilePathPrefix)
 	}
