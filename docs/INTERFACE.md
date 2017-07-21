@@ -25,7 +25,8 @@ type TradeAlgorithmContext interface {
 - Finalize
   - トレード情報を継続的な取得(streaming)を停止した場合に呼ばれる
   - ここでアルゴリズムの終了処理を行う
-  
+
+(今後必要に応じてメソッドを追加していく予定)  
 
 ## ArbitrageTradeAlgorithmContextインターフェイス
  
@@ -51,7 +52,9 @@ type ArbitrageTradeAlgorithm interface {
 - Finalize
   - 定期的なポーリングを停止した場合に呼ばれる
   - ここでアルゴリズムの終了処理を行う
-  
+
+(今後必要に応じてメソッドを追加する予定)  
+    
 ## Exchangeインターフェイス
   
 - 各取引所が実装するインターフェイス
@@ -84,6 +87,8 @@ type Exchange interface {
   - トレード情報の継続的な取得を開始する
 - StartStreaming
   - トレード情報の継続的な取得を停止する
+
+(今後必要に応じてメソッドを追加する予定)  
 
 ## TradeContextインターフェイス
   
@@ -146,6 +151,8 @@ type TradeContext interface {
 - GetMinAmountUnit
   - 最小の量の単位を返す (例. 0.01)
   
+(今後必要に応じてメソッドを追加する予定)  
+
   
 ## カーソルインターフェイス
   - イテレーションを目的としたインターフェイス
