@@ -2,7 +2,7 @@
 
 ## 全体概要
 
-![全体概要](/docs/images/desgine.svg)
+![全体概要](/docs/images/design.svg)
 
 ## integrator
   

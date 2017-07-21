@@ -4,6 +4,11 @@
 
  - [開発環境の作り方](/docs/ENVIRONMENT.md)
 
+## デザイン
+
+ - [デザイン](/docs/DESIGN.md)
+
+
 ## アルゴリズム追加
 
  - [アルゴリズムの追加の仕方](/docs/ALGORITHM.md)
