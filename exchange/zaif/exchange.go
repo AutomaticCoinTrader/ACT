@@ -412,7 +412,7 @@ func (e *Exchange) StopStreaming(tradeContext exchange.TradeContext) (error) {
 	return nil
 }
 
-type ExchangeConfigCurrencyPair struct {
+type exchangeConfigCurrencyPair struct {
 	Src string `json:"src" yaml:"src" toml:"src"`
 	Dst string `json:"dst" yaml:"dst" toml:"dst"`
 }
@@ -424,7 +424,7 @@ type ExchangeConfig struct {
 	Timeout       int                            `json:"timeout"      yaml:"timeout"      toml:"timeout"`
 	ReadBufSize   int                            `json:"readBufSize"  yaml:"readBufSize"  toml:"readBufSize"`
 	WriteBufSize  int                            `json:"writeBufSize" yaml:"writeBufSize" toml:"writeBufSize"`
-	CurrencyPairs []*ExchangeConfigCurrencyPair  `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
+	CurrencyPairs []*exchangeConfigCurrencyPair  `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
 }
 
 func newZaifExchange(config interface{}) (exchange.Exchange, error)  {
