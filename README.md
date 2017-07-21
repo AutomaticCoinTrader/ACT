@@ -58,7 +58,7 @@ go build
 ```
 robot:
   algorithmPluginDir: "plugin"
-integrator:
+exchanges:
   zaif:
     key: "key"
     secret: "secret"
@@ -69,6 +69,9 @@ integrator:
     timeout: 0
     readBufSize: 0
     writeBufSize: 0
+server:
+  debug: true
+  addrPort: 127.0.0.1:38080
 notifier:
   mail:
     hostPort: "smtp.gmail.com:465"
