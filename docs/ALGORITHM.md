@@ -167,6 +167,7 @@ import (
 ## 設定を追加
 
 ### 1. confDirで指定したコンフィグディレクトリ以下のalgorithmディレクトリの下にmy.yamlを追加する
+  - ビルトイン方式の設定ファイルはyaml,toml,jsonのいずれかでよい
 
 ```
 trade:
@@ -377,13 +378,16 @@ notifier:
   mail:
 ```
 
-## 2. confDirで指定したコンフィグディレクトリ以下のalgorithmディレクトリの下にmy.yamlを追加する
+## 2. confDirで指定したコンフィグディレクトリ以下のalgorithmディレクトリの下にmy.tomlを追加する
+  - プラグイン方式の設定ファイルはtomlまたはjsonにすること
+    - 現状goのplugin機能とyamlのローダーライブラリの相性の問題でyamlだとロードに失敗する
+      - バージョンが上がると治るかも
 
 ```
-trade:
-  message: "hello!!"
-arbitrageTrade:
-  message: "hello!!"
+[trade]
+[trade.ape]
+[arbitrageTrade]
+[arbitrageTrade.ape]
 ```
 
 ## 起動
