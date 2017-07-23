@@ -5,6 +5,8 @@ import (
 )
 
 type CoincheckExchangeConfig struct {
+	APIKey    string
+	APISecret string
 }
 
 type CoincheckExchange struct {
