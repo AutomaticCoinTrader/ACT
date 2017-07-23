@@ -31,20 +31,21 @@
 
 ## 取引所対応状況
 
-  - [x] Zaif
-  - [ ] bitFlyer
-  - [ ] bitbank
-  - [ ] Btcbox
-  - [ ] coincheck
-  - [ ] kraken
-  - [ ] QUOINEX
-  - [ ] Lemuria
-  - [ ] BITPoint
-  - [ ] Money365
-  - [ ] みんなのビットコイン
-  - [ ] Fisco
-  - [ ] FIREX
-  - [ ] Z.comコインbyGMO
+  - [ ] coincheck (信用取引APIあり)  
+  - [ ] kraken (信用取引APIあり)
+  - [ ] QUOINEX (信用取引APIあり)
+  - [ ] BITPoint (信用取引APIあり)
+  - [x] Zaif (信用取引APIなし)
+  - [ ] bitFlyer (信用取引APIなし)
+  - [ ] bitbank (信用取引APIなし)
+  - [ ] Btcbox (信用取引APIなし)
+  - [ ] Fisco (信用取引APIなし ZaifのAPIそのまま？)
+  - [ ] FIREX ((信用取引APIなし ZaifのAPIそのまま？)
+  - [ ] Z.comコインbyGMO (API自体ない？)
+  - [ ] Lemuria (API自体ない？)
+  - [ ] Money365 (API自体ない？)
+  - [ ] みんなのビットコイン (API自体ない？)
+
 
 ## ビルド方法
 
@@ -53,6 +54,7 @@ go build
 ```
 
 ## 設定例
+ - 設定はyaml,toml,jsonいずれかで記述する
  - config/act.yaml
 
 ```
