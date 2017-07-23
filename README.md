@@ -54,6 +54,7 @@ go build
 ```
 
 ## 設定例
+ - 設定はyaml,toml,jsonいずれかで記述する
  - config/act.yaml
 
 ```

@@ -8,21 +8,23 @@ import (
 	"path/filepath"
 	"log"
 	"fmt"
+	"regexp"
+	"os/user"
 )
 
-type GetRegistrationInfo func() (string, algorithm.TradeAlgorithmNewFunc, algorithm.ArbitrageTradeAlgorithmNewFunc)
+type GetRegistrationInfoType func() (string, algorithm.TradeAlgorithmNewFunc, algorithm.ArbitrageTradeAlgorithmNewFunc)
 
-func (r *Robot) registerAlgorithm(getRegistrationInfo GetRegistrationInfo) {
+func (r *Robot) registerAlgorithm(getRegistrationInfo GetRegistrationInfoType) {
 	name, tradeAlgorithmNewFunc, arbitrageTradeAlgorithmNewFunc := getRegistrationInfo()
 	algorithm.RegisterAlgorithm(name, tradeAlgorithmNewFunc, arbitrageTradeAlgorithmNewFunc)
 }
 
-func (r *Robot) checkPluginSymbole(p *plugin.Plugin) (GetRegistrationInfo, error) {
+func (r *Robot) checkPluginSymbole(p *plugin.Plugin) (GetRegistrationInfoType, error) {
 	s, err := p.Lookup("GetRegistrationInfo")
 	if err != nil {
 		return nil, errors.Wrap(err, "not found GetRegistrationInfo symbole")
 	}
-	return s.(GetRegistrationInfo), nil
+	return s.(func() (string, algorithm.TradeAlgorithmNewFunc, algorithm.ArbitrageTradeAlgorithmNewFunc)), nil
 }
 
 func (r *Robot) loadPluginFile(pluginFile string) (error) {
@@ -38,13 +40,25 @@ func (r *Robot) loadPluginFile(pluginFile string) (error) {
 	return nil
 }
 
+func (r *Robot) fixupAlgorithmPluginDir(algorithmPluginDir string) (string) {
+	// shell表現 "~/" をなんとかする
+	u, err := user.Current()
+	if err != nil {
+		log.Printf("can not get user info (reason = %v)", err)
+		return algorithmPluginDir
+	}
+	re := regexp.MustCompile("^~/")
+	return re.ReplaceAllString(r.config.AlgorithmPluginDir, u.HomeDir + "/")
+}
+
 func (r *Robot) loadPluginFiles() {
 	if r.config == nil || r.config.AlgorithmPluginDir == "" {
 		return
 	}
-	filist, err := ioutil.ReadDir(r.config.AlgorithmPluginDir)
+	algorithmPluginDir := r.fixupAlgorithmPluginDir(r.config.AlgorithmPluginDir)
+	filist, err := ioutil.ReadDir(algorithmPluginDir)
 	if err != nil {
-		log.Printf("can not readdir (dir = %v)", r.config.AlgorithmPluginDir)
+		log.Printf("can not readdir (dir = %v)", algorithmPluginDir)
 		return
 	}
 	for _, fi := range filist {
@@ -55,10 +69,10 @@ func (r *Robot) loadPluginFiles() {
 		if ext != ".so" && ext != ".dylib" {
 			continue
 		}
-		pluginPath := filepath.Join(r.config.AlgorithmPluginDir, fi.Name())
+		pluginPath := filepath.Join(algorithmPluginDir, fi.Name())
 		err := r.loadPluginFile(pluginPath)
 		if err != nil {
-			log.Printf("can not load plugin file (plugin file = %v)", pluginPath)
+			log.Printf("can not load plugin file (plugin file = %v, reason = %v)", pluginPath, err)
 			continue
 		}
 	}
