@@ -5,6 +5,7 @@ import (
 	"time"
 	"crypto/hmac"
 	"crypto/sha256"
+	"log"
 )
 
 const (
@@ -32,28 +33,13 @@ func (cr *CoincheckRequester) sign(req *utility.HTTPRequest) error {
 	return nil
 }
 
-func (cr *CoincheckRequester) GetBoard() (error) {
-
-	headers := make(map[string]string)
-
-	req := &utility.HTTPRequest{
-		URL: "https://" + ENDPOINT + "/api/order_books",
-		Headers: headers,
-		Body: "",
-	}
-
-	cr.sign(req)
-	resp, body, err := cr.httpClient.DoRequest(utility.HTTPMethodGET, req)
-	if err != nil {
-		panic("failed")
-	}
-
-	println(resp, body)
-
+func (cr *CoincheckRequester) StreamingStart() error {
+	log.Println("Coincheck StreamingStart")
 	return nil
 }
 
-func (cr *CoincheckRequester) GetBalance() error {
+func (cr *CoincheckRequester) StreamingStop() error {
+	log.Println("Coincheck StreamingStop")
 	return nil
 }
 

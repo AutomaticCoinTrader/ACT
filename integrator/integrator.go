@@ -92,6 +92,7 @@ func (i *Integrator) Initialize() (error) {
 		errors.Errorf("can not initalize of http server (reason = %v)", err)
 	}
 	for name, exchangeNewFunc := range exchange.GetRegisterdExchanges() {
+		log.Printf("listing exchange: %s\n", name)
 		t := reflect.TypeOf(i.config.Exchanges).Elem()
 		for idx := 0; idx < t.NumField(); idx++ {
 			f := t.Field(idx)
