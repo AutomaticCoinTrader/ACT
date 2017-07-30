@@ -1,22 +1,26 @@
 package coincheck
 
 import (
-	"github.com/AutomaticCoinTrader/ACT/utility"
-	"time"
 	"crypto/hmac"
 	"crypto/sha256"
-	"log"
+	"time"
+
+	"github.com/AutomaticCoinTrader/ACT/utility"
 )
 
 const (
-	ENDPOINT = "coincheck.com"
-	ENDPOINT_WS = "ws-api.coincheck.com"
+	// Endpoint ...
+	Endpoint = "coincheck.com"
+	// WebsocketEndpoint ...
+	WebsocketEndpoint = "ws-api.coincheck.com"
 )
 
+// CoincheckRequester ...
 type CoincheckRequester struct {
-	httpClient *utility.HTTPClient
-	apiKey string
-	apiSecret string
+	httpClient      *utility.HTTPClient
+	websocketClient []*utility.WSClient
+	apiKey          string
+	apiSecret       string
 }
 
 func (cr *CoincheckRequester) sign(req *utility.HTTPRequest) error {
@@ -33,20 +37,12 @@ func (cr *CoincheckRequester) sign(req *utility.HTTPRequest) error {
 	return nil
 }
 
-func (cr *CoincheckRequester) StreamingStart() error {
-	log.Println("Coincheck StreamingStart")
-	return nil
-}
-
-func (cr *CoincheckRequester) StreamingStop() error {
-	log.Println("Coincheck StreamingStop")
-	return nil
-}
-
-func NewRequester() *CoincheckRequester {
-	return &CoincheckRequester {
-		httpClient: nil,
-		apiKey: "",
-		apiSecret: "",
+// NewCoincheckRequester ...
+func NewCoincheckRequester(key string, secret string) *CoincheckRequester {
+	return &CoincheckRequester{
+		httpClient:      nil,
+		websocketClient: make([]*utility.WSClient, 0),
+		apiKey:          key,
+		apiSecret:       secret,
 	}
 }

@@ -1,8 +1,9 @@
 package coincheck
 
 import (
-	"github.com/AutomaticCoinTrader/ACT/exchange"
 	"log"
+
+	"github.com/AutomaticCoinTrader/ACT/exchange"
 )
 
 type CoincheckExchangeConfig struct {
@@ -11,8 +12,9 @@ type CoincheckExchangeConfig struct {
 }
 
 type CoincheckExchange struct {
-	config *CoincheckExchangeConfig
-	context []*CoincheckTradeContext
+	config    *CoincheckExchangeConfig
+	context   []*CoincheckTradeContext
+	requester *CoincheckRequester
 }
 
 type CoincheckTradeContext struct {
@@ -40,15 +42,15 @@ func (ct *CoincheckTradeContext) GetExchangeName() string {
 	return "coincheck-exchange-id"
 }
 
-func (ct *CoincheckTradeContext) Buy(price float64, amount float64) (error) {
+func (ct *CoincheckTradeContext) Buy(price float64, amount float64) error {
 	return nil
 }
 
-func (ct *CoincheckTradeContext) Sell(price float64, amount float64) (error) {
+func (ct *CoincheckTradeContext) Sell(price float64, amount float64) error {
 	return nil
 }
 
-func (ct *CoincheckTradeContext) Cancel(orderID int64) (error) {
+func (ct *CoincheckTradeContext) Cancel(orderID int64) error {
 	return nil
 }
 
@@ -60,11 +62,11 @@ func (ct *CoincheckTradeContext) GetDstCurrencyFund() (float64, error) {
 	return 0.0, nil
 }
 
-func (ct *CoincheckTradeContext) GetSrcCurrencyName() (string) {
+func (ct *CoincheckTradeContext) GetSrcCurrencyName() string {
 	return "coincheck-trade-context-src-currency"
 }
 
-func (ct *CoincheckTradeContext) GetDstCurrencyName() (string) {
+func (ct *CoincheckTradeContext) GetDstCurrencyName() string {
 	return "coincheck-trade-context-dst-currency"
 }
 
@@ -88,28 +90,27 @@ func (ct *CoincheckTradeContext) GetActiveOrderCursor() (exchange.OrderCursor, e
 	return nil, nil
 }
 
-func (ct *CoincheckTradeContext) GetMinPriceUnit() (float64) {
+func (ct *CoincheckTradeContext) GetMinPriceUnit() float64 {
 	return 1.0
 }
 
-func (ct *CoincheckTradeContext) GetMinAmountUnit() (float64) {
+func (ct *CoincheckTradeContext) GetMinAmountUnit() float64 {
 	return 1.0
 }
-
 
 func (ce *CoincheckExchange) GetName() string {
 	return "Coincheck"
 }
 
 // ここで tradecontext を作る
-func (ce *CoincheckExchange) Initialize(streamingCallback exchange.StreamingCallback, userCallbackData interface{}) (error) {
+func (ce *CoincheckExchange) Initialize(streamingCallback exchange.StreamingCallback, userCallbackData interface{}) error {
 	ce.context = make([]*CoincheckTradeContext, 0)
 	ce.context = append(ce.context, &CoincheckTradeContext{callback: streamingCallback})
 	log.Println("coincheckexchange Initialize")
 	return nil
 }
 
-func (ce *CoincheckExchange) Finalize() (error) {
+func (ce *CoincheckExchange) Finalize() error {
 	return nil
 }
 
@@ -119,7 +120,7 @@ func (ce *CoincheckExchange) GetTradeContext(srcCurrency string, dstCurrency str
 
 type CoincheckTradeContextCursor struct {
 	context []*CoincheckTradeContext
-	index int
+	index   int
 }
 
 func (ctcc *CoincheckTradeContextCursor) Next() (tradeContext exchange.TradeContext, ok bool) {
@@ -131,30 +132,48 @@ func (ctcc *CoincheckTradeContextCursor) Next() (tradeContext exchange.TradeCont
 	return res, true
 }
 
+// Reset ...
 func (ctcc *CoincheckTradeContextCursor) Reset() {
 }
 
+// Len ...
 func (ctcc *CoincheckTradeContextCursor) Len() int {
 	return len(ctcc.context)
 }
 
-func (ce *CoincheckExchange) GetTradeContextCursor() (exchange.TradeContextCursor) {
-	return &CoincheckTradeContextCursor{ context: ce.context, index: 0 }
+// GetTradeContextCursor ...
+func (ce *CoincheckExchange) GetTradeContextCursor() exchange.TradeContextCursor {
+	return &CoincheckTradeContextCursor{context: ce.context, index: 0}
 }
 
-func (ce *CoincheckExchange) StartStreaming(tradeContext exchange.TradeContext) (error) {
-	log.Println("CoincheckExchange StartStreaming")
+// dummy
+func tradeHistoryStreamingCallback(pair string, values []interface{}, _ interface{}) error {
+	log.Printf("coincheck: tradeHistoryStreamingCallback %s", values)
 	return nil
 }
 
-func (ce *CoincheckExchange) StopStreaming(tradeContext exchange.TradeContext) (error) {
+// StartStreaming ...
+func (ce *CoincheckExchange) StartStreaming(tradeContext exchange.TradeContext) error {
+	log.Printf("CoincheckExchange StartStreaming: %s%s\n",
+		tradeContext.GetSrcCurrencyName(),
+		tradeContext.GetDstCurrencyName())
+	ce.requester.StreamingStart("btc_jpy", tradeHistoryStreamingCallback, nil)
+	return nil
+}
+
+// StopStreaming ...
+func (ce *CoincheckExchange) StopStreaming(tradeContext exchange.TradeContext) error {
 	log.Println("CoincheckExchange StopStreaming")
 	return nil
 }
 
-func newCoincheckExchange(config interface {}) (exchange.Exchange, error) {
+func newCoincheckExchange(config interface{}) (exchange.Exchange, error) {
 	coincheckConfig := config.(*CoincheckExchangeConfig)
-	return &CoincheckExchange { config: coincheckConfig, context: nil }, nil
+	return &CoincheckExchange{
+		config:    coincheckConfig,
+		context:   nil,
+		requester: NewCoincheckRequester(coincheckConfig.APIKey, coincheckConfig.APISecret),
+	}, nil
 }
 
 func init() {
