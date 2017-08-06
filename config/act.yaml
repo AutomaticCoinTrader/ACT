@@ -27,3 +27,5 @@ notifier:
     useStartTls:
     from:
     to:
+  ifttt:
+    key: "webhook-key"
