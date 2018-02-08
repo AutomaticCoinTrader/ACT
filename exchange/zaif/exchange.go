@@ -24,9 +24,13 @@ func updateFunds(exchangeName string, requester *Requester, funds *ExchageFunds)
 	}
 	funds.update(map[string]float64{
 		"btc": info2Response.Return.Funds.Btc,
+		"bch": info2Response.Return.Funds.Bch,
+		"eth": info2Response.Return.Funds.Eth,
 		"mona": info2Response.Return.Funds.Mona,
 		"xem": info2Response.Return.Funds.Xem,
-		"jpy": info2Response.Return.Funds.Jpy})
+		"jpy": info2Response.Return.Funds.Jpy,
+		"zaif": info2Response.Return.Funds.Zaif,
+		"pepecash": info2Response.Return.Funds.Pepecash})
 	return nil
 }
 
@@ -253,9 +257,29 @@ func  (t *TradeContext)  GetMinPriceUnit() (float64) {
 	switch t.currencyPair {
 	case "btc_jpy":
 		return 5
+	case "xem_jpy":
+		return 0.0001
 	case "mona_jpy":
 		return 0.1
+	case "bch_jpy":
+		return 5
+	case "eth_jpy":
+		return 5
+	case "zaif_jpy":
+		return 0.0001
+	case "pepecash_jpy":
+		return 0.0001
+	case "xem_btc":
+		return 0.00000001
 	case "mona_btc":
+		return 0.00000001
+	case "bch_btc":
+		return 0.0001
+	case "eth_btc":
+		return 0.0001
+	case "zaif_btc":
+		return 0.00000001
+	case "pepecash_btc":
 		return 0.00000001
 	default:
 		return 0
@@ -266,9 +290,29 @@ func  (t *TradeContext)  GetMinAmountUnit() (float64) {
 	switch t.currencyPair {
 	case "btc_jpy":
 		return 0.0001
+	case "xem_jpy":
+		return 0.1
 	case "mona_jpy":
 		return 1
+	case "bch_jpy":
+		return 0.0001
+	case "eth_jpy":
+		return 0.0001
+	case "zaif_jpy":
+		return 0.1
+	case "pepecash_jpy":
+		return 0.0001
+	case "xem_btc":
+		return 1
 	case "mona_btc":
+		return 1
+	case "bch_btc":
+		return 0.0001
+	case "eth_btc":
+		return 0.0001
+	case "zaif_btc":
+		return 1
+	case "pepecash_btc":
 		return 1
 	default:
 		return 0
@@ -421,6 +465,7 @@ type ExchangeConfig struct {
 	Key           string                         `json:"key"          yaml:"key"          toml:"key"`
 	Secret        string                         `json:"secret"       yaml:"secret"       toml:"secret"`
 	Retry         int                            `json:"retry"        yaml:"retry"        toml:"retry"`
+	RetryWait     int                            `json:"retryWait"    yaml:"retryWait"    toml:"retryWait"`
 	Timeout       int                            `json:"timeout"      yaml:"timeout"      toml:"timeout"`
 	ReadBufSize   int                            `json:"readBufSize"  yaml:"readBufSize"  toml:"readBufSize"`
 	WriteBufSize  int                            `json:"writeBufSize" yaml:"writeBufSize" toml:"writeBufSize"`
@@ -432,7 +477,7 @@ func newZaifExchange(config interface{}) (exchange.Exchange, error)  {
 	return &Exchange{
 		config:        myConfig,
 		name :         exchangeName,
-		requester:     NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
+		requester:     NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.RetryWait,myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
 		tradeContexts: make([]*TradeContext, 0),
 		funds : &ExchageFunds{
 			funds: make(map[string]float64),

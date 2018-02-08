@@ -31,26 +31,26 @@ type HTTPRequest struct {
 	URL           string
 	ParsedURL     *url.URL
 	RequestMethod RequestMethod
+	RequestMethodString string
 	Headers       map[string]string
 	Body          string
 }
 
 type HTTPClient struct {
-	retry   int
-	timeout int
+	retry     int
+	retryWait int
+	timeout   int
 }
-
-type httpMethodFunc func(request *HTTPRequest) (*http.Response, []byte, bool, error)
 
 func (c *HTTPClient) newHTTPTransport() (transport *http.Transport) {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		Dial: (&net.Dialer{
-			Timeout:   60 * time.Second,
-			KeepAlive: 60 * time.Second,
+			Timeout:   300 * time.Second,
+			KeepAlive: 300 * time.Second,
 		}).Dial,
-		TLSHandshakeTimeout:   30 * time.Second,
-		ExpectContinueTimeout: 30 * time.Second,
+		TLSHandshakeTimeout:   300 * time.Second,
+		ExpectContinueTimeout: 300 * time.Second,
 	}
 }
 
@@ -65,43 +65,39 @@ func (c *HTTPClient) newHTTPClient(scheme string, host string, timeout int) *htt
 	}
 }
 
-func (c *HTTPClient) methodFuncBase(method string, request *HTTPRequest) (*http.Response, []byte, bool, error) {
+func (c *HTTPClient) methodFuncBase(method string, request *HTTPRequest) (*http.Response, []byte, error) {
 	httpClient := c.newHTTPClient(request.ParsedURL.Scheme, request.ParsedURL.Host, c.timeout)
 	req, err := http.NewRequest(method, request.URL, bytes.NewBufferString(request.Body))
 	if err != nil {
-		return nil, nil, false, errors.Wrap(err, fmt.Sprintf("can not create request (url = %v, method = %v, request body = %v,)", request.URL, request.RequestMethod, request.Body))
+		return nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request (url = %v, method = %v, request body = %v,)", request.URL, request.RequestMethod, request.Body))
 	}
 	for k, v := range request.Headers {
 		req.Header.Set(k, v)
 	}
 	res, err := httpClient.Do(req)
 	if err != nil {
-		return res, nil, true, errors.Wrap(err, fmt.Sprintf("request of HTTPMethodGET is failure (url = %v, method = %v, request body = %v)", request.URL, request.RequestMethod, request.Body))
+		return res, nil, errors.Wrap(err, fmt.Sprintf("request of HTTPMethodGET is failure (url = %v, method = %v, request body = %v)", request.URL, request.RequestMethod, request.Body))
 	}
 	defer res.Body.Close()
 	resBody, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return res, resBody, true, errors.Wrap(err, fmt.Sprintf("can not read response (url = %v, method = %v, request body = %v)", request.URL, request.RequestMethod, request.Body))
+		return res, resBody, errors.Wrap(err, fmt.Sprintf("can not read response (url = %v, method = %v, request body = %v)", request.URL, request.RequestMethod, request.Body))
 	}
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		retryable := false
-		if res.StatusCode >= 500 && res.StatusCode < 600 {
-			retryable = true
-		}
-		return res, resBody, retryable, errors.Errorf("unexpected status code (url = %v, method = %v, request body = %v, status = %v, body = %v)", request.URL, request.RequestMethod, request.Body, res.StatusCode, string(resBody))
+		return res, resBody, errors.Errorf("unexpected status code (url = %v, method = %v, request body = %v, status = %v, body = %v)", request.URL, request.RequestMethod, request.Body, res.StatusCode, string(resBody))
 	}
 	// log.Printf("http ok (url = %v, method = %v, request body = %v, status = %v, response body = %v)", request.URL, request.RequestMethod , request.Body, res.StatusCode, string(resBody))
-	return res, resBody, false, nil
+	return res, resBody, nil
 }
 
-func (c *HTTPClient) retryRequest(methodFunc httpMethodFunc, request *HTTPRequest) (*http.Response, []byte, error) {
+func (c *HTTPClient) retryRequest(request *HTTPRequest) (*http.Response, []byte, error) {
 	for i := 0; i <= c.retry; i++ {
-		res, resBody, retryable, err := methodFunc(request)
-		if retryable {
-			log.Printf("request is failure, retry... (url = %v, method = %v, reason = %v)", request.URL, request.RequestMethod, err)
-			time.Sleep(500 * time.Millisecond)
-			continue
+		res, resBody, err := c.methodFuncBase(request.RequestMethodString, request)
+		log.Printf("request is failure, retry... (url = %v, method = %v, reason = %v)", request.URL, request.RequestMethod, err)
+		if (c.retryWait != 0) {
+			time.Sleep(time.Duration(c.retryWait) * time.Millisecond)
 		}
+		continue
 		return res, resBody, err
 	}
 	return nil, nil, errors.Errorf("give up retry (url = %v, method = %v)", request.URL, request.RequestMethod)
@@ -113,52 +109,40 @@ func (c *HTTPClient) DoRequest(requestMethod RequestMethod, request *HTTPRequest
 		return nil, nil, errors.Wrap(err, fmt.Sprintf("can not parse url (url = %v, method = %v)", request.URL, requestMethod))
 	}
 	request.ParsedURL = u
-	var methodFunc httpMethodFunc
+	request.RequestMethod = requestMethod
 	switch requestMethod {
 	case HTTPMethodHEAD:
-		methodFunc = func(request *HTTPRequest) (*http.Response, []byte, bool, error) {
-			return c.methodFuncBase("HEAD", request)
-		}
+		request.RequestMethodString = "HEAD"
 	case HTTPMethodGET:
-		methodFunc = func(request *HTTPRequest) (*http.Response, []byte, bool, error) {
-			return c.methodFuncBase("GET", request)
-		}
+		request.RequestMethodString = "GET"
 	case HTTPMethodPUT:
-		methodFunc = func(request *HTTPRequest) (*http.Response, []byte, bool, error) {
-			return c.methodFuncBase("PUT", request)
-		}
+		request.RequestMethodString = "PUT"
 	case HTTPMethdoPOST:
-		methodFunc = func(request *HTTPRequest) (*http.Response, []byte, bool, error) {
-			return c.methodFuncBase("POST", request)
-		}
+		request.RequestMethodString = "POST"
 	case HTTPMethodDELETE:
-		methodFunc = func(request *HTTPRequest) (*http.Response, []byte, bool, error) {
-			return c.methodFuncBase("DELETE", request)
-		}
+		request.RequestMethodString = "DELETE"
 	case HTTPMethodPATCH:
-		methodFunc = func(request *HTTPRequest) (*http.Response, []byte, bool, error) {
-			return c.methodFuncBase("PATCH", request)
-		}
+		request.RequestMethodString = "PATCH"
 	default:
 		return nil, nil, errors.Wrap(err, fmt.Sprintf("unsupported request method (url = %v, method = %v)", request.URL, requestMethod))
 	}
-	request.RequestMethod = requestMethod
-	res, resBody, err := c.retryRequest(methodFunc, request)
+	res, resBody, err := c.retryRequest(request)
 	if err != nil {
 		return res, resBody, errors.Wrap(err, fmt.Sprintf("request is failure (url = %v, method = %v)", request.URL, request.RequestMethod))
 	}
 	return res, resBody, err
 }
 
-func NewHTTPClient(retry int, timeout int) *HTTPClient {
+func NewHTTPClient(retry int, retryWait int, timeout int) *HTTPClient {
 	if retry == 0 {
-		retry = 60
+		retry = 200000
 	}
 	if timeout == 0 {
-		timeout = 60
+		timeout = 300
 	}
 	return &HTTPClient{
-		retry:   retry,
+		retry: retry,
+		retryWait: retryWait,
 		timeout: timeout,
 	}
 }
@@ -169,6 +153,7 @@ type WSClient struct {
 	readBufSize  int
 	writeBufSize int
 	retry        int
+	retryWait    int
 	conn         *websocket.Conn
 	connChan     chan error
 	started      bool
@@ -228,8 +213,10 @@ func (w *WSClient) connect(callback WSCallback, callbackData interface{}, reques
 	i := 0
 	for {
 		i++
-		if i > w.retry {
-			break
+		if w.retry != 0 {
+			if i > w.retry {
+				break
+			}
 		}
 		conn, response, err := dialer.Dial(requestURL, header)
 		if err != nil {
@@ -238,13 +225,13 @@ func (w *WSClient) connect(callback WSCallback, callbackData interface{}, reques
 				time.Sleep(500 * time.Millisecond)
 				continue
 			}
-			if response.StatusCode >= 500 && response.StatusCode < 600 {
+			if response.StatusCode < 200 && response.StatusCode <= 300 {
 				log.Printf("can not dial, retry ... (url = %v, header = %v, reason = %v)", requestURL, requestHeaders, err)
 				time.Sleep(500 * time.Millisecond)
 				continue
 			}
 			w.connChan <- errors.Wrap(err, fmt.Sprintf("can not dial (URL = %v, header = %v)", requestURL, requestHeaders))
-			return
+			continue
 		}
 		if !w.started {
 			w.connChan <- nil
@@ -287,20 +274,18 @@ func (w *WSClient) Send(v interface{}) error {
 	return w.conn.WriteJSON(v)
 }
 
-func NewWSClient(readBufSize int, writeBufSize int, retry int) *WSClient {
+func NewWSClient(readBufSize int, writeBufSize int, retry int, retryWait int) *WSClient {
 	if readBufSize == 0 {
 		readBufSize = 1024 * 1024 * 2
 	}
 	if writeBufSize == 0 {
 		writeBufSize = 1024 * 1024 * 2
 	}
-	if retry == 0 {
-		retry = 60
-	}
 	return &WSClient{
 		readBufSize:  readBufSize,
 		writeBufSize: writeBufSize,
 		retry:        retry,
+		retryWait:    retryWait,
 		connChan:     make(chan error),
 	}
 }

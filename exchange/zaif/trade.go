@@ -12,8 +12,8 @@ import (
 )
 
 type TradeCommonResponse struct {
-	Success int `json:"success"`
-	Error string `json:"error"`
+	Success int    `json:"success"`
+	Error   string `json:"error"`
 }
 
 func (t TradeCommonResponse) needRetry() (bool) {
@@ -33,19 +33,25 @@ type TradeGetInfoResponse struct {
 		Deposit struct {
 			Btc      float64 `json:"btc"`
 			Jpy      float64 `json:"jpy"`
+			Bch      float64 `json:"bch"`
+			Eth      float64 `json:"eth"`
 			Mona     float64 `json:"mona"`
-			Pepecash float64 `json:"pepecash"`
 			Xem      float64 `json:"xem"`
+			Zaif     float64 `json:"zaif"`
+			Pepecash float64 `json:"pepecash"`
 		} `json:"deposit"`
 		Funds struct {
 			Btc      float64 `json:"btc"`
 			Jpy      float64 `json:"jpy"`
+			Bch      float64 `json:"bch"`
+			Eth      float64 `json:"eth"`
 			Mona     float64 `json:"mona"`
-			Pepecash float64 `json:"pepecash"`
 			Xem      float64 `json:"xem"`
+			Zaif     float64 `json:"zaif"`
+			Pepecash float64 `json:"pepecash"`
 		} `json:"funds"`
 		OpenOrders int `json:"open_orders"`
-		Rights     struct {
+		Rights struct {
 			IDInfo       int64 `json:"id_info"`
 			Info         int64 `json:"info"`
 			PersonalInfo int64 `json:"personal_info"`
@@ -61,7 +67,7 @@ type TradeGetInfoResponse struct {
 // GetInfo is get informarion
 func (r *Requester) GetInfo() (*TradeGetInfoResponse, *utility.HTTPRequest, *http.Response, error) {
 	request := r.makeTradeRequest("get_info", "")
-	newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 		if err != nil {
 			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get info (url = %v)", request.URL))
@@ -77,20 +83,26 @@ type TradeGetInfo2Response struct {
 	Return struct {
 		Deposit struct {
 			Btc      float64 `json:"btc"`
+			Bch      float64 `json:"bch"`
+			Eth      float64 `json:"eth"`
 			Jpy      float64 `json:"jpy"`
 			Mona     float64 `json:"mona"`
-			Pepecash float64 `json:"pepecash"`
 			Xem      float64 `json:"xem"`
+			Zaif     float64 `json:"zaif"`
+			Pepecash float64 `json:"pepecash"`
 		} `json:"deposit"`
 		Funds struct {
 			Btc      float64 `json:"btc"`
+			Bch      float64 `json:"bch"`
+			Eth      float64 `json:"eth"`
 			Jpy      float64 `json:"jpy"`
 			Mona     float64 `json:"mona"`
-			Pepecash float64 `json:"pepecash"`
 			Xem      float64 `json:"xem"`
+			Zaif     float64 `json:"zaif"`
+			Pepecash float64 `json:"pepecash"`
 		} `json:"funds"`
 		OpenOrders int `json:"open_orders"`
-		Rights     struct {
+		Rights struct {
 			Info         int64 `json:"info"`
 			PersonalInfo int64 `json:"personal_info"`
 			Trade        int64 `json:"trade"`
@@ -104,7 +116,7 @@ type TradeGetInfo2Response struct {
 // GetInfo is get informarion2
 func (r *Requester) GetInfo2() (*TradeGetInfo2Response, *utility.HTTPRequest, *http.Response, error) {
 	request := r.makeTradeRequest("get_info2", "")
-	newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 		if err != nil {
 			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get info2 (url = %v)", request.URL))
@@ -128,14 +140,14 @@ type TradeGetPersonalInfoResponse struct {
 func (r *Requester) GetPersonalInfo() (*TradeGetPersonalInfoResponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
 		request := r.makeTradeRequest("get_personal_info", "")
-		newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get personal info (url = %v)", request.URL))
 			}
 			newRes := new(TradeGetPersonalInfoResponse)
 			return newRes, res, resBody, err
-		},request)
+		}, request)
 		if newRes.(*TradeGetPersonalInfoResponse).needRetry() {
 			continue
 		}
@@ -151,7 +163,7 @@ type TradeGetIDInfoResponse struct {
 			Email     string `json:"email"`
 			Name      string `json:"name"`
 			Kana      string `json:"kana"`
-			Certified bool `json:"certified"`
+			Certified bool   `json:"certified"`
 		} `json:"user"`
 	} `json:"return"`
 	TradeCommonResponse
@@ -161,7 +173,7 @@ type TradeGetIDInfoResponse struct {
 func (r *Requester) GetIDInfo() (*TradeGetIDInfoResponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
 		request := r.makeTradeRequest("get_id_info", "")
-		newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get id info (url = %v)", request.URL))
@@ -186,20 +198,20 @@ type TradeHistoryParams struct {
 	Since        int64  `url:"since,omitempty"`
 	End          int64  `url:"end"`
 	CurrencyPair string `url:"currency_pair,omitempty"`
-	IsToken	  	 bool   `url:"is_token,omitempty"`
+	IsToken      bool   `url:"is_token,omitempty"`
 }
 
 // TradeHistoryParams is create TradeHistoryParams
 func (r *Requester) NewTradeHistoryParams() (*TradeHistoryParams) {
-	return &TradeHistoryParams {
+	return &TradeHistoryParams{
 		EndID: math.MaxInt64,
-		End: time.Now().Unix(),
+		End:   time.Now().Unix(),
 	}
 }
 
 // TradeHistoryResponse is response of trade history
 type TradeHistoryResponse struct {
-	Return  map[string]TradeHistoryRecordResponse `json:"return"`
+	Return map[string]TradeHistoryRecordResponse `json:"return"`
 	TradeCommonResponse
 }
 
@@ -228,7 +240,7 @@ func (r *Requester) TradeHistory(tradeHistoryParams *TradeHistoryParams) (*Trade
 	}
 	for {
 		request := r.makeTradeRequest("trade_history", params.Encode())
-		newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get trade history (url = %v, params = %v)", request.URL, params.Encode()))
@@ -243,12 +255,11 @@ func (r *Requester) TradeHistory(tradeHistoryParams *TradeHistoryParams) (*Trade
 	}
 }
 
-
 // TradeActiveOrdersParams is parameter of active order
 type TradeActiveOrderParams struct {
 	CurrencyPair string `url:"currency_pair,omitempty"`
-	IsToken	  	 bool   `url:"is_token,omitempty"`
-	IsTokenBoth	 bool   `url:"is_token_both,omitempty"`
+	IsToken      bool   `url:"is_token,omitempty"`
+	IsTokenBoth  bool   `url:"is_token_both,omitempty"`
 }
 
 // TradeActiveOrderParams is create TradeActiveOrderParams
@@ -258,7 +269,7 @@ func (r *Requester) NewTradeActiveOrderParams() (*TradeActiveOrderParams) {
 
 // TradeActiveOrderResponse is response of active order
 type TradeActiveOrderResponse struct {
-	Return  map[string]TradeActiveOrderRecordResponse `json:"return"`
+	Return map[string]TradeActiveOrderRecordResponse `json:"return"`
 	TradeCommonResponse
 }
 
@@ -289,7 +300,7 @@ func (r *Requester) TradeActiveOrder(tradeActiveOrderParams *TradeActiveOrderPar
 	}
 	for {
 		request := r.makeTradeRequest("active_orders", params.Encode())
-		newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get active order (url = %v, params = %v)", request.URL, params.Encode()))
@@ -297,7 +308,7 @@ func (r *Requester) TradeActiveOrder(tradeActiveOrderParams *TradeActiveOrderPar
 			newRes := new(TradeActiveOrderResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if newRes.(*TradeActiveOrderResponse).needRetry()  {
+		if newRes.(*TradeActiveOrderResponse).needRetry() {
 			continue
 		}
 		return newRes.(*TradeActiveOrderResponse), request, response, err
@@ -313,7 +324,7 @@ func (r *Requester) TradeActiveOrderBoth(tradeActiveOrderParams *TradeActiveOrde
 	}
 	for {
 		request := r.makeTradeRequest("active_orders", params.Encode())
-		newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get active order with both (url = %v, params = %v)", request.URL, params.Encode()))
@@ -331,10 +342,10 @@ func (r *Requester) TradeActiveOrderBoth(tradeActiveOrderParams *TradeActiveOrde
 // TradeParams is parameter of trade
 type TradeParams struct {
 	CurrencyPair string  `url:"currency_pair"`
-	Action	  	 string  `url:"action"`
-	Price	  	 float64 `url:"price"`
-	Amount	  	 float64 `url:"amount"`
-	Limit	  	 float64 `url:"limit,omitempty"`
+	Action       string  `url:"action"`
+	Price        float64 `url:"price"`
+	Amount       float64 `url:"amount"`
+	Limit        float64 `url:"limit,omitempty"`
 }
 
 func (t *TradeParams) fixupPriceAndAmount() {
@@ -378,6 +389,8 @@ type TradeResponse struct {
 	Return struct {
 		Funds struct {
 			Btc  float64 `json:"btc"`
+			Bch  float64 `json:"bch"`
+			Eth  float64 `json:"eth"`
 			Jpy  float64 `json:"jpy"`
 			Mona float64 `json:"mona"`
 			Xem  float64 `json:"xem"`
@@ -397,7 +410,7 @@ func (r *Requester) tradeBase(tradeParams *TradeParams) (*TradeResponse, *utilit
 	}
 	for {
 		request := r.makeTradeRequest("trade", params.Encode())
-		newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not trade (url = %v, params = %v)", request.URL, params.Encode()))
@@ -426,8 +439,8 @@ func (r *Requester) TradeSell(tradeParams *TradeParams) (*TradeResponse, *utilit
 
 // TradeCancelOrderParams is parameter of cancel order
 type TradeCancelOrderParams struct {
-	OrderId 	int64 `url:"order_id"`
-	IsToken	  	bool  `url:"is_token,omitempty"`
+	OrderId int64 `url:"order_id"`
+	IsToken bool  `url:"is_token,omitempty"`
 }
 
 // NewTradeCancelOrderParams is create TradeCancelOrderParams
@@ -439,12 +452,14 @@ func (r *Requester) NewTradeCancelOrderParams() (*TradeCancelOrderParams) {
 type TradeCancelOrderResponse struct {
 	Return struct {
 		Funds struct {
-			Btc   float64 `json:"btc"`
-			Jpy   float64 `json:"jpy"`
-			Mona  float64 `json:"mona"`
-			Xem   float64 `json:"xem"`
+			Btc  float64 `json:"btc"`
+			Bch  float64 `json:"bch"`
+			Eth  float64 `json:"eth"`
+			Jpy  float64 `json:"jpy"`
+			Mona float64 `json:"mona"`
+			Xem  float64 `json:"xem"`
 		} `json:"funds"`
-		OrderID  int64   `json:"order_id"`
+		OrderID int64 `json:"order_id"`
 	} `json:"return"`
 	TradeCommonResponse
 }
@@ -457,7 +472,7 @@ func (r *Requester) TradeCancelOrder(tradeCancelOrderParams *TradeCancelOrderPar
 	}
 	for {
 		request := r.makeTradeRequest("cancel_order", params.Encode())
-		newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not cancel order (url = %v, params = %v)", request.URL, params.Encode()))
@@ -474,14 +489,14 @@ func (r *Requester) TradeCancelOrder(tradeCancelOrderParams *TradeCancelOrderPar
 
 // TradeWithdrawParams is parameter of withdraw
 type TradeWithdrawParams struct {
-	Currency 	string  `url:"currency"`
-	Address	  	string  `url:"address"`
-	Message	  	string  `url:"message,omitempty"`
-	Amount	  	float64 `url:"amount"`
-	OptFee	  	float64 `url:"opt_fee,omitempty"`
+	Currency string  `url:"currency"`
+	Address  string  `url:"address"`
+	Message  string  `url:"message,omitempty"`
+	Amount   float64 `url:"amount"`
+	OptFee   float64 `url:"opt_fee,omitempty"`
 }
 
-func (t *TradeWithdrawParams)fixupFee() {
+func (t *TradeWithdrawParams) fixupFee() {
 	if t.Currency == "xem" {
 		t.OptFee = 0
 	}
@@ -496,13 +511,13 @@ func (r *Requester) NewTradeWithdrawParams() (*TradeWithdrawParams) {
 type TradeWithdrawResponse struct {
 	Return struct {
 		Funds struct {
-			Btc   float64 `json:"btc"`
-			Jpy   float64 `json:"jpy"`
-			Mona  float64 `json:"mona"`
-			Xem   float64 `json:"xem"`
+			Btc  float64 `json:"btc"`
+			Jpy  float64 `json:"jpy"`
+			Mona float64 `json:"mona"`
+			Xem  float64 `json:"xem"`
 		} `json:"funds"`
-		Fee   float64 `json:"fee"`
-		TxID  string  `json:"txid"`
+		Fee  float64 `json:"fee"`
+		TxID string  `json:"txid"`
 	} `json:"return"`
 	TradeCommonResponse
 }
@@ -516,7 +531,7 @@ func (r *Requester) TradeWithdraw(tradeWithdrawParams *TradeWithdrawParams) (*Tr
 	}
 	for {
 		request := r.makeTradeRequest("withdraw", params.Encode())
-		newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not Withdraw (url = %v, params = %v)", request.URL, params.Encode()))
@@ -533,27 +548,27 @@ func (r *Requester) TradeWithdraw(tradeWithdrawParams *TradeWithdrawParams) (*Tr
 
 // TradeDepositHistoryParams is parameter of trade history
 type TradeDepositHistoryParams struct {
-	Currency     string `url:"currency"`
-	From         int64  `url:"from,omitempty"`
-	Count        int64  `url:"count,omitempty"`
-	FromID       int64  `url:"from_id,omitempty"`
-	EndID        int64  `url:"end_id"`
-	Order        string `url:"order,omitempty"`
-	Since        int64  `url:"since,omitempty"`
-	End          int64  `url:"end"`
+	Currency string `url:"currency"`
+	From     int64  `url:"from,omitempty"`
+	Count    int64  `url:"count,omitempty"`
+	FromID   int64  `url:"from_id,omitempty"`
+	EndID    int64  `url:"end_id"`
+	Order    string `url:"order,omitempty"`
+	Since    int64  `url:"since,omitempty"`
+	End      int64  `url:"end"`
 }
 
 // NewTradeDepositHistoryParams is create TradeDepositHistoryParams
 func (r *Requester) NewTradeDepositHistoryParams() (*TradeDepositHistoryParams) {
 	return &TradeDepositHistoryParams{
 		EndID: math.MaxInt64,
-		End: time.Now().Unix(),
+		End:   time.Now().Unix(),
 	}
 }
 
 // TradeDepositHistoryResponse is response of deposit history
 type TradeDepositHistoryResponse struct {
-	Return  map[string]TradeDepositHistoryRecordResponse `json:"return"`
+	Return map[string]TradeDepositHistoryRecordResponse `json:"return"`
 	TradeCommonResponse
 }
 
@@ -573,7 +588,7 @@ func (r *Requester) TradeDepositHistory(tradeDepositHistoryParams *TradeDepositH
 	}
 	for {
 		request := r.makeTradeRequest("deposit_history", params.Encode())
-		newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get deposit history (url = %v, params = %v)", request.URL, params.Encode()))
@@ -590,27 +605,27 @@ func (r *Requester) TradeDepositHistory(tradeDepositHistoryParams *TradeDepositH
 
 // TradeWithdrawHistoryParams is parameter of trade history
 type TradeWithdrawHistoryParams struct {
-	Currency     string `url:"currency"`
-	From         int64  `url:"from,omitempty"`
-	Count        int64  `url:"count,omitempty"`
-	FromID       int64  `url:"from_id,omitempty"`
-	EndID        int64  `url:"end_id"`
-	Order        string `url:"order,omitempty"`
-	Since        int64  `url:"since,omitempty"`
-	End          int64  `url:"end"`
+	Currency string `url:"currency"`
+	From     int64  `url:"from,omitempty"`
+	Count    int64  `url:"count,omitempty"`
+	FromID   int64  `url:"from_id,omitempty"`
+	EndID    int64  `url:"end_id"`
+	Order    string `url:"order,omitempty"`
+	Since    int64  `url:"since,omitempty"`
+	End      int64  `url:"end"`
 }
 
 // NewTradeWithdrawHistoryParams is create TradeWithdrawHistoryParams
 func (r *Requester) NewTradeWithdrawHistoryParams() (*TradeWithdrawHistoryParams) {
 	return &TradeWithdrawHistoryParams{
 		EndID: math.MaxInt64,
-		End: time.Now().Unix(),
+		End:   time.Now().Unix(),
 	}
 }
 
 // TradeWithdrawHistoryResponse is response of withdraw history
 type TradeWithdrawHistoryResponse struct {
-	Return  map[string]TradeWithdrawHistoryRecordResponse `json:"return"`
+	Return map[string]TradeWithdrawHistoryRecordResponse `json:"return"`
 	TradeCommonResponse
 }
 
@@ -630,7 +645,7 @@ func (r *Requester) TradeWithdrawHistory(tradeWithdrawHistoryParams *TradeWithdr
 	}
 	for {
 		request := r.makeTradeRequest("withdraw_history", params.Encode())
-		newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get withdraw history (url = %v, params = %v)", request.URL, params.Encode()))

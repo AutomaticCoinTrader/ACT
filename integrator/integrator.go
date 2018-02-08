@@ -79,7 +79,7 @@ func (i *Integrator) initHttpServer() (error) {
 func (i *Integrator) streamingCallback(tradeContext exchange.TradeContext, userCallbackData interface{}) (error) {
 	// トレード処理を期待
 	tradeID := tradeContext.GetID()
-	err := i.robot.UpdateTradeAlgorithms(tradeID, tradeContext)
+	err := i.robot.UpdateInternalTradeAlgorithms(tradeID, tradeContext)
 	if err != nil {
 		log.Printf("can not run algorithm (reason = %v)", err)
 	}
@@ -174,7 +174,7 @@ func (i *Integrator) stopInternalTrade() (error) {
 			}
 			// straming止めた後の終了処理を期待
 			tradeID := tradeContext.GetID()
-			err = i.robot.DestroyTradeAlgorithms(tradeID, tradeContext)
+			err = i.robot.DestroyInternalTradeAlgorithms(tradeID, tradeContext)
 			if err != nil {
 				log.Printf("can not destroy algorithm (name = %v, reason = %v)", ex.GetName(), err)
 			}
@@ -189,7 +189,7 @@ func (i *Integrator) externalTradeEventLoop(){
 		case <- i.arbitrageLoopFinishChan:
 			return
 		case <- time.After(500 * time.Millisecond):
-			err := i.robot.UpdateArbitrageTradeAlgorithms(i.exchanges)
+			err := i.robot.UpdateExternalTradeAlgorithms(i.exchanges)
 			if err != nil {
 				log.Printf("can not update external trade algorithm (reason = %v)", err)
 			}
@@ -208,7 +208,7 @@ func (i *Integrator) startExternalTrade() (error) {
 
 func (i *Integrator) stopExternalTrade() (error) {
 	close(i.arbitrageLoopFinishChan)
-	err := i.robot.DestroyArbitrageTradeAlgorithms(i.exchanges)
+	err := i.robot.DestroyExternalTradeAlgorithms(i.exchanges)
 	if err != nil {
 		log.Printf("can not destroy external trade algorithm (reason = %v)", err)
 	}

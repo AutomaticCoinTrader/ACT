@@ -220,7 +220,7 @@ func (r Requester) StreamingStart(currencyPair string, callback StreamingCallbac
 		callback: callback,
 		callbackData: callbackData,
 	}
-	newClient := utility.NewWSClient(r.readBufSize,  r.writeBufSize, r.retry)
+	newClient := utility.NewWSClient(r.readBufSize,  r.writeBufSize, r.retry, r.retryWait)
 	err := newClient.Start(r.streamingCallback, streaminCallbackData, requestURL,nil)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("can not start streaming (url = %v)", requestURL))

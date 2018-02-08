@@ -20,6 +20,7 @@ type Requester struct {
     readBufSize  int
     writeBufSize int
     retry        int
+	retryWait    int
 	key          string
 	secret       string
 }
@@ -104,13 +105,14 @@ func (r *Requester) unmarshal(requestFunc requestFunc, request *utility.HTTPRequ
 }
 
 // NewRequester is create requester
-func NewRequester(key string, secret string, retry int, timeout int, readBufSize int, writeBufSize int) (*Requester) {
+func NewRequester(key string, secret string, retry int, retryWait, timeout int, readBufSize int, writeBufSize int) (*Requester) {
 	return &Requester {
-		httpClient : utility.NewHTTPClient(retry, timeout),
+		httpClient : utility.NewHTTPClient(retry, retryWait, timeout),
 		wsClients : make(map[string]*utility.WSClient),
 		readBufSize : readBufSize,
 		writeBufSize : writeBufSize,
 		retry : retry,
+		retryWait: retryWait,
 		key: key,
 		secret: secret,
 	}

@@ -8,6 +8,7 @@ exchanges:
       - src: btc
         dst: jpy
     retry: 0
+    retryWait: 0
     timeout: 0
     readBufSize: 0
     writeBufSize: 0
