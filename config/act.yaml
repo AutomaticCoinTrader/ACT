@@ -5,8 +5,7 @@ exchanges:
     key: "key"
     secret: "secret"
     currencyPairs:
-      - src: btc
-        dst: jpy
+      - btc_jpy
     retry: 0
     retryWait: 0
     timeout: 0

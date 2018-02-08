@@ -10,32 +10,32 @@ import (
 	"log"
 )
 
-const(
+const (
 	exchangeName = "zaif"
 )
 
-func updateFunds(exchangeName string, requester *Requester, funds *ExchageFunds) (error){
-	info2Response, _, _ , err := requester.GetInfo2()
+func updateFunds(exchangeName string, requester *Requester, funds *ExchageFunds) (error) {
+	info2Response, _, _, err := requester.GetInfo2()
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not get info2 (ID = %v)", exchangeName))
+		return errors.Wrapf(err, "can not get info2 (ID = %v)", exchangeName)
 	}
 	if info2Response.Success != 1 {
 		return errors.Errorf("can not buy (ID = %v, reason = %v)", exchangeName, info2Response.Error)
 	}
 	funds.update(map[string]float64{
-		"btc": info2Response.Return.Funds.Btc,
-		"bch": info2Response.Return.Funds.Bch,
-		"eth": info2Response.Return.Funds.Eth,
-		"mona": info2Response.Return.Funds.Mona,
-		"xem": info2Response.Return.Funds.Xem,
-		"jpy": info2Response.Return.Funds.Jpy,
-		"zaif": info2Response.Return.Funds.Zaif,
+		"btc":      info2Response.Return.Funds.Btc,
+		"bch":      info2Response.Return.Funds.Bch,
+		"eth":      info2Response.Return.Funds.Eth,
+		"mona":     info2Response.Return.Funds.Mona,
+		"xem":      info2Response.Return.Funds.Xem,
+		"jpy":      info2Response.Return.Funds.Jpy,
+		"zaif":     info2Response.Return.Funds.Zaif,
 		"pepecash": info2Response.Return.Funds.Pepecash})
 	return nil
 }
 
 type BoardCursor struct {
-	index int
+	index  int
 	values [][]float64
 }
 
@@ -57,7 +57,7 @@ func (b *BoardCursor) Len() int {
 }
 
 type TradeHistoryCursor struct {
-	index int
+	index  int
 	values []*StreamingTradesResponse
 }
 
@@ -78,13 +78,21 @@ func (t *TradeHistoryCursor) Len() int {
 	return len(t.values)
 }
 
-type OrderCursor struct {
-	index int
-	keys []string
-	values map[string]TradeActiveOrderRecordResponse
+func (t *TradeHistoryCursor) GetTradeHistory {
+	// XXXXX
+	// XXXXX TODO
+	// XXXXX
 }
 
-func (o *OrderCursor) Next() (int64, exchange.OrderAction, float64, float64, bool) {
+
+
+type OrderHistoryCursor struct {
+	index  int
+	keys   []string
+	values map[string]OrderHistoryCursor
+}
+
+func (o *OrderHistoryCursor) Next() (int64, exchange.OrderAction, float64, float64, bool) {
 	if o.index >= len(o.keys) {
 		return 0, "", 0, 0, false
 	}
@@ -103,73 +111,103 @@ func (o *OrderCursor) Next() (int64, exchange.OrderAction, float64, float64, boo
 	return id, action, value.Price, value.Amount, true
 }
 
-func (o *OrderCursor) Reset() {
+func (o *OrderHistoryCursor) Reset() {
 	o.index = 0
 }
 
-func (o *OrderCursor) Len() int {
+func (o *OrderHistoryCursor) Len() int {
+	return len(o.keys)
+}
+
+
+
+type ActiveOrderCursor struct {
+	index  int
+	keys   []string
+	values map[string]TradeActiveOrderRecordResponse
+}
+
+func (o *ActiveOrderCursor) Next() (int64, exchange.OrderAction, float64, float64, bool) {
+	if o.index >= len(o.keys) {
+		return 0, "", 0, 0, false
+	}
+	value := o.values[o.keys[o.index]]
+	o.index++
+	var action exchange.OrderAction
+	if value.Action == "ask" {
+		action = exchange.OrderActSell
+	} else if value.Action == "bid" {
+		action = exchange.OrderActBuy
+	}
+	id, err := strconv.ParseInt(o.keys[o.index], 10, 64)
+	if err != nil {
+		log.Printf("can not parse id (reason = %v)", err)
+	}
+	return id, action, value.Price, value.Amount, true
+}
+
+func (o *ActiveOrderCursor) Reset() {
+	o.index = 0
+}
+
+func (o *ActiveOrderCursor) Len() int {
 	return len(o.keys)
 }
 
 type TradeContext struct {
-	funds                *ExchageFunds
-	requester   	     *Requester
-	exchangeName		 string
-	currencySrc          string
-	currencyDst          string
-	currencyPair         string
-	streamingCallback    exchange.StreamingCallback
-	userCallbackData     interface{}
-	currencyDatPrice     float64
-	bids			 	 [][]float64
-	asks			 	 [][]float64
-	trades               []*StreamingTradesResponse
-}
-
-func (t *TradeContext) GetID() (string) {
-	return exchange.MakeTradeID(t.exchangeName, t.currencyPair)
+	funds                  *ExchageFunds
+	requester              *Requester
+	exchangeName           string
+	streamingCallback      exchange.StreamingCallback
+	userCallbackData       interface{}
+	currencyPairsBids      map[string][][]float64
+	currencyPairsAsks      map[string][][]float64
+	currencyPairsLastPrice map[string]float64
+	currencyPairsTrades    map[string][]*StreamingTradesResponse
+	currencyPairs          []string
+	mutex                  *sync.Mutex
 }
 
 func (t *TradeContext) GetExchangeName() (string) {
 	return t.exchangeName
 }
 
-func (t *TradeContext) Buy(price float64, amount float64) (error) {
+func (t *TradeContext) Buy(currencyPair string, price float64, amount float64) (int64, error) {
 	tradeParams := t.requester.NewTradeParams()
 	tradeParams.Price = price
 	tradeParams.Amount = amount
-	tradeParams.CurrencyPair = t.currencyPair
+	tradeParams.CurrencyPair = currencyPair
 	tradeResponse, _, _, err := t.requester.TradeBuy(tradeParams)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not buy trade (ID = %v)", t.GetID()))
+		return 0, errors.Wrapf(err, "can not buy trade (currencyPair = %v)", currencyPair)
 	}
 	if tradeResponse.Success != 1 {
-		return errors.Errorf("can not buy trade (ID = %v, reason = %v)", t.GetID(), tradeResponse.Error)
+		return 0, errors.Errorf("can not buy trade (currencyPair = %v, reason = %v)", currencyPair, tradeResponse.Error)
 	}
 	err = updateFunds(t.exchangeName, t.requester, t.funds)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not update fund (ID = %v)", t.GetID()))
+		return tradeResponse.Return.OrderID, errors.Wrapf(err, "can not update fund (currencyPair = %v)", currencyPair)
 	}
-	return nil
+	return tradeResponse.Return.OrderID, nil
 }
 
-func (t *TradeContext) Sell(price float64, amount float64) (error) {
+func (t *TradeContext) Sell(currencyPair string, price float64, amount float64) (int64, error) {
 	tradeParams := t.requester.NewTradeParams()
 	tradeParams.Price = price
 	tradeParams.Amount = amount
-	tradeParams.CurrencyPair = t.currencyPair
+	tradeParams.CurrencyPair = currencyPair
 	tradeResponse, _, _, err := t.requester.TradeSell(tradeParams)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not sell trade (ID = %v)", t.GetID()))
+		return 0, errors.Wrapf(err, "can not sell trade (currencyPair = %v)", currencyPair)
 	}
 	if tradeResponse.Success != 1 {
-		return errors.Errorf("can not sell trade (ID = %v, reason = %v)", t.GetID(), tradeResponse.Error)
+		return 0, errors.Errorf("can not sell trade (currencyPair = %v, reason = %v)", currencyPair, tradeResponse.Error)
 	}
 	err = updateFunds(t.exchangeName, t.requester, t.funds)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not update fund (ID = %v)", t.GetID()))
+		return tradeResponse.Return.OrderID, errors.Wrapf(err,"can not update fund (currencyPair = %v)", currencyPair)
 	}
-	return nil
+	return tradeResponse.Return.OrderID, nil
 }
 
 func (t *TradeContext) Cancel(orderID int64) (error) {
@@ -178,82 +216,115 @@ func (t *TradeContext) Cancel(orderID int64) (error) {
 	tradeCancelOrderParams.OrderId = orderID
 	tradeCancelOrderResponse, _, _, err := t.requester.TradeCancelOrder(tradeCancelOrderParams)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not cancel order (ID = %v)", t.GetID()))
+		return errors.Wrapf(err, "can not cancel order (orderID = %v)", orderID)
 	}
 	if tradeCancelOrderResponse.Success != 1 {
-		return errors.Errorf("can not cancel order (ID = %v, reason = %v)", t.GetID(), tradeCancelOrderResponse.Error)
+		return errors.Errorf("can not cancel order (orderID = %v, reason = %v)", orderID, tradeCancelOrderResponse.Error)
 	}
 	err = updateFunds(t.exchangeName, t.requester, t.funds)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not update fund (ID = %v)", t.GetID()))
+		return errors.Wrap(err, fmt.Sprintf("can not update fund (orderID = %v)", orderID))
 	}
 	return nil
 }
 
-func (t *TradeContext) GetSrcCurrencyFund() (float64, error) {
-	return t.funds.get(t.currencySrc), nil
+func (t *TradeContext) GetFunds() (map[string]float64, error) {
+	return t.funds.copyAll(), nil
 }
 
-func (t *TradeContext) GetDstCurrencyFund() (float64, error) {
-	return t.funds.get(t.currencyDst), nil
+func (t *TradeContext) GetLastPrice(currencyPair string) (float64, error) {
+	return t.currencyPairsLastPrice[currencyPair], nil
 }
 
-func (t *TradeContext) GetSrcCurrencyName() (string) {
-	return t.currencySrc
-}
-
-func (t *TradeContext) GetDstCurrencyName() (string) {
-	return t.currencyDst
-}
-
-func (t *TradeContext) GetPrice() (float64, error) {
-	return t.currencyDatPrice, nil
-}
-
-func (t *TradeContext) GetBuyBoardCursor() (exchange.BoardCursor, error) {
+func (t *TradeContext) GetBuyBoardCursor(currencyPair string) (exchange.BoardCursor, error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
 	return &BoardCursor{
 		index:  0,
-		values: t.bids,
+		values: t.currencyPairsBids[currencyPair],
 	}, nil
 }
 
-func (t *TradeContext) GetSellBoardCursor() (exchange.BoardCursor, error) {
+func (t *TradeContext) GetSellBoardCursor(currencyPair string) (exchange.BoardCursor, error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
 	return &BoardCursor{
 		index:  0,
-		values: t.asks,
+		values: t.currencyPairsAsks[currencyPair],
 	}, nil
 }
 
-func (t *TradeContext) GetTradeHistoryCursor() (exchange.TradeHistoryCursor, error) {
+func (t *TradeContext) GetTradesCursor(currencyPair string) (exchange.TradesCursor, error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
 	return &TradeHistoryCursor{
-		index: 0,
-		values: t.trades,
+		index:  0,
+		values: t.currencyPairsTrades[currencyPair],
 	}, nil
 }
 
-func (t *TradeContext) GetActiveOrderCursor() (exchange.OrderCursor, error) {
-	tradeActiveOrderParams := t.requester.NewTradeActiveOrderParams()
-	tradeActiveOrderParams.CurrencyPair = t.currencyPair
-	tradeActiveOrderParams.IsToken = false
-	tradeActiveOrderResponse, _, _, err := t.requester.TradeActiveOrder(tradeActiveOrderParams)
+
+
+func (t *TradeContext) GetMyTradeHistoryCursor(count int64) (exchange.OrderCursor, error) {
+	tradeHistoryParams :=  t.requester.NewTradeHistoryParams()
+	tradeHistoryParams.IsToken = false
+	tradeHistoryParams.Count = count
+	tradeHistoryResponse, _, _, err := t.requester.TradeHistory(tradeHistoryParams)
 	if err != nil {
 		return nil, err
 	}
-	if tradeActiveOrderResponse.Success != 1 {
-		return nil, errors.Errorf("can not get active order (ID = %v, reason = %v)", t.GetID(), tradeActiveOrderResponse.Error)
+	if tradeHistoryResponse.Success != 1 {
+		return nil, errors.Errorf("can not get trade history (reason = %v)", tradeHistoryResponse.Error)
 	}
-	newOrderCursor := &OrderCursor{
-		index: 0,
-		keys: make([]string, 0, len(tradeActiveOrderResponse.Return)),
-		values: tradeActiveOrderResponse.Return,
+	tradeHistoryParams =  t.requester.NewTradeHistoryParams()
+	tradeHistoryParams.IsToken = true
+	tradeHistoryParams.Count = count
+	tradeHistoryTokenResponse, _, _, err := t.requester.TradeHistory(tradeHistoryParams)
+	if err != nil {
+		return nil, err
 	}
-	for key := range tradeActiveOrderResponse.Return {
+	if tradeHistoryTokenResponse.Success != 1 {
+		return nil, errors.Errorf("can not get trade history (reason = %v)", tradeHistoryTokenResponse.Error)
+	}
+	newOrderCursor := &ActiveOrderCursor{
+		index:  0,
+		keys:   make([]string, 0, len(tradeHistoryResponse.Return) + len(tradeHistoryTokenResponse.Return)),
+		values: make(map[string]TradeHistoryRecordResponse),
+	}
+
+
+
+
+}
+
+
+func (t *TradeContext) GetMyActiveOrderCursor() (exchange.OrderCursor, error) {
+	tradeActiveOrderParams := t.requester.NewTradeActiveOrderParams()
+
+	tradeActiveOrderParams.IsTokenBoth = true
+	tradeActiveOrderBothResponse, _, _, err := t.requester.TradeActiveOrderBoth(tradeActiveOrderParams)
+	if err != nil {
+		return nil, err
+	}
+	if tradeActiveOrderBothResponse.Success != 1 {
+		return nil, errors.Errorf("can not get active order (reason = %v)", tradeActiveOrderBothResponse.Error)
+	}
+	newOrderCursor := &ActiveOrderCursor{
+		index:  0,
+		keys:   make([]string, 0, len(tradeActiveOrderBothResponse.Return)),
+		values: tradeActiveOrderBothResponse.Return,
+	}
+	for key := range tradeActiveOrderBothResponse.Return {
 		newOrderCursor.keys = append(newOrderCursor.keys, key)
 	}
 	return newOrderCursor, nil
 }
 
-func  (t *TradeContext)  GetMinPriceUnit() (float64) {
+
+
+
+
+func (t *TradeContext) GetMinPriceUnit() (float64) {
 	switch t.currencyPair {
 	case "btc_jpy":
 		return 5
@@ -286,7 +357,7 @@ func  (t *TradeContext)  GetMinPriceUnit() (float64) {
 	}
 }
 
-func  (t *TradeContext)  GetMinAmountUnit() (float64) {
+func (t *TradeContext) GetMinAmountUnit() (float64) {
 	switch t.currencyPair {
 	case "btc_jpy":
 		return 0.0001
@@ -321,11 +392,11 @@ func  (t *TradeContext)  GetMinAmountUnit() (float64) {
 
 type TradeContextCursor struct {
 	tradeContexts []*TradeContext
-	index int
+	index         int
 }
 
 func (t *TradeContextCursor) Next() (exchange.TradeContext, bool) {
-	if t.index >= len(t.tradeContexts)  {
+	if t.index >= len(t.tradeContexts) {
 		return nil, false
 	}
 	tradeContext := t.tradeContexts[t.index]
@@ -342,8 +413,8 @@ func (t *TradeContextCursor) Len() int {
 }
 
 type ExchageFunds struct {
-	funds  map[string]float64
-	mutex  *sync.Mutex
+	funds map[string]float64
+	mutex *sync.Mutex
 }
 
 func (e *ExchageFunds) update(funds map[string]float64) {
@@ -364,23 +435,36 @@ func (e *ExchageFunds) get(name string) (float64) {
 	return fund
 }
 
+func (e *ExchageFunds) copyAll() (map[string]float64) {
+	newFunds := make(map[string]float64)
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
+	for name, value, := range e.funds {
+		newFunds[name] = value
+	}
+	return newFunds
+}
+
+
 type Exchange struct {
 	config        *ExchangeConfig
 	requester     *Requester
 	name          string
-	tradeContexts []*TradeContext
+	tradeContext  *TradeContext
 	funds         *ExchageFunds
 }
 
 func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingResponse *StreamingResponse, StreamingCallbackData interface{}) (error) {
-	tradeContext := StreamingCallbackData.(*TradeContext)
-	tradeContext.currencyDatPrice = streamingResponse.LastPrice.Price
-	tradeContext.bids = streamingResponse.Bids
-	tradeContext.asks = streamingResponse.Asks
-	tradeContext.trades = streamingResponse.Trades
-	err := tradeContext.streamingCallback(tradeContext, tradeContext.userCallbackData)
+	myTradeContext := StreamingCallbackData.(*TradeContext)
+	myTradeContext.mutex.Lock()
+	myTradeContext.currencyPairsLastPrice[currencyPair] = streamingResponse.LastPrice.Price
+	myTradeContext.currencyPairsBids[currencyPair] = streamingResponse.Bids
+	myTradeContext.currencyPairsAsks[currencyPair] = streamingResponse.Asks
+	myTradeContext.currencyPairsTrades[currencyPair] = streamingResponse.Trades
+	myTradeContext.mutex.Unlock()
+	err := myTradeContext.streamingCallback(currencyPair, myTradeContext)
 	if err != nil {
-		return errors.Wrap(err,"trade update callback error")
+		return errors.Wrap(err, "trade update callback error")
 	}
 	return nil
 }
@@ -390,24 +474,13 @@ func (e *Exchange) GetName() string {
 }
 
 // Initialize is initalize exchange
-func (e *Exchange) Initialize(streamingCallback exchange.StreamingCallback, userCallbackData interface{}) (error) {
-	// 設定のcurrencyPairsに応じてコンテキストを作る
-	for _, exchangeConfigCurrencyPair := range e.config.CurrencyPairs {
-		log.Printf("create zaif trade context (currency pair = %v)", exchangeConfigCurrencyPair)
-		srcCurrency := strings.ToLower(exchangeConfigCurrencyPair.Src)
-		dstCurrency := strings.ToLower(exchangeConfigCurrencyPair.Dst)
-		currencyPair := srcCurrency + "_" + dstCurrency
-		tradeContext := &TradeContext{
-			funds:             e.funds,
-			requester:         e.requester,
-			exchangeName:              e.name,
-			currencySrc:       srcCurrency,
-			currencyDst:       dstCurrency,
-			currencyPair:      currencyPair,
-			streamingCallback: streamingCallback,
-			userCallbackData:  userCallbackData,
-		}
-		e.tradeContexts = append(e.tradeContexts, tradeContext)
+func (e *Exchange) Initialize(streamingCallback exchange.StreamingCallback) (error) {
+	e.tradeContext = &TradeContext{
+		funds:             e.funds,
+		requester:         e.requester,
+		exchangeName:      e.name,
+		streamingCallback: streamingCallback,
+		currencyPairs:     e.config.CurrencyPairs,
 	}
 	// fundsを初期化時に更新しておく
 	err := updateFunds(e.name, e.requester, e.funds)
@@ -422,64 +495,56 @@ func (e *Exchange) Finalize() (error) {
 	return nil
 }
 
-func (e *Exchange) GetTradeContext(srcCurrency string, dstCcurrency string) (exchange.TradeContext, bool) {
-	srcCurrency = strings.ToLower(srcCurrency)
-	dstCcurrency = strings.ToLower(dstCcurrency)
-	for _, tradeContext := range e.tradeContexts {
-		if srcCurrency == tradeContext.currencySrc && dstCcurrency == tradeContext.currencyDst {
-			return tradeContext, true
-		}
-	}
-	return nil, false
-}
-
-func (e *Exchange) GetTradeContextCursor() (exchange.TradeContextCursor) {
-	tradeContextCursor := &TradeContextCursor {
-		tradeContexts: e.tradeContexts,
-		index: 0,
-	}
-	return tradeContextCursor
+func (e *Exchange) GetTradeContext() (exchange.TradeContext) {
+	return e.tradeContext
 }
 
 // StreamingStart is start streaming
-func (e *Exchange) StartStreaming(tradeContext exchange.TradeContext) (error){
+func (e *Exchange) StartStreaming(tradeContext exchange.TradeContext) (error) {
 	// ストリーミングを開始する
-	myTradeContest := tradeContext.(*TradeContext)
-	return e.requester.StreamingStart(myTradeContest.currencyPair, e.exchangeStreamingCallback, tradeContext)
+	myTradeContext := tradeContext.(*TradeContext)
+	for _, currencyPair := range myTradeContext.currencyPairs {
+		currencyPair = strings.ToLower(currencyPair)
+		err := e.requester.StreamingStart(currencyPair, e.exchangeStreamingCallback, tradeContext)
+		if (err != nil) {
+			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair);
+		}
+	}
+	return nil
 }
 
 // StopStreaming is stop streaming
 func (e *Exchange) StopStreaming(tradeContext exchange.TradeContext) (error) {
 	// ストリーミングを停止する
-	myTradeContest := tradeContext.(*TradeContext)
-	e.requester.StreamingStop(myTradeContest.currencyPair)
+	myTradeContext := tradeContext.(*TradeContext)
+	for _, currencyPair := range myTradeContext.currencyPairs {
+		currencyPair = strings.ToLower(currencyPair)
+		e.requester.StreamingStop(currencyPair)
+
+	}
 	return nil
 }
 
-type exchangeConfigCurrencyPair struct {
-	Src string `json:"src" yaml:"src" toml:"src"`
-	Dst string `json:"dst" yaml:"dst" toml:"dst"`
-}
 
 type ExchangeConfig struct {
-	Key           string                         `json:"key"          yaml:"key"          toml:"key"`
-	Secret        string                         `json:"secret"       yaml:"secret"       toml:"secret"`
-	Retry         int                            `json:"retry"        yaml:"retry"        toml:"retry"`
-	RetryWait     int                            `json:"retryWait"    yaml:"retryWait"    toml:"retryWait"`
-	Timeout       int                            `json:"timeout"      yaml:"timeout"      toml:"timeout"`
-	ReadBufSize   int                            `json:"readBufSize"  yaml:"readBufSize"  toml:"readBufSize"`
-	WriteBufSize  int                            `json:"writeBufSize" yaml:"writeBufSize" toml:"writeBufSize"`
-	CurrencyPairs []*exchangeConfigCurrencyPair  `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
+	Key           string                        `json:"key"          yaml:"key"          toml:"key"`
+	Secret        string                        `json:"secret"       yaml:"secret"       toml:"secret"`
+	Retry         int                           `json:"retry"        yaml:"retry"        toml:"retry"`
+	RetryWait     int                           `json:"retryWait"    yaml:"retryWait"    toml:"retryWait"`
+	Timeout       int                           `json:"timeout"      yaml:"timeout"      toml:"timeout"`
+	ReadBufSize   int                           `json:"readBufSize"  yaml:"readBufSize"  toml:"readBufSize"`
+	WriteBufSize  int                           `json:"writeBufSize" yaml:"writeBufSize" toml:"writeBufSize"`
+	CurrencyPairs []string                      `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
 }
 
-func newZaifExchange(config interface{}) (exchange.Exchange, error)  {
+func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 	myConfig := config.(*ExchangeConfig)
 	return &Exchange{
 		config:        myConfig,
-		name :         exchangeName,
-		requester:     NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.RetryWait,myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
-		tradeContexts: make([]*TradeContext, 0),
-		funds : &ExchageFunds{
+		name:          exchangeName,
+		requester:     NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
+		tradeContext:  nil,
+		funds: &ExchageFunds{
 			funds: make(map[string]float64),
 			mutex: new(sync.Mutex),
 		},

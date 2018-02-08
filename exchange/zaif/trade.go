@@ -203,10 +203,7 @@ type TradeHistoryParams struct {
 
 // TradeHistoryParams is create TradeHistoryParams
 func (r *Requester) NewTradeHistoryParams() (*TradeHistoryParams) {
-	return &TradeHistoryParams{
-		EndID: math.MaxInt64,
-		End:   time.Now().Unix(),
-	}
+	return &TradeHistoryParams{}
 }
 
 // TradeHistoryResponse is response of trade history
@@ -391,9 +388,11 @@ type TradeResponse struct {
 			Btc  float64 `json:"btc"`
 			Bch  float64 `json:"bch"`
 			Eth  float64 `json:"eth"`
-			Jpy  float64 `json:"jpy"`
 			Mona float64 `json:"mona"`
 			Xem  float64 `json:"xem"`
+			Jpy  float64 `json:"jpy"`
+			Zaif  float64 `json:"zaif"`
+			Pepecash  float64 `json:"pepecash"`
 		} `json:"funds"`
 		OrderID  int64   `json:"order_id"`
 		Received float64 `json:"received"`
@@ -455,9 +454,11 @@ type TradeCancelOrderResponse struct {
 			Btc  float64 `json:"btc"`
 			Bch  float64 `json:"bch"`
 			Eth  float64 `json:"eth"`
-			Jpy  float64 `json:"jpy"`
 			Mona float64 `json:"mona"`
 			Xem  float64 `json:"xem"`
+			Jpy  float64 `json:"jpy"`
+			Zaif  float64 `json:"zaif"`
+			Pepecash  float64 `json:"pepecash"`
 		} `json:"funds"`
 		OrderID int64 `json:"order_id"`
 	} `json:"return"`
@@ -512,9 +513,13 @@ type TradeWithdrawResponse struct {
 	Return struct {
 		Funds struct {
 			Btc  float64 `json:"btc"`
-			Jpy  float64 `json:"jpy"`
+			Bch  float64 `json:"bch"`
+			Eth  float64 `json:"eth"`
 			Mona float64 `json:"mona"`
 			Xem  float64 `json:"xem"`
+			Jpy  float64 `json:"jpy"`
+			Zaif  float64 `json:"zaif"`
+			Pepecash  float64 `json:"pepecash"`
 		} `json:"funds"`
 		Fee  float64 `json:"fee"`
 		TxID string  `json:"txid"`

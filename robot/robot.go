@@ -14,50 +14,48 @@ type Robot struct {
 	config                  *Config
 	configDir               string
 	notifier                *notifier.Notifier
-	internalTradeAlgorithms map[string][]algorithm.InternalTradeAlgorithm
+	internalTradeAlgorithms []algorithm.InternalTradeAlgorithm
 	externalTradeAlgorithms []algorithm.ExternalTradeAlgorithm
 }
 
-func (r *Robot) CreateInternalTradeAlgorithms(tradeID string, tradeContext exchange.TradeContext) (error) {
-	tradeAlgorithms := make([]algorithm.InternalTradeAlgorithm, 0)
+func (r *Robot) CreateInternalTradeAlgorithms(tradeContext exchange.TradeContext) (error) {
+
 	for name, registeredAlgorithm := range algorithm.GetRegisterdAlgoriths() {
 		if registeredAlgorithm.InternalTradeAlgorithmNewFunc == nil {
 			continue
 		}
-		log.Printf("create %v algorithm (trade id = %v)", name, tradeID)
+		log.Printf("create %v algorithm", name)
 		newInternalTradeAlgoritm, err := registeredAlgorithm.InternalTradeAlgorithmNewFunc(path.Join(r.configDir, algorithm.AlgorithmConfigDir))
 		if err != nil {
-			log.Printf("can not create algorithm of %v (trade id = %v, reason = %v)", name, tradeID, err)
+			log.Printf("can not create algorithm of %v (reason = %v)", name, err)
 			continue
 		}
 		err = newInternalTradeAlgoritm.Initialize(tradeContext, r.notifier)
 		if err != nil {
-			r.DestroyInternalTradeAlgorithms(tradeID, tradeContext)
-			return errors.Wrap(err, fmt.Sprintf("algorithm initialize error of %v (trade id = %v)", name, tradeID))
+			r.DestroyInternalTradeAlgorithms(tradeContext)
+			return errors.Wrap(err, fmt.Sprintf("algorithm initialize error of %v", name))
 		}
-		tradeAlgorithms = append(tradeAlgorithms, newInternalTradeAlgoritm)
+		r.internalTradeAlgorithms = append(r.internalTradeAlgorithms, newInternalTradeAlgoritm)
 	}
-	r.internalTradeAlgorithms[tradeID] = tradeAlgorithms
+
 	return nil
 }
 
 func (r *Robot) UpdateInternalTradeAlgorithms(tradeID string, tradeContext exchange.TradeContext) (error) {
-	tradeAlgorithms := r.internalTradeAlgorithms[tradeID]
-	for _, tradeAlgorithm := range tradeAlgorithms {
+	for _, tradeAlgorithm := range r.internalTradeAlgorithms {
 		err := tradeAlgorithm.Update(tradeContext, r.notifier)
 		if err != nil {
-			log.Printf("algorithm update error (name = %v, trade id = %v reason = %v)", tradeAlgorithm.GetName(), tradeID, err)
+			log.Printf("algorithm update error (name = %v, reason = %v)", tradeAlgorithm.GetName(), err)
 		}
 	}
 	return nil
 }
 
-func (r *Robot) DestroyInternalTradeAlgorithms(tradeID string, tradeContext exchange.TradeContext) (error) {
-	tradeAlgorithms := r.internalTradeAlgorithms[tradeID]
-	for _, tradeAlgorithm := range tradeAlgorithms {
+func (r *Robot) DestroyInternalTradeAlgorithms(tradeContext exchange.TradeContext) (error) {
+	for _, tradeAlgorithm := range r.internalTradeAlgorithms {
 		err := tradeAlgorithm.Finalize(tradeContext, r.notifier)
 		if err != nil {
-			log.Printf("algorithm finalize error (name = %v, trade id = %v reason = %v)", tradeAlgorithm.GetName(), tradeID, err)
+			log.Printf("algorithm finalize error (name = %v, reason = %v)", tradeAlgorithm.GetName(), err)
 		}
 	}
 	return nil
@@ -120,7 +118,7 @@ func NewRobot(config *Config, configDir string, notifier *notifier.Notifier) (*R
 		config:                  config,
 		configDir:               configDir,
 		notifier:                notifier,
-		internalTradeAlgorithms: make(map[string][]algorithm.InternalTradeAlgorithm),
+		internalTradeAlgorithms: make([]algorithm.InternalTradeAlgorithm, 0),
 		externalTradeAlgorithms: make([]algorithm.ExternalTradeAlgorithm, 0),
 	}
 	r.loadPluginFiles()

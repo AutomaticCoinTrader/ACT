@@ -19,7 +19,7 @@ type BoardCursor interface {
 	Len() int
 }
 
-type TradeHistoryCursor interface {
+type TradesCursor interface {
 	Next() (time int64, peice float64, amount float64, tradeType string, ok bool)
 	Reset()
 	Len() int
@@ -32,37 +32,29 @@ type TradeContextCursor interface {
 }
 
 type TradeContext interface {
-	GetID() string
 	GetExchangeName() string
-	Buy(price float64, amount float64) (error)
-	Sell(price float64, amount float64) (error)
+	Buy(currencyPair string, price float64, amount float64) (int64, error)
+	Sell(currencyPair string, price float64, amount float64) (int64, error)
 	Cancel(orderID int64) (error)
-	GetSrcCurrencyFund() (float64, error)
-	GetDstCurrencyFund() (float64, error)
-	GetSrcCurrencyName() (string)
-	GetDstCurrencyName() (string)
-	GetPrice() (float64, error)
-	GetBuyBoardCursor() (BoardCursor, error)
-	GetSellBoardCursor() (BoardCursor, error)
-	GetTradeHistoryCursor() (TradeHistoryCursor, error)
+	GetFunds() (map[string]float64, error)
+	GetLastPrice(currencyPair string) (float64, error)
+	GetBuyBoardCursor(currencyPair string) (BoardCursor, error)
+	GetSellBoardCursor(currencyPair string) (BoardCursor, error)
+	GetTradesCursor(currencyPair string) (TradesCursor, error)
+	GetOrderHistoryCursor() (OrderCursor, error)
 	GetActiveOrderCursor() (OrderCursor, error)
-	GetMinPriceUnit() (float64)
-	GetMinAmountUnit() (float64)
+	GetMinPriceUnit(currencyPair string) (float64)
+	GetMinAmountUnit(currencyPair string) (float64)
 }
 
 // トレードコンテキストが更新されるたびに呼ばれる
-type StreamingCallback func(tradeContext TradeContext, userCallbackData interface{}) (error)
+type StreamingCallback func(currencyPair string, tradeContext TradeContext) (error)
 
 type Exchange interface {
 	GetName() string
-	Initialize(streamingCallback StreamingCallback, userCallbackData interface{}) (error)
+	Initialize(streamingCallback StreamingCallback) (error)
 	Finalize() (error)
-	GetTradeContext(srcCurrency string, dstCurrency string) (TradeContext, bool)
-	GetTradeContextCursor() (TradeContextCursor)
-	StartStreaming(tradeContext TradeContext) (error)
-	StopStreaming(tradeContext TradeContext) (error)
-}
-
-func MakeTradeID(exchangeName string, currencyPair string) string {
-	return exchangeName + ":" + currencyPair
+	GetTradeContext() (TradeContext)
+	StartStreamings(tradeContext TradeContext) (error)
+	StopStreamings(tradeContext TradeContext) (error)
 }

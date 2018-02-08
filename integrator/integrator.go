@@ -76,10 +76,9 @@ func (i *Integrator) initHttpServer() (error) {
 	return nil
 }
 
-func (i *Integrator) streamingCallback(tradeContext exchange.TradeContext, userCallbackData interface{}) (error) {
+func (i *Integrator) streamingCallback(currencyPair string, tradeContext exchange.TradeContext) (error) {
 	// トレード処理を期待
-	tradeID := tradeContext.GetID()
-	err := i.robot.UpdateInternalTradeAlgorithms(tradeID, tradeContext)
+	err := i.robot.UpdateInternalTradeAlgorithms(currencyPair, tradeContext)
 	if err != nil {
 		log.Printf("can not run algorithm (reason = %v)", err)
 	}
@@ -118,7 +117,7 @@ func (i *Integrator) Initialize() (error) {
 				i.Finalize()
 				return errors.Wrap(err, fmt.Sprintf("can not create exchange of %v", name))
 			}
-			ex.Initialize(i.streamingCallback, nil)
+			ex.Initialize(streamingCallback)
 			// 作った取引所を保存しておく
 			i.exchanges[name] = ex
 		}
@@ -133,25 +132,18 @@ func (i *Integrator) Finalize() (error) {
 
 func (i *Integrator) startInternalTrade() (error) {
 	for _, ex := range i.exchanges {
-		tradeContextCursor := ex.GetTradeContextCursor()
-		for {
-			tradeContext, ok := tradeContextCursor.Next()
-			if !ok {
-				break
-			}
-			// streamingを始める前の前処理を期待
-			tradeID := tradeContext.GetID()
-			err := i.robot.CreateInternalTradeAlgorithms(tradeID, tradeContext)
-			if err != nil {
-				i.stopInternalTrade()
-				return errors.Wrap(err, fmt.Sprintf("can not create algorithm  (name = %v)", ex.GetName()))
-			}
-			// ストリーミングを開始
-			err = ex.StartStreaming(tradeContext)
-			if err != nil {
-				i.stopInternalTrade()
-				return errors.Wrap(err, fmt.Sprintf("can not start streaming (name = %v)", ex.GetName()))
-			}
+		tradeContext := ex.GetTradeContext()
+		// streamingを始める前の前処理を期待
+		err := i.robot.CreateInternalTradeAlgorithms(tradeContext)
+		if err != nil {
+			i.stopInternalTrade()
+			return errors.Wrap(err, fmt.Sprintf("can not create algorithm  (name = %v)", ex.GetName()))
+		}
+		// ストリーミングを開始
+		err = ex.StartStreamings(tradeContext)
+		if err != nil {
+			i.stopInternalTrade()
+			return errors.Wrap(err, fmt.Sprintf("can not start streaming (name = %v)", ex.GetName()))
 		}
 	}
 
@@ -161,23 +153,16 @@ func (i *Integrator) startInternalTrade() (error) {
 func (i *Integrator) stopInternalTrade() (error) {
 	// 取引所を停止する処理
 	for _, ex := range i.exchanges {
-		tradeContextCursor := ex.GetTradeContextCursor()
-		for {
-			tradeContext, ok := tradeContextCursor.Next()
-			if !ok {
-				break
-			}
-			// streamingを停止
-			err := ex.StopStreaming(tradeContext)
-			if err != nil {
-				log.Printf("can not stop streaming (name = %v)", ex.GetName())
-			}
-			// straming止めた後の終了処理を期待
-			tradeID := tradeContext.GetID()
-			err = i.robot.DestroyInternalTradeAlgorithms(tradeID, tradeContext)
-			if err != nil {
-				log.Printf("can not destroy algorithm (name = %v, reason = %v)", ex.GetName(), err)
-			}
+		tradeContext := ex.GetTradeContext()
+		// streamingを停止
+		err := ex.StopStreamings(tradeContext)
+		if err != nil {
+			log.Printf("can not stop streaming (name = %v)", ex.GetName())
+		}
+		// straming止めた後の終了処理を期待
+		err = i.robot.DestroyInternalTradeAlgorithms(tradeContext)
+		if err != nil {
+			log.Printf("can not destroy algorithm (name = %v, reason = %v)", ex.GetName(), err)
 		}
 	}
 	return nil
