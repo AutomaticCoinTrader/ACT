@@ -5,6 +5,7 @@ type OrderAction string
 const (
 	OrderActSell OrderAction = "sell"
 	OrderActBuy  OrderAction = "buy"
+	OrderActUnkown  OrderAction = "unknown"
 )
 
 type OrderCursor interface {

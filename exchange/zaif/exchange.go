@@ -89,22 +89,34 @@ func (t *TradeHistoryCursor) GetTradeHistory {
 type OrderHistoryCursor struct {
 	index  int
 	keys   []string
-	values map[string]OrderHistoryCursor
+	values map[string]TradeHistoryRecordResponse
+	keysToken   []string
+	valuesToken map[string]TradeHistoryRecordResponse
 }
 
 func (o *OrderHistoryCursor) Next() (int64, exchange.OrderAction, float64, float64, bool) {
-	if o.index >= len(o.keys) {
+	if o.index >= len(o.keys) + len(o.keysToken) {
 		return 0, "", 0, 0, false
 	}
-	value := o.values[o.keys[o.index]]
+	var key string
+	var value TradeHistoryRecordResponse
+	if o.index < len(o.keys) {
+		key = o.keys[o.index]
+		value = o.values[key]
+	} else {
+		key = o.keysToken[o.index - len(o.keys)]
+		value = o.valuesToken[key]
+	}
 	o.index++
 	var action exchange.OrderAction
 	if value.Action == "ask" {
 		action = exchange.OrderActSell
 	} else if value.Action == "bid" {
 		action = exchange.OrderActBuy
+	} else {
+		action = exchange.OrderActUnkown
 	}
-	id, err := strconv.ParseInt(o.keys[o.index], 10, 64)
+	id, err := strconv.ParseInt(key, 10, 64)
 	if err != nil {
 		log.Printf("can not parse id (reason = %v)", err)
 	}
@@ -116,8 +128,9 @@ func (o *OrderHistoryCursor) Reset() {
 }
 
 func (o *OrderHistoryCursor) Len() int {
-	return len(o.keys)
+	return len(o.keys) + len(o.keysToken)
 }
+
 
 
 
@@ -153,6 +166,8 @@ func (o *ActiveOrderCursor) Reset() {
 func (o *ActiveOrderCursor) Len() int {
 	return len(o.keys)
 }
+
+
 
 type TradeContext struct {
 	funds                  *ExchageFunds
