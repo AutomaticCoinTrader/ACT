@@ -131,7 +131,7 @@ func (i *Integrator) Finalize() (error) {
 	return nil
 }
 
-func (i *Integrator) startStreaming() (error) {
+func (i *Integrator) startInternalTrade() (error) {
 	for _, ex := range i.exchanges {
 		tradeContextCursor := ex.GetTradeContextCursor()
 		for {
@@ -143,13 +143,13 @@ func (i *Integrator) startStreaming() (error) {
 			tradeID := tradeContext.GetID()
 			err := i.robot.CreateInternalTradeAlgorithms(tradeID, tradeContext)
 			if err != nil {
-				i.stopStreaming()
+				i.stopInternalTrade()
 				return errors.Wrap(err, fmt.Sprintf("can not create algorithm  (name = %v)", ex.GetName()))
 			}
 			// ストリーミングを開始
 			err = ex.StartStreaming(tradeContext)
 			if err != nil {
-				i.stopStreaming()
+				i.stopInternalTrade()
 				return errors.Wrap(err, fmt.Sprintf("can not start streaming (name = %v)", ex.GetName()))
 			}
 		}
@@ -158,7 +158,7 @@ func (i *Integrator) startStreaming() (error) {
 	return nil
 }
 
-func (i *Integrator) stopStreaming() (error) {
+func (i *Integrator) stopInternalTrade() (error) {
 	// 取引所を停止する処理
 	for _, ex := range i.exchanges {
 		tradeContextCursor := ex.GetTradeContextCursor()
@@ -183,7 +183,7 @@ func (i *Integrator) stopStreaming() (error) {
 	return nil
 }
 
-func (i *Integrator) ArbitrageLoop (){
+func (i *Integrator) externalTradeEventLoop(){
 	for {
 		select {
 		case <- i.arbitrageLoopFinishChan:
@@ -191,50 +191,50 @@ func (i *Integrator) ArbitrageLoop (){
 		case <- time.After(500 * time.Millisecond):
 			err := i.robot.UpdateArbitrageTradeAlgorithms(i.exchanges)
 			if err != nil {
-				log.Printf("can not update arbitrage algorithm (reason = %v)", err)
+				log.Printf("can not update external trade algorithm (reason = %v)", err)
 			}
 		}
 	}
 }
 
-func (i *Integrator) startArbitrage() (error) {
+func (i *Integrator) startExternalTrade() (error) {
 	err := i.robot.CreateExternalTradeAlgorithms(i.exchanges)
 	if err != nil {
-		return errors.Wrap(err,"can not create arbitrage algorithm")
+		return errors.Wrap(err,"can not create external trade algorithm")
 	}
-	go i.ArbitrageLoop()
+	go i.externalTradeEventLoop()
 	return nil
 }
 
-func (i *Integrator) stopArbitrageTrade() (error) {
+func (i *Integrator) stopExternalTrade() (error) {
 	close(i.arbitrageLoopFinishChan)
 	err := i.robot.DestroyArbitrageTradeAlgorithms(i.exchanges)
 	if err != nil {
-		log.Printf("can not destroy arbitrage algorithm (reason = %v)", err)
+		log.Printf("can not destroy external trade algorithm (reason = %v)", err)
 	}
 	return nil
 }
 
 func (i *Integrator) Start() (error) {
-	err := i.startStreaming()
+	err := i.startInternalTrade()
 	if err != nil {
 		return errors.Wrap(err, "can not start streaming")
 	}
-	err = i.startArbitrage()
+	err = i.startExternalTrade()
 	if err != nil {
-		return errors.Wrap(err, "can not start arbitarage")
+		return errors.Wrap(err, "can not start external trade")
 	}
 	return nil
 }
 
 func (i *Integrator) Stop() (error) {
-	err := i.stopArbitrageTrade()
+	err := i.stopExternalTrade()
 	if err != nil {
-		log.Printf("can not stop arbitarage (reason = %v)", err)
+		log.Printf("can not stop extenal trade (reason = %v)", err)
 	}
-	err = i.stopStreaming()
+	err = i.stopInternalTrade()
 	if err != nil {
-		log.Printf("can not stop streaming (reason = %v)", err)
+		log.Printf("can not stop internal trade (reason = %v)", err)
 	}
 	return nil
 }

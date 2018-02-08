@@ -177,5 +177,6 @@ func newCoincheckExchange(config interface{}) (exchange.Exchange, error) {
 }
 
 func init() {
-	exchange.RegisterExchange("coincheck", newCoincheckExchange)
+	// TODO
+	// exchange.RegisterExchange("coincheck", newCoincheckExchange)
 }
