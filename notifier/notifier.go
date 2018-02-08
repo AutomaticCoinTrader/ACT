@@ -6,7 +6,7 @@ type Notifier struct {
 	smtpClient *utility.SMTPClient
 }
 
-func (n *Notifier) SendMail(subject string, body string) (error) {
+func (n *Notifier) SendMail(subject string, body string) error {
 	if n.smtpClient == nil {
 		return nil
 	}
@@ -25,7 +25,8 @@ type MailConfig struct {
 }
 
 type Config struct {
-	Mail *MailConfig `json:"mail" yaml:"mail" toml:"mail"`
+	Mail  *MailConfig          `json:"mail" yaml:"mail" toml:"mail"`
+	IFTTT *IFTTTNotifierConfig `json:"ifttt" yaml:"ifttt" toml:"ifttt"`
 }
 
 func NewNotifier(config *Config) (*Notifier, error) {

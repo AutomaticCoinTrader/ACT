@@ -11,6 +11,9 @@ exchanges:
     timeout: 0
     readBufSize: 0
     writeBufSize: 0
+  coincheck:
+    apikey: "key"
+    apisecret: "secret"
 server:
   debug: true
   addrPort: 127.0.0.1:38080
@@ -24,3 +27,5 @@ notifier:
     useStartTls:
     from:
     to:
+  ifttt:
+    key: "webhook-key"
