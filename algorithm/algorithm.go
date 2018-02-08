@@ -9,14 +9,14 @@ const (
 	AlgorithmConfigDir = "algorithm"
 )
 
-type TradeAlgorithm interface {
+type InternalTradeAlgorithm interface {
 	GetName() (string)
 	Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)
 	Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)
 	Finalize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)
 }
 
-type ArbitrageTradeAlgorithm interface {
+type ExternalTradeAlgorithm interface {
 	GetName() (string)
 	Initialize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error)
 	Update(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error)

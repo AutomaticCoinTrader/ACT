@@ -14,42 +14,41 @@ const (
 	algorithmName string = "example"
 )
 
-
-type tradeConfig struct {
+type internalTradeConfig struct {
 }
 
-type arbitrageTradeConfig struct {
+type externalTradeConfig struct {
 }
 
 type config struct {
-	Trade          *tradeConfig          `json:"trade"          yaml:"trade"          toml:"trade"`
-	ArbitrageTrade *arbitrageTradeConfig `json:"arbitrageTrade" yaml:"arbitrageTrade" toml:"arbitrageTrade"`
+	InternalTrade *internalTradeConfig `json:"internalTrade" yaml:"internalTrade" toml:"internalTrade"`
+	ExternalTrade *externalTradeConfig `json:"externalTrade" yaml:"externalTrade" toml:"externalTrade"`
 }
 
-type example struct {
-	name           string
-	config         *tradeConfig
+type internalTradeExample struct {
+	name   string
+	config *internalTradeConfig
 }
 
-func (e *example) GetName() (string) {
-	return e.name
+func (i *internalTradeExample) GetName() (string) {
+	return i.name
 }
 
-func (e *example) Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (i *internalTradeExample) Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
-func (e *example) Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (i *internalTradeExample) Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	// trade
-	log.Printf("trade")
+	log.Printf("internal trade")
 	return nil
 }
 
-func (e *example) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (i *internalTradeExample) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
-func newExample(configDir string) (algorithm.TradeAlgorithm, error) {
+func newInternalTradeExample(configDir string) (algorithm.InternalTradeAlgorithm, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix)
 	if err != nil {
@@ -60,36 +59,36 @@ func newExample(configDir string) (algorithm.TradeAlgorithm, error) {
 	if err != nil {
 		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
 	}
-	return &example{
-		name:           algorithmName,
-		config:         conf.Trade,
+	return &internalTradeExample{
+		name:   algorithmName,
+		config: conf.InternalTrade,
 	}, nil
 }
 
-type arbitrageExample struct {
-	name           string
-	config         *arbitrageTradeConfig
+type externalTradeExample struct {
+	name   string
+	config *externalTradeConfig
 }
 
-func (a *arbitrageExample) GetName() (string) {
-	return a.name
+func (e *externalTradeExample) GetName() (string) {
+	return e.name
 }
 
-func (a *arbitrageExample) Initialize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (e *externalTradeExample) Initialize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
-func (a *arbitrageExample) Update(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (e *externalTradeExample) Update(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
 	// arbitrage trade
-	log.Printf("arbitrage trade")
+	log.Printf("external trade")
 	return nil
 }
 
-func (a *arbitrageExample) Finalize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (e *externalTradeExample) Finalize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
-func newArbitrageExample(configDir string) (algorithm.ArbitrageTradeAlgorithm, error) {
+func newExternalTradeExample(configDir string) (algorithm.ExternalTradeAlgorithm, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix)
 	if err != nil {
@@ -100,15 +99,12 @@ func newArbitrageExample(configDir string) (algorithm.ArbitrageTradeAlgorithm, e
 	if err != nil {
 		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
 	}
-	return &arbitrageExample{
-		name:           algorithmName,
-		config:         conf.ArbitrageTrade,
+	return &externalTradeExample{
+		name:   algorithmName,
+		config: conf.ExternalTrade,
 	}, nil
 }
 
 func init() {
-	algorithm.RegisterAlgorithm(algorithmName, newExample, newArbitrageExample)
+	algorithm.RegisterAlgorithm(algorithmName, newInternalTradeExample, newExternalTradeExample)
 }
-
-
-

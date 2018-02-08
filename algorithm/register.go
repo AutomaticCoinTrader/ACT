@@ -2,18 +2,18 @@ package algorithm
 
 var registeredAlgorithms map[string]*registeredAlgorithm = make(map[string]*registeredAlgorithm)
 
-type TradeAlgorithmNewFunc func(configDir string) (TradeAlgorithm, error)
-type ArbitrageTradeAlgorithmNewFunc func(configDir string) (ArbitrageTradeAlgorithm, error)
+type InternalTradeAlgorithmNewFunc func(configDir string) (InternalTradeAlgorithm, error)
+type ExternalTradeAlgorithmNewFunc func(configDir string) (ExternalTradeAlgorithm, error)
 
 type registeredAlgorithm struct {
-	TradeAlgorithmNewFunc TradeAlgorithmNewFunc
-	ArbitrageTradeAlgorithmNewFunc ArbitrageTradeAlgorithmNewFunc
+	InternalTradeAlgorithmNewFunc InternalTradeAlgorithmNewFunc
+	ExternalTradeAlgorithmNewFunc ExternalTradeAlgorithmNewFunc
 }
 
-func RegisterAlgorithm(name string, tradeAlgorithmNewFunc TradeAlgorithmNewFunc, arbitrageTradeAlgorithmNewFunc ArbitrageTradeAlgorithmNewFunc) {
+func RegisterAlgorithm(name string, InternalTradeAlgorithmNewFunc InternalTradeAlgorithmNewFunc, externalTradeAlgorithmNewFunc ExternalTradeAlgorithmNewFunc) {
 	registeredAlgorithms[name] = &registeredAlgorithm{
-		TradeAlgorithmNewFunc: tradeAlgorithmNewFunc,
-		ArbitrageTradeAlgorithmNewFunc: arbitrageTradeAlgorithmNewFunc,
+		InternalTradeAlgorithmNewFunc: InternalTradeAlgorithmNewFunc,
+		ExternalTradeAlgorithmNewFunc: externalTradeAlgorithmNewFunc,
 	}
 }
 

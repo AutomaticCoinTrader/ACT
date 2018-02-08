@@ -12,7 +12,7 @@ import (
 	"os/user"
 )
 
-type GetRegistrationInfoType func() (string, algorithm.TradeAlgorithmNewFunc, algorithm.ArbitrageTradeAlgorithmNewFunc)
+type GetRegistrationInfoType func() (string, algorithm.InternalTradeAlgorithmNewFunc, algorithm.ExternalTradeAlgorithmNewFunc)
 
 func (r *Robot) registerAlgorithm(getRegistrationInfo GetRegistrationInfoType) {
 	name, tradeAlgorithmNewFunc, arbitrageTradeAlgorithmNewFunc := getRegistrationInfo()
@@ -24,7 +24,7 @@ func (r *Robot) checkPluginSymbole(p *plugin.Plugin) (GetRegistrationInfoType, e
 	if err != nil {
 		return nil, errors.Wrap(err, "not found GetRegistrationInfo symbole")
 	}
-	return s.(func() (string, algorithm.TradeAlgorithmNewFunc, algorithm.ArbitrageTradeAlgorithmNewFunc)), nil
+	return s.(func() (string, algorithm.InternalTradeAlgorithmNewFunc, algorithm.ExternalTradeAlgorithmNewFunc)), nil
 }
 
 func (r *Robot) loadPluginFile(pluginFile string) (error) {

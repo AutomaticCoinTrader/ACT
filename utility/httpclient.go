@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"sync/atomic"
 	"time"
-
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 )

@@ -13,7 +13,7 @@ func (n *Notifier) SendMail(subject string, body string) error {
 	return n.smtpClient.SendMail(subject, body)
 }
 
-type MailConfig struct {
+type MailNotifierConfig struct {
 	HostPort    string `json:"hostPort"    yaml:"hostPort"    toml:"hostPort"`
 	Username    string `json:"username"    yaml:"username"    toml:"username"`
 	Password    string `json:"password"    yaml:"password"    toml:"password"`
@@ -25,11 +25,11 @@ type MailConfig struct {
 }
 
 type Config struct {
-	Mail  *MailConfig          `json:"mail" yaml:"mail" toml:"mail"`
+	Mail  *MailNotifierConfig  `json:"mail" yaml:"mail" toml:"mail"`
 	IFTTT *IFTTTNotifierConfig `json:"ifttt" yaml:"ifttt" toml:"ifttt"`
 }
 
-func NewNotifier(config *Config) (*Notifier, error) {
+func NewMailNotifier(config *Config) (*Notifier, error) {
 	var smtpClient *utility.SMTPClient
 	if config != nil {
 		smtpClient = utility.NewSMTPClient(config.Mail.HostPort, config.Mail.Username,

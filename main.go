@@ -21,8 +21,8 @@ func signalWait() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan,
 		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
+		syscall.SIGQUIT,
+		syscall.SIGTERM)
 Loop:
 	for {
 		sig := <-sigChan

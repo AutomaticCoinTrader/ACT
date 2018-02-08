@@ -141,7 +141,7 @@ func (i *Integrator) startStreaming() (error) {
 			}
 			// streamingを始める前の前処理を期待
 			tradeID := tradeContext.GetID()
-			err := i.robot.CreateTradeAlgorithms(tradeID, tradeContext)
+			err := i.robot.CreateInternalTradeAlgorithms(tradeID, tradeContext)
 			if err != nil {
 				i.stopStreaming()
 				return errors.Wrap(err, fmt.Sprintf("can not create algorithm  (name = %v)", ex.GetName()))
@@ -198,7 +198,7 @@ func (i *Integrator) ArbitrageLoop (){
 }
 
 func (i *Integrator) startArbitrage() (error) {
-	err := i.robot.CreateArbitrageTradeAlgorithms(i.exchanges)
+	err := i.robot.CreateExternalTradeAlgorithms(i.exchanges)
 	if err != nil {
 		return errors.Wrap(err,"can not create arbitrage algorithm")
 	}
@@ -252,7 +252,7 @@ type Config struct {
 }
 
 func NewIntegrator(config *Config, configDir string) (*Integrator, error) {
-	ntf, err := notifier.NewNotifier(config.Notifier)
+	ntf, err := notifier.NewMailNotifier(config.Notifier)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("can not create notifier (config dir = %v, reason = %v)", configDir, err))
 	}
