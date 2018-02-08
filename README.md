@@ -37,7 +37,6 @@
   - [ ] coincheck
   - [ ] DMMCOIN
   - [ ] GMOCOIN
-  - [ ] kraken
   - [ ] QUOINEX (*)
   - [x] Zaif    (*)
 
