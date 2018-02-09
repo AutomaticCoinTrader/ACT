@@ -35,14 +35,10 @@
   - [ ] bitFlyer (*)
   - [ ] BITPoint
   - [ ] coincheck
-  
   - [ ] DMMBitcoin
-  
-  - [ ] GMOCoin
-  
+  - [ ] GMOCoin
   - [ ] QUOINEX (*)
   - [x] Zaif    (*)
-
 
 ## ビルド方法
 
