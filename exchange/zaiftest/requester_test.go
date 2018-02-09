@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 func dump(t *testing.T, res interface{}, httpReq *utility.HTTPRequest, httpRes *http.Response,) {
@@ -29,6 +30,18 @@ func dump(t *testing.T, res interface{}, httpReq *utility.HTTPRequest, httpRes *
 		t.Fatalf("can not marshal json")
 	}
 	fmt.Printf("response: %v\n", string(bytes))
+}
+
+func callback(currencyPair string, streamingResponse *zaif.StreamingResponse, streamingCallbackData interface{}) (error) {
+	fmt.Printf("--------------------------\n");
+	fmt.Printf("currencyPair: %v\n", currencyPair)
+	t := streamingCallbackData.(*testing.T)
+	bytes, err := json.Marshal(streamingResponse)
+	if err != nil {
+		t.Fatalf("can not marshal json")
+	}
+	fmt.Printf("response: %v\n", string(bytes))
+	return nil
 }
 
 func TestRequester (t *testing.T) {
@@ -146,4 +159,10 @@ func TestRequester (t *testing.T) {
 		t.Fatalf("TradeCancelOrder failure")
 	}
 	dump(t, res15, httpreq, httpres)
+
+	r.StreamingStart("btc_jpy", callback, t)
+
+	time.Sleep(time.Duration(60 * time.Second))
+
+	r.StreamingStop("btc_jpy")
 }
