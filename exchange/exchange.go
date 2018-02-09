@@ -26,23 +26,18 @@ type TradesCursor interface {
 	Len() int
 }
 
-type TradeContextCursor interface {
-	Next() (tradeContext TradeContext, ok bool)
-	Reset()
-	Len() int
-}
-
 type TradeContext interface {
 	GetExchangeName() string
+	GetCurrencyPairs() ([]string)
 	Buy(currencyPair string, price float64, amount float64) (int64, error)
 	Sell(currencyPair string, price float64, amount float64) (int64, error)
 	Cancel(orderID int64) (error)
 	GetFunds() (map[string]float64, error)
 	GetLastPrice(currencyPair string) (float64, error)
-	GetBuyBoardCursor(currencyPair string) (BoardCursor, error)
 	GetSellBoardCursor(currencyPair string) (BoardCursor, error)
+	GetBuyBoardCursor(currencyPair string) (BoardCursor, error)
 	GetTradesCursor(currencyPair string) (TradesCursor, error)
-	GetOrderHistoryCursor() (OrderCursor, error)
+	GetOrderHistoryCursor(count int64) (OrderCursor, error)
 	GetActiveOrderCursor() (OrderCursor, error)
 	GetMinPriceUnit(currencyPair string) (float64)
 	GetMinAmountUnit(currencyPair string) (float64)

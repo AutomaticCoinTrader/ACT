@@ -117,7 +117,7 @@ func (i *Integrator) Initialize() (error) {
 				i.Finalize()
 				return errors.Wrap(err, fmt.Sprintf("can not create exchange of %v", name))
 			}
-			ex.Initialize(streamingCallback)
+			ex.Initialize(i.streamingCallback)
 			// 作った取引所を保存しておく
 			i.exchanges[name] = ex
 		}
