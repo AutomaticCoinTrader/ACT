@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"syscall"
 	"path"
+	"path/filepath"
 )
 
 const (
@@ -65,6 +66,15 @@ func actStop(integrator *integrator.Integrator) (error) {
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	wd, err := os.Getwd()
+	if err == nil {
+		abswd, err := filepath.Abs(wd)
+		if err == nil {
+			log.Printf("workdir: %v", abswd)
+		} else {
+			log.Printf("workdir: %v", wd)
+		}
+	}
 	configDir := flag.String("confdir", "", "config directory")
 	flag.Parse()
 	cf, err := configurator.NewConfigurator(path.Join(*configDir, actConfigPrefix))
