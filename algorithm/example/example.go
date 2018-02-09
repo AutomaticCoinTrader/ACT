@@ -43,7 +43,11 @@ func (i *internalTradeExample) Update(currencyPair string, tradeContext exchange
 	// trade
 	log.Printf("internal trade")
 	log.Printf("> currencyPair = %v", currencyPair)
-
+	latPrice, err := tradeContext.GetLastPrice(currencyPair)
+	if err != nil {
+		return err
+	}
+	log.Printf(">> LastPrice: %v\n", latPrice)
 	boardCursor, err := tradeContext.GetBuyBoardCursor(currencyPair)
 	if err != nil {
 		return err
