@@ -28,11 +28,11 @@ touch ACT/algorithm/my/my.go
 
 ```
 type internalTradeConfig struct {
-	message string `json:"message" yaml:"message" toml:"message"`
+	Message string `json:"message" yaml:"message" toml:"message"`
 }
 
 type externalTradeConfig struct {
-	message string `json:"message" yaml:"message" toml:"message"`
+	Message string `json:"message" yaml:"message" toml:"message"`
 }
 
 type config struct {
@@ -65,7 +65,7 @@ func (m *my) Update(currencyPair string, tradeContext exchange.TradeContext, not
     // トレード情報を取得するたびに呼ばれる
     // ここでトレードをやる
     
-    fmt.Print(m.config.message)
+    fmt.Print(m.config.Message)
     return nil
 }
 
@@ -94,7 +94,7 @@ func (m *externalMy) Update(exchanges map[string]exchange.Exchange, notifier *no
     // 定期的に呼ばれる
     // ここでトレードをやる
     
-    fmt.Print(m.config.message)
+    fmt.Print(m.config.Message)
     return nil
 }
 
@@ -148,7 +148,7 @@ func newExternalMy(config interface{}) (algorithm.ExternalTradeAlgorithm, error)
 
 ```
 func init() {
-	algorithm.RegisterAlgorithm("my", newMy, newArbitrageMy) // "my"という名前で登録
+	algorithm.RegisterAlgorithm("my", newMy, newExternalMy) // "my"という名前で登録
 }
 ```
 
@@ -166,13 +166,13 @@ import (
 
 ## 設定を追加
 
-### 1. confDirで指定したコンフィグディレクトリ以下のalgorithmディレクトリの下にmy.yamlを追加する
-  - ビルトイン方式の設定ファイルはyaml,toml,jsonのいずれかでよい
+### 1. confDirで指定したコンフィグディレクトリ以下のalgorithmディレクトリの下にyaml,toml,jsonのいずれかで設定を追加する
+  - my.yamlの場合
 
 ```
-trade:
+internalTrade:
   message: "hello!!"
-arbitrageTrade:
+externalTrade:
   message: "hello!!"
 ```
 
@@ -214,17 +214,17 @@ touch my/my.go
   - tomlとyamlとjsonで解釈できるように定義をしておく
 
 ```
-type tradeConfig struct {
-	message string `json:"message" yaml:"message" toml:"message"`
+type internalTradeConfig struct {
+	Message string `json:"message" yaml:"message" toml:"message"`
 }
 
-type arbitrageTradeConfig struct {
-	message string `json:"message" yaml:"message" toml:"message"`
+type externalTradeConfig struct {
+	Message string `json:"message" yaml:"message" toml:"message"`
 }
 
 type config struct {
-	Trade          *tradeConfig          `json:"trade"          yaml:"trade"          toml:"trade"`
-    ArbitrageTrade *arbitrageTradeConfig `json:"arbitrageTrade" yaml:"arbitrageTrade" toml:"arbitrageTrade"`
+    InternalTrade *internalTradeConfig `json:"internalTrade" yaml:"internalTrade" toml:"internalTrade"`
+    ExternalTrade *externalTradeConfig `json:"externalTrade" yaml:"externalTrade" toml:"externalTrade"`
 }
 
 
@@ -234,13 +234,13 @@ type config struct {
 
 ```
 type my struct {
-	config         *tradeConfig
+	config         *internalTradeConfig
 	name           string
 }
 
 func (m *my) GetName() (string) {
     // 名前を返す
-	return l.name
+	return m.name
 }
 
 func (m *my) Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
@@ -248,11 +248,11 @@ func (m *my) Initialize(tradeContext exchange.TradeContext, notifier *notifier.N
 	return nil
 }
 
-func (m *my) Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (m *my) Update(currencyPair string, tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
     // トレード情報を取得するたびに呼ばれる
     // ここでトレードをやる
     
-    fmt.Print(l.config.message)
+    fmt.Print(m.config.Message)
     return nil
 }
 
@@ -263,13 +263,13 @@ func (m *my) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Not
 
 
 type arbitrageMy struct {
-	config         *arbitrageTradeConfig
+	config         *externalTradeConfig
 	name           string
 }
 
 func (m *arbitrageMy) GetName() (string) {
     // 名前を返す
-	return l.name
+	return m.name
 }
 
 func (m *arbitrageMy) Initialize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
@@ -281,7 +281,7 @@ func (m *arbitrageMy) Update(exchanges map[string]exchange.Exchange, notifier *n
     // 定期的に呼ばれる
     // ここでトレードをやる
     
-    fmt.Print(l.config.message)
+    fmt.Print(m.config.Message)
     return nil
 }
 
@@ -309,11 +309,11 @@ func newMy(config interface{}) (algorithm.InternalTradeAlgorithm, error) {
 	}
 	return &my{
 	    name: "my",
-	    config: conf.Trade,
+	    config: conf.InternalTrade,
 	}, nil
 }
 
-func newArbitrageMy(config interface{}) (algorithm.ExternalTradeAlgorithm, error) {
+func newExternalMy(config interface{}) (algorithm.ExternalTradeAlgorithm, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix) // NewConfigratorに渡すパスは拡張子を含まないプレフィックス指定なので注意
 	if err != nil {
@@ -326,7 +326,7 @@ func newArbitrageMy(config interface{}) (algorithm.ExternalTradeAlgorithm, error
 	}
 	return &arbitrageMy{
 	    name: "my",
-	    config: conf.ArbitrageTrade,
+	    config: conf.ExternalTrade,
 	}, nil
 }
 ```
@@ -341,8 +341,8 @@ func init() {
 ### 7. (5)で作った関数やアルゴリズム名を返すGetRegistrationInfo関数を作成する
 
 ```
-func GetRegistrationInfo() (string, algorithm.TradeAlgorithmNewFunc, algorithm.ArbitrageTradeAlgorithmNewFunc)
-    return "my", newMy, newArbitrageMy
+func GetRegistrationInfo() (string, algorithm.InternalTradeAlgorithmNewFunc, algorithm.ExternalTradeAlgorithmNewFunc)
+    return "my", newMy, newExternalMy
 }
 ```
 
