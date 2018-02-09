@@ -131,10 +131,10 @@ func newOrderHistoryCursor(values map[string]TradeHistoryRecordResponse, valuesT
 		keysToken: make([]string, 0, len(valuesToken)),
 		valuesToken: valuesToken,
 	}
-	for k, _ := range values {
+	for k := range values {
 		newOrderHistoryCursor.keys = append(newOrderHistoryCursor.keys, k)
 	}
-	for k, _ := range valuesToken {
+	for k := range valuesToken {
 		newOrderHistoryCursor.keysToken = append(newOrderHistoryCursor.keysToken, k)
 	}
 	return newOrderHistoryCursor
@@ -191,10 +191,10 @@ func newActiveOrderCursor(values map[string]TradeActiveOrderRecordResponse, valu
 		keysToken: make([]string, 0, len(valuesToken)),
 		valuesToken: valuesToken,
 	}
-	for k, _ := range values {
+	for k := range values {
 		newActiveOrderCursor.keys = append(newActiveOrderCursor.keys, k)
 	}
-	for k, _ := range valuesToken {
+	for k := range valuesToken {
 		newActiveOrderCursor.keysToken = append(newActiveOrderCursor.keysToken, k)
 	}
 	return newActiveOrderCursor
