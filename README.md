@@ -37,9 +37,9 @@
   - [ ] coincheck
   - [ ] DMMBitcoin
   - [ ] GMOCoin
-  - [ ] QUOINEX (*)
+  - [ ] QUOINEX (*)
   - [x] Zaif    (*)
-
+  
 ## ビルド方法
 
 ```
