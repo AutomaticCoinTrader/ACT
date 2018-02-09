@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"log"
 	"path"
+	"encoding/json"
 )
 
 const (
@@ -41,6 +42,28 @@ func (i *internalTradeExample) Initialize(tradeContext exchange.TradeContext, no
 func (i *internalTradeExample) Update(currencyPair string, tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	// trade
 	log.Printf("currencyPair = %v, internal trade", currencyPair)
+
+	boardCursor, err := tradeContext.GetBuyBoardCursor(currencyPair)
+	if err != nil {
+		return err
+	}
+	bytes, err := json.Marshal(boardCursor.PriceAll())
+	if err != nil {
+		return err
+	}
+	log.Printf("buy: %v\n", string(bytes))
+
+	boardCursor, err = tradeContext.GetSellBoardCursor(currencyPair)
+	if err != nil {
+		return err
+	}
+	bytes, err = json.Marshal(boardCursor.PriceAll())
+	if err != nil {
+		return err
+	}
+	log.Printf("sell: %v\n", string(bytes))
+
+
 	return nil
 }
 

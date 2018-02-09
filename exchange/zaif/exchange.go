@@ -56,6 +56,14 @@ func (b *BoardCursor) Len() int {
 	return len(b.values)
 }
 
+func (b *BoardCursor) PriceAll() []float64 {
+	newPriceAll := make([]float64, 0, len(b.values))
+	for _, v := range b.values {
+		newPriceAll = append(newPriceAll, v[0])
+	}
+	return newPriceAll
+}
+
 type TradeHistoryCursor struct {
 	index  int
 	values []*StreamingTradesResponse
