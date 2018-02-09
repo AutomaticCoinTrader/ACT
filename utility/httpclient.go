@@ -93,11 +93,13 @@ func (c *HTTPClient) methodFuncBase(method string, request *HTTPRequest) (*http.
 func (c *HTTPClient) retryRequest(request *HTTPRequest) (*http.Response, []byte, error) {
 	for i := 0; i <= c.retry; i++ {
 		res, resBody, err := c.methodFuncBase(request.RequestMethodString, request)
-		log.Printf("request is failure, retry... (url = %v, method = %v, reason = %v)", request.URL, request.RequestMethod, err)
-		if (c.retryWait != 0) {
-			time.Sleep(time.Duration(c.retryWait) * time.Millisecond)
+		if err != nil {
+			log.Printf("request is failure, retry... (url = %v, method = %v, reason = %v)", request.URL, request.RequestMethod, err)
+			if (c.retryWait != 0) {
+				time.Sleep(time.Duration(c.retryWait) * time.Millisecond)
+			}
+			continue
 		}
-		continue
 		return res, resBody, err
 	}
 	return nil, nil, errors.Errorf("give up retry (url = %v, method = %v)", request.URL, request.RequestMethod)
