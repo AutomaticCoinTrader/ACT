@@ -41,7 +41,8 @@ func (i *internalTradeExample) Initialize(tradeContext exchange.TradeContext, no
 
 func (i *internalTradeExample) Update(currencyPair string, tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	// trade
-	log.Printf("currencyPair = %v, internal trade", currencyPair)
+	log.Printf("internal trade")
+	log.Printf("> currencyPair = %v", currencyPair)
 
 	boardCursor, err := tradeContext.GetBuyBoardCursor(currencyPair)
 	if err != nil {
@@ -51,7 +52,7 @@ func (i *internalTradeExample) Update(currencyPair string, tradeContext exchange
 	if err != nil {
 		return err
 	}
-	log.Printf("buy: %v\n", string(bytes))
+	log.Printf(">> buy: %v\n", string(bytes))
 
 	boardCursor, err = tradeContext.GetSellBoardCursor(currencyPair)
 	if err != nil {
@@ -61,7 +62,7 @@ func (i *internalTradeExample) Update(currencyPair string, tradeContext exchange
 	if err != nil {
 		return err
 	}
-	log.Printf("sell: %v\n", string(bytes))
+	log.Printf(">> sell: %v\n", string(bytes))
 
 
 	return nil
@@ -104,6 +105,13 @@ func (e *externalTradeExample) Initialize(exchanges map[string]exchange.Exchange
 func (e *externalTradeExample) Update(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
 	// arbitrage trade
 	log.Printf("external trade")
+	for name, ex := range exchanges {
+		tradeContext := ex.GetTradeContext()
+		log.Printf("> exchange = %v", name)
+		for _, currencyPair := range tradeContext.GetCurrencyPairs() {
+			log.Printf(">> currencyPair = %v", currencyPair)
+		}
+	}
 	return nil
 }
 
