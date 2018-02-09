@@ -55,24 +55,20 @@ vi ACT/exchange/myexchange/requester.go
 ```
 vi ACT/exchange/myexchange/exchange.go
 ```
- - exchange.goはrequester.goをラップしてexchangeインターフェイスを実装した取引所ごとの構造体を実装する
+ - exchange.goはrequester.goをラップしてExchangeインターフェイスを実装した取引所ごとの構造体を実装する
    - exchange/excahnge.goのインターフェイスを全て実装すること 
      - APIが提供されてなくて実装できない場合は要相談
     
 ### 3. コンフィグ構造体を定義する
 
 ```
-type ExchangeConfigCurrencyPair struct {
-	Src string `json:"src" yaml:"src" toml:"src"`
-	Dst string `json:"dst" yaml:"dst" toml:"dst"`
-}
 
 type ExchangeConfig struct {
-	Key           string                         `json:"key"          yaml:"key"          toml:"key"`
-	Secret        string                         `json:"secret"       yaml:"secret"       toml:"secret"`
-	Retry         int                            `json:"retry"        yaml:"retry"        toml:"retry"`
-	Timeout       int                            `json:"timeout"      yaml:"timeout"      toml:"timeout"`
-	CurrencyPairs []*ExchangeConfigCurrencyPair  `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
+	Key           string    `json:"key"          yaml:"key"          toml:"key"`
+	Secret        string    `json:"secret"       yaml:"secret"       toml:"secret"`
+	Retry         int       `json:"retry"        yaml:"retry"        toml:"retry"`
+	Timeout       int       `json:"timeout"      yaml:"timeout"      toml:"timeout"`
+	CurrencyPairs []string  `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
 }
 ```
 
@@ -83,13 +79,8 @@ func newMyExchange(config interface{}) (exchange.Exchange, error)  {
 	myConfig := config.(*ExchangeConfig)
 	return &MyExchange{
 		config:        myConfig,
-		name :         exchangeName,
 		requester:     NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.Timeout),
-		tradeContexts: make([]*TradeContext, 0),
-		funds : &ExchageFunds{
-			funds: make(map[string]float64),
-			mutex: new(sync.Mutex),
-		},
+		tradeContext:  nil,
 	}, nil
 }
 ```
