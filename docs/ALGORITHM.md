@@ -378,16 +378,14 @@ notifier:
   mail:
 ```
 
-## 2. confDirで指定したコンフィグディレクトリ以下のalgorithmディレクトリの下にmy.tomlを追加する
-  - プラグイン方式の設定ファイルはtomlまたはjsonにすること
-    - 現状goのplugin機能とyamlのローダーライブラリの相性の問題でyamlだとロードに失敗する
-      - バージョンが上がると治るかも
+## 2. confDirで指定したコンフィグディレクトリ以下のalgorithmディレクトリの下に設定をtoml,yaml,jsonのいずれかで追加するを追加する
+  - my.yamlの場合
 
 ```
-[trade]
-[trade.ape]
-[arbitrageTrade]
-[arbitrageTrade.ape]
+internalTrade:
+  message: hoge
+externalTrade:
+  message: hoge
 ```
 
 ## 起動
