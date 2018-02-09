@@ -157,7 +157,7 @@ func (r *Requester) Depth(currencyPair string) (*PublicDepthReaponse, *utility.H
 	return newRes.(*PublicDepthReaponse), request, response, err
 }
 
-type StreamingCallback func(currencyPair string, streamingResponse *StreamingResponse, StreamingCallbackData interface{}) (error)
+type StreamingCallback func(currencyPair string, streamingResponse *StreamingResponse, streamingCallbackData interface{}) (error)
 
 type StreamingResponse struct {
 	Asks         [][]float64 `json:"asks"`

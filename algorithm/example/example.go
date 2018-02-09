@@ -38,9 +38,9 @@ func (i *internalTradeExample) Initialize(tradeContext exchange.TradeContext, no
 	return nil
 }
 
-func (i *internalTradeExample) Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (i *internalTradeExample) Update(currencyPair string, tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
 	// trade
-	log.Printf("internal trade")
+	log.Printf("currencyPair = %v, internal trade", currencyPair)
 	return nil
 }
 

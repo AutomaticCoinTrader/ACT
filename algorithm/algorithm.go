@@ -12,7 +12,7 @@ const (
 type InternalTradeAlgorithm interface {
 	GetName() (string)
 	Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)
-	Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)
+	Update(currencyPair string, tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)
 	Finalize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)
 }
 

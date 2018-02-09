@@ -41,9 +41,9 @@ func (r *Robot) CreateInternalTradeAlgorithms(tradeContext exchange.TradeContext
 	return nil
 }
 
-func (r *Robot) UpdateInternalTradeAlgorithms(tradeID string, tradeContext exchange.TradeContext) (error) {
+func (r *Robot) UpdateInternalTradeAlgorithms(currencyPair string, tradeContext exchange.TradeContext) (error) {
 	for _, tradeAlgorithm := range r.internalTradeAlgorithms {
-		err := tradeAlgorithm.Update(tradeContext, r.notifier)
+		err := tradeAlgorithm.Update(currencyPair, tradeContext, r.notifier)
 		if err != nil {
 			log.Printf("algorithm update error (name = %v, reason = %v)", tradeAlgorithm.GetName(), err)
 		}

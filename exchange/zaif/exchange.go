@@ -506,6 +506,10 @@ func (e *Exchange) Initialize(streamingCallback exchange.StreamingCallback) (err
 		streamingCallback: streamingCallback,
 		currencyPairs:     e.config.CurrencyPairs,
 		currencyPairsInfo: &currencyPairsInfo{
+			Bids: make(map[string][][]float64),
+			Asks: make(map[string][][]float64),
+			LastPrice: make(map[string]float64),
+			Trades: make(map[string][]*StreamingTradesResponse),
 			mutex: new(sync.Mutex),
 		},
 	}
