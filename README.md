@@ -77,6 +77,8 @@ notifier:
     useStartTls: "false"
     from: "exmaple@gmail.com"
     to: "exmaple@gmail.com"
+  ifttt:
+    key: "webhook-key"
 ```
 
 ## 起動
