@@ -35,8 +35,11 @@
   - [ ] bitFlyer (*)
   - [ ] BITPoint
   - [ ] coincheck
+  
   - [ ] DMMBitcoin
+  
   - [ ] GMOCoin
+  
   - [ ] QUOINEX (*)
   - [x] Zaif    (*)
 
