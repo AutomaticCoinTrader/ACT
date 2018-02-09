@@ -27,17 +27,17 @@ touch ACT/algorithm/my/my.go
   - tomlとyamlとjsonで解釈できるように定義をしておく
 
 ```
-type tradeConfig struct {
+type internalTradeConfig struct {
 	message string `json:"message" yaml:"message" toml:"message"`
 }
 
-type arbitrageTradeConfig struct {
+type externalTradeConfig struct {
 	message string `json:"message" yaml:"message" toml:"message"`
 }
 
 type config struct {
-	Trade          *tradeConfig          `json:"trade"          yaml:"trade"          toml:"trade"`
-    ArbitrageTrade *arbitrageTradeConfig `json:"arbitrageTrade" yaml:"arbitrageTrade" toml:"arbitrageTrade"`
+    InternalTrade *internalTradeConfig `json:"internalTrade" yaml:"internalTrade" toml:"internalTrade"`
+    ExternalTrade *externalTradeConfig `json:"externalTrade" yaml:"externalTrade" toml:"externalTrade"`
 }
 
 
@@ -47,13 +47,13 @@ type config struct {
 
 ```
 type my struct {
-	config         *tradeConfig
+	config         *internalTradeConfig
 	name           string
 }
 
 func (m *my) GetName() (string) {
     // 名前を返す
-	return l.name
+	return m.name
 }
 
 func (m *my) Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
@@ -61,11 +61,11 @@ func (m *my) Initialize(tradeContext exchange.TradeContext, notifier *notifier.N
 	return nil
 }
 
-func (m *my) Update(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (m *my) Update(currencyPair string, tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
     // トレード情報を取得するたびに呼ばれる
     // ここでトレードをやる
     
-    fmt.Print(l.config.message)
+    fmt.Print(m.config.message)
     return nil
 }
 
@@ -75,30 +75,30 @@ func (m *my) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Not
 }
 
 
-type arbitrageMy struct {
-	config         *arbitrageTradeConfig
+type externalMy struct {
+	config         *externalTradeConfig
 	name           string
 }
 
-func (m *arbitrageMy) GetName() (string) {
+func (m *externalMy) GetName() (string) {
     // 名前を返す
 	return l.name
 }
 
-func (m *arbitrageMy) Initialize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (m *externalMy) Initialize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
     // 初期化処理
 	return nil
 }
 
-func (m *arbitrageMy) Update(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (m *externalMy) Update(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
     // 定期的に呼ばれる
     // ここでトレードをやる
     
-    fmt.Print(l.config.message)
+    fmt.Print(m.config.message)
     return nil
 }
 
-func (m *arbitrageMy) Finalize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
+func (m *externalMy) Finalize(exchanges map[string]exchange.Exchange, notifier *notifier.Notifier) (error) {
     // 終了処理
 	return nil
 }
@@ -109,7 +109,7 @@ func (m *arbitrageMy) Finalize(exchanges map[string]exchange.Exchange, notifier 
 ### 5. (4)で作ったTradeAlgorithmContextインターフェイスを備えた構造体のポインタを返す関数を作る
 
 ```
-func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
+func newMy(config interface{}) (algorithm.InternalTradeAlgorithm, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix)　// NewConfigratorに渡すパスは拡張子を含まないプレフィックス指定なので注意
 	if err != nil {
@@ -122,11 +122,11 @@ func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
 	}
 	return &my{
 	    name: "my",
-	    config: conf.Trade,
+	    config: conf.InternalTrade,
 	}, nil
 }
 
-func newArbitrageMy(config interface{}) (algorithm.ArbitrageTradeAlgorithmContext, error) {
+func newExternalMy(config interface{}) (algorithm.ExternalTradeAlgorithm, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix) // NewConfigratorに渡すパスは拡張子を含まないプレフィックス指定なので注意
 	if err != nil {
@@ -137,9 +137,9 @@ func newArbitrageMy(config interface{}) (algorithm.ArbitrageTradeAlgorithmContex
 	if err != nil {
 		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
 	}
-	return &arbitrageMy{
+	return &externalMy{
 	    name: "my",
-	    config: conf.ArbitrageTrade,
+	    config: conf.ExternalTrade,
 	}, nil
 }
 ```
@@ -296,7 +296,7 @@ func (m *arbitrageMy) Finalize(exchanges map[string]exchange.Exchange, notifier 
 ### 5. (4)で作ったTradeAlgorithmContextインターフェイスを備えた構造体のポインタを返す関数を作る
 
 ```
-func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
+func newMy(config interface{}) (algorithm.InternalTradeAlgorithm, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix) // NewConfigratorに渡すパスは拡張子を含まないプレフィックス指定なので注意
 	if err != nil {
@@ -313,7 +313,7 @@ func newMy(config interface{}) (algorithm.TradeAlgorithmContext, error) {
 	}, nil
 }
 
-func newArbitrageMy(config interface{}) (algorithm.ArbitrageTradeAlgorithmContext, error) {
+func newArbitrageMy(config interface{}) (algorithm.ExternalTradeAlgorithm, error) {
 	configFilePathPrefix := path.Join(configDir, algorithmName)
 	cf, err := configurator.NewConfigurator(configFilePathPrefix) // NewConfigratorに渡すパスは拡張子を含まないプレフィックス指定なので注意
 	if err != nil {
