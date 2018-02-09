@@ -36,7 +36,7 @@
   - [ ] BITPoint
   - [ ] coincheck
   - [ ] DMMBitcoin
-  - [ ] GMOコイン
+  - [ ] GMOCoin
   - [ ] QUOINEX (*)
   - [x] Zaif    (*)
 
