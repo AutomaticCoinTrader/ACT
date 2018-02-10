@@ -10,9 +10,9 @@ type registeredAlgorithm struct {
 	ExternalTradeAlgorithmNewFunc ExternalTradeAlgorithmNewFunc
 }
 
-func RegisterAlgorithm(name string, InternalTradeAlgorithmNewFunc InternalTradeAlgorithmNewFunc, externalTradeAlgorithmNewFunc ExternalTradeAlgorithmNewFunc) {
+func RegisterAlgorithm(name string, internalTradeAlgorithmNewFunc InternalTradeAlgorithmNewFunc, externalTradeAlgorithmNewFunc ExternalTradeAlgorithmNewFunc) {
 	registeredAlgorithms[name] = &registeredAlgorithm{
-		InternalTradeAlgorithmNewFunc: InternalTradeAlgorithmNewFunc,
+		InternalTradeAlgorithmNewFunc: internalTradeAlgorithmNewFunc,
 		ExternalTradeAlgorithmNewFunc: externalTradeAlgorithmNewFunc,
 	}
 }

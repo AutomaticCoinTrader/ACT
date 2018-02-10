@@ -1,6 +1,6 @@
 package exchange
 
-var registeredExchanges map[string]ExchangeNewFunc = make(map[string]ExchangeNewFunc)
+var registeredExchanges = make(map[string]ExchangeNewFunc)
 
 type ExchangeNewFunc func(config interface{}) (Exchange, error)
 

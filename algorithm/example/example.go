@@ -87,6 +87,9 @@ func newInternalTradeExample(configDir string) (algorithm.InternalTradeAlgorithm
 	if err != nil {
 		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
 	}
+	if conf.InternalTrade == nil {
+		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
+	}
 	return &internalTradeExample{
 		name:   algorithmName,
 		config: conf.InternalTrade,
@@ -131,6 +134,9 @@ func newExternalTradeExample(configDir string) (algorithm.ExternalTradeAlgorithm
 	conf := new(config)
 	err = cf.Load(conf)
 	if err != nil {
+		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
+	}
+	if conf.ExternalTrade == nil {
 		return nil, errors.Errorf("can not load config (config file path prefix = %v)", configFilePathPrefix)
 	}
 	return &externalTradeExample{
