@@ -11,9 +11,9 @@ const (
 
 type InternalTradeAlgorithm interface {
 	GetName() (string)
-	Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)
-	Update(currencyPair string, tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)
-	Finalize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error)
+	Initialize(ex exchange.Exchange, notifier *notifier.Notifier) (error)
+	Update(currencyPair string, ex exchange.Exchange, notifier *notifier.Notifier) (error)
+	Finalize(ex exchange.Exchange, notifier *notifier.Notifier) (error)
 }
 
 type ExternalTradeAlgorithm interface {

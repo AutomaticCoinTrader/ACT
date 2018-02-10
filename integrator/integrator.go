@@ -14,12 +14,12 @@ import (
 	"github.com/AutomaticCoinTrader/ACT/notifier"
 )
 
-type StartStreamingCallback func(tradeContext exchange.TradeContext, userCallbackData interface{}) (error)
-type UpdateStreamingCallback func(tradeContext exchange.TradeContext, userCallbackData interface{}) (error)
-type StopStreamingCallback func(tradeContext exchange.TradeContext, userCallbackData interface{}) (error)
-type StartArbitrageCallback func(exchanges map[string]exchange.Exchange, userCallbackData interface{}) (error)
-type UpdateArbitrageCallback func(exchanges map[string]exchange.Exchange, userCallbackData interface{}) (error)
-type StopArbitrageCallback func(exchanges map[string]exchange.Exchange, userCallbackData interface{}) (error)
+type StartStreamingCallback func(ex exchange.Exchange, userCallbackData interface{}) (error)
+type UpdateStreamingCallback func(ex exchange.Exchange, userCallbackData interface{}) (error)
+type StopStreamingCallback func(ex exchange.Exchange, userCallbackData interface{}) (error)
+type StartArbitrageCallback func(exs map[string]exchange.Exchange, userCallbackData interface{}) (error)
+type UpdateArbitrageCallback func(exs map[string]exchange.Exchange, userCallbackData interface{}) (error)
+type StopArbitrageCallback func(exs map[string]exchange.Exchange, userCallbackData interface{}) (error)
 
 type gracefulServer struct {
 	server    *manners.GracefulServer
@@ -76,9 +76,9 @@ func (i *Integrator) initHttpServer() (error) {
 	return nil
 }
 
-func (i *Integrator) streamingCallback(currencyPair string, tradeContext exchange.TradeContext) (error) {
+func (i *Integrator) streamingCallback(currencyPair string, ex exchange.Exchange) (error) {
 	// トレード処理を期待
-	err := i.robot.UpdateInternalTradeAlgorithms(currencyPair, tradeContext)
+	err := i.robot.UpdateInternalTradeAlgorithms(currencyPair, ex)
 	if err != nil {
 		log.Printf("can not run algorithm (reason = %v)", err)
 	}
@@ -112,12 +112,12 @@ func (i *Integrator) Initialize() (error) {
 				continue
 			}
 			log.Printf("%v exchange create", name)
-			ex, err :=  exchangeNewFunc(conf)
+			ex, err :=  exchangeNewFunc(conf, )
 			if err != nil {
 				i.Finalize()
 				return errors.Wrap(err, fmt.Sprintf("can not create exchange of %v", name))
 			}
-			ex.Initialize(i.streamingCallback)
+			ex.Initialize()
 			// 作った取引所を保存しておく
 			i.exchanges[name] = ex
 		}
@@ -132,15 +132,15 @@ func (i *Integrator) Finalize() (error) {
 
 func (i *Integrator) startInternalTrade() (error) {
 	for _, ex := range i.exchanges {
-		tradeContext := ex.GetTradeContext()
+
 		// streamingを始める前の前処理を期待
-		err := i.robot.CreateInternalTradeAlgorithms(tradeContext)
+		err := i.robot.CreateInternalTradeAlgorithms(ex)
 		if err != nil {
 			i.stopInternalTrade()
 			return errors.Wrap(err, fmt.Sprintf("can not create algorithm  (name = %v)", ex.GetName()))
 		}
 		// ストリーミングを開始
-		err = ex.StartStreamings(tradeContext)
+		err = ex.StartStreamings(i.streamingCallback)
 		if err != nil {
 			i.stopInternalTrade()
 			return errors.Wrap(err, fmt.Sprintf("can not start streaming (name = %v)", ex.GetName()))
@@ -153,14 +153,14 @@ func (i *Integrator) startInternalTrade() (error) {
 func (i *Integrator) stopInternalTrade() (error) {
 	// 取引所を停止する処理
 	for _, ex := range i.exchanges {
-		tradeContext := ex.GetTradeContext()
+
 		// streamingを停止
-		err := ex.StopStreamings(tradeContext)
+		err := ex.StopStreamings()
 		if err != nil {
 			log.Printf("can not stop streaming (name = %v)", ex.GetName())
 		}
 		// straming止めた後の終了処理を期待
-		err = i.robot.DestroyInternalTradeAlgorithms(tradeContext)
+		err = i.robot.DestroyInternalTradeAlgorithms(ex)
 		if err != nil {
 			log.Printf("can not destroy algorithm (name = %v, reason = %v)", ex.GetName(), err)
 		}

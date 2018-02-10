@@ -27,8 +27,11 @@ type TradesCursor interface {
 	Len() int
 }
 
-type TradeContext interface {
-	GetExchangeName() string
+// トレードコンテキストが更新されるたびに呼ばれる
+type StreamingCallback func(currencyPair string, ex Exchange) (error)
+
+type Exchange interface {
+	GetName() string
 	GetCurrencyPairs() ([]string)
 	Buy(currencyPair string, price float64, amount float64) (int64, error)
 	Sell(currencyPair string, price float64, amount float64) (int64, error)
@@ -42,16 +45,8 @@ type TradeContext interface {
 	GetActiveOrderCursor() (OrderCursor, error)
 	GetMinPriceUnit(currencyPair string) (float64)
 	GetMinAmountUnit(currencyPair string) (float64)
-}
-
-// トレードコンテキストが更新されるたびに呼ばれる
-type StreamingCallback func(currencyPair string, tradeContext TradeContext) (error)
-
-type Exchange interface {
-	GetName() string
-	Initialize(streamingCallback StreamingCallback) (error)
+	Initialize() (error)
 	Finalize() (error)
-	GetTradeContext() (TradeContext)
-	StartStreamings(tradeContext TradeContext) (error)
-	StopStreamings(tradeContext TradeContext) (error)
+	StartStreamings(streamingCallback StreamingCallback) (error)
+	StopStreamings() (error)
 }

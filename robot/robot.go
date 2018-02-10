@@ -18,7 +18,7 @@ type Robot struct {
 	externalTradeAlgorithms []algorithm.ExternalTradeAlgorithm
 }
 
-func (r *Robot) CreateInternalTradeAlgorithms(tradeContext exchange.TradeContext) (error) {
+func (r *Robot) CreateInternalTradeAlgorithms(ex exchange.Exchange) (error) {
 
 	for name, registeredAlgorithm := range algorithm.GetRegisterdAlgoriths() {
 		if registeredAlgorithm.InternalTradeAlgorithmNewFunc == nil {
@@ -30,9 +30,9 @@ func (r *Robot) CreateInternalTradeAlgorithms(tradeContext exchange.TradeContext
 			log.Printf("can not create algorithm of %v (reason = %v)", name, err)
 			continue
 		}
-		err = newInternalTradeAlgoritm.Initialize(tradeContext, r.notifier)
+		err = newInternalTradeAlgoritm.Initialize(ex, r.notifier)
 		if err != nil {
-			r.DestroyInternalTradeAlgorithms(tradeContext)
+			r.DestroyInternalTradeAlgorithms(ex)
 			return errors.Wrap(err, fmt.Sprintf("algorithm initialize error of %v", name))
 		}
 		r.internalTradeAlgorithms = append(r.internalTradeAlgorithms, newInternalTradeAlgoritm)
@@ -41,9 +41,9 @@ func (r *Robot) CreateInternalTradeAlgorithms(tradeContext exchange.TradeContext
 	return nil
 }
 
-func (r *Robot) UpdateInternalTradeAlgorithms(currencyPair string, tradeContext exchange.TradeContext) (error) {
+func (r *Robot) UpdateInternalTradeAlgorithms(currencyPair string, ex exchange.Exchange) (error) {
 	for _, tradeAlgorithm := range r.internalTradeAlgorithms {
-		err := tradeAlgorithm.Update(currencyPair, tradeContext, r.notifier)
+		err := tradeAlgorithm.Update(currencyPair, ex, r.notifier)
 		if err != nil {
 			log.Printf("algorithm update error (name = %v, reason = %v)", tradeAlgorithm.GetName(), err)
 		}
@@ -51,19 +51,15 @@ func (r *Robot) UpdateInternalTradeAlgorithms(currencyPair string, tradeContext 
 	return nil
 }
 
-func (r *Robot) DestroyInternalTradeAlgorithms(tradeContext exchange.TradeContext) (error) {
+func (r *Robot) DestroyInternalTradeAlgorithms(ex exchange.Exchange) (error) {
 	for _, tradeAlgorithm := range r.internalTradeAlgorithms {
-		err := tradeAlgorithm.Finalize(tradeContext, r.notifier)
+		err := tradeAlgorithm.Finalize(ex, r.notifier)
 		if err != nil {
 			log.Printf("algorithm finalize error (name = %v, reason = %v)", tradeAlgorithm.GetName(), err)
 		}
 	}
 	return nil
 }
-
-
-
-
 
 func (r *Robot) CreateExternalTradeAlgorithms(exchanges map[string]exchange.Exchange) (error) {
 	for name, registeredAlgorithm := range algorithm.GetRegisterdAlgoriths() {
@@ -105,9 +101,6 @@ func (r *Robot) DestroyExternalTradeAlgorithms(exchanges map[string]exchange.Exc
 	}
 	return nil
 }
-
-
-
 
 type Config struct {
 	AlgorithmPluginDir string `json:"algorithmPluginDir" yaml:"algorithmPluginDir" toml:"algorithmPluginDir"`

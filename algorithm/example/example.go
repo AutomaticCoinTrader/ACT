@@ -35,20 +35,20 @@ func (i *internalTradeExample) GetName() (string) {
 	return i.name
 }
 
-func (i *internalTradeExample) Initialize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (i *internalTradeExample) Initialize(ex exchange.Exchange, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
-func (i *internalTradeExample) Update(currencyPair string, tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (i *internalTradeExample) Update(currencyPair string, ex exchange.Exchange, notifier *notifier.Notifier) (error) {
 	// trade
 	log.Printf("internal trade")
 	log.Printf("> currencyPair = %v", currencyPair)
-	latPrice, err := tradeContext.GetLastPrice(currencyPair)
+	latPrice, err := ex.GetLastPrice(currencyPair)
 	if err != nil {
 		return err
 	}
 	log.Printf(">> LastPrice: %v\n", latPrice)
-	boardCursor, err := tradeContext.GetBuyBoardCursor(currencyPair)
+	boardCursor, err := ex.GetBuyBoardCursor(currencyPair)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (i *internalTradeExample) Update(currencyPair string, tradeContext exchange
 	}
 	log.Printf(">> buy: %v\n", string(bytes))
 
-	boardCursor, err = tradeContext.GetSellBoardCursor(currencyPair)
+	boardCursor, err = ex.GetSellBoardCursor(currencyPair)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (i *internalTradeExample) Update(currencyPair string, tradeContext exchange
 	return nil
 }
 
-func (i *internalTradeExample) Finalize(tradeContext exchange.TradeContext, notifier *notifier.Notifier) (error) {
+func (i *internalTradeExample) Finalize(ex exchange.Exchange, notifier *notifier.Notifier) (error) {
 	return nil
 }
 
@@ -110,9 +110,8 @@ func (e *externalTradeExample) Update(exchanges map[string]exchange.Exchange, no
 	// arbitrage trade
 	log.Printf("external trade")
 	for name, ex := range exchanges {
-		tradeContext := ex.GetTradeContext()
 		log.Printf("> exchange = %v", name)
-		for _, currencyPair := range tradeContext.GetCurrencyPairs() {
+		for _, currencyPair := range ex.GetCurrencyPairs() {
 			log.Printf(">> currencyPair = %v", currencyPair)
 		}
 	}

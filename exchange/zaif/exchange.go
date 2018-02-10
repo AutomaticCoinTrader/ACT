@@ -276,124 +276,127 @@ func (c *currencyPairsInfo) getTrades(currencyPair string) ([]*StreamingTradesRe
 	return c.Trades[currencyPair]
 }
 
-type TradeContext struct {
+
+type Exchange struct {
+	config        *ExchangeConfig
+	requester     *Requester
 	funds                  *CurrencyFunds
-	requester              *Requester
 	streamingCallback      exchange.StreamingCallback
 	currencyPairs          []string
 	currencyPairsInfo      *currencyPairsInfo
-	userCallbackData       interface{}
 }
 
-func (t *TradeContext) GetExchangeName() (string) {
+
+
+func (e *Exchange) GetName() (string) {
 	return exchangeName
 }
 
-func (t *TradeContext) GetCurrencyPairs() ([]string) {
-	return t.currencyPairs
+func (e *Exchange) GetCurrencyPairs() ([]string) {
+	return e.currencyPairs
 }
 
-func (t *TradeContext) Buy(currencyPair string, price float64, amount float64) (int64, error) {
-	tradeParams := t.requester.NewTradeParams()
+func (e *Exchange) Buy(currencyPair string, price float64, amount float64) (int64, error) {
+	tradeParams := e.requester.NewTradeParams()
 	tradeParams.Price = price
 	tradeParams.Amount = amount
 	tradeParams.CurrencyPair = currencyPair
-	tradeResponse, _, _, err := t.requester.TradeBuy(tradeParams)
+	tradeResponse, _, _, err := e.requester.TradeBuy(tradeParams)
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not buy trade (exchange = %v, currencyPair = %v)", exchangeName, currencyPair)
 	}
 	if tradeResponse.Success != 1 {
 		return 0, errors.Errorf("can not buy trade (exchange = %v, currencyPair = %v, reason = %v)", exchangeName, currencyPair, tradeResponse.Error)
 	}
-	err = updateFunds(t.requester, t.funds)
+	err = updateFunds(e.requester, e.funds)
 	if err != nil {
 		return tradeResponse.Return.OrderID, errors.Wrapf(err, "can not update fund (exchange = %v, currencyPair = %v)", exchangeName, currencyPair)
 	}
 	return tradeResponse.Return.OrderID, nil
 }
 
-func (t *TradeContext) Sell(currencyPair string, price float64, amount float64) (int64, error) {
-	tradeParams := t.requester.NewTradeParams()
+func (e *Exchange) Sell(currencyPair string, price float64, amount float64) (int64, error) {
+	tradeParams := e.requester.NewTradeParams()
 	tradeParams.Price = price
 	tradeParams.Amount = amount
 	tradeParams.CurrencyPair = currencyPair
-	tradeResponse, _, _, err := t.requester.TradeSell(tradeParams)
+	tradeResponse, _, _, err := e.requester.TradeSell(tradeParams)
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not sell trade (currencyPair = %v)", currencyPair)
 	}
 	if tradeResponse.Success != 1 {
 		return 0, errors.Errorf("can not sell trade (currencyPair = %v, reason = %v)", currencyPair, tradeResponse.Error)
 	}
-	err = updateFunds(t.requester, t.funds)
+	err = updateFunds(e.requester, e.funds)
 	if err != nil {
 		return tradeResponse.Return.OrderID, errors.Wrapf(err,"can not update fund (currencyPair = %v)", currencyPair)
 	}
 	return tradeResponse.Return.OrderID, nil
 }
 
-func (t *TradeContext) Cancel(orderID int64) (error) {
-	tradeCancelOrderParams := t.requester.NewTradeCancelOrderParams()
+func (e *Exchange) Cancel(orderID int64) (error) {
+	tradeCancelOrderParams := e.requester.NewTradeCancelOrderParams()
 	tradeCancelOrderParams.IsToken = false
 	tradeCancelOrderParams.OrderId = orderID
-	tradeCancelOrderResponse, _, _, err := t.requester.TradeCancelOrder(tradeCancelOrderParams)
+	tradeCancelOrderResponse, _, _, err := e.requester.TradeCancelOrder(tradeCancelOrderParams)
 	if err != nil {
 		return errors.Wrapf(err, "can not cancel order (orderID = %v)", orderID)
 	}
 	if tradeCancelOrderResponse.Success != 1 {
 		return errors.Errorf("can not cancel order (orderID = %v, reason = %v)", orderID, tradeCancelOrderResponse.Error)
 	}
-	err = updateFunds(t.requester, t.funds)
+	err = updateFunds(e.requester, e.funds)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("can not update fund (orderID = %v)", orderID))
 	}
 	return nil
 }
 
-func (t *TradeContext) GetFunds() (map[string]float64, error) {
-	return t.funds.all(), nil
+func (e *Exchange) GetFunds() (map[string]float64, error) {
+	return e.funds.all(), nil
 }
 
-func (t *TradeContext) GetLastPrice(currencyPair string) (float64, error) {
-	return t.currencyPairsInfo.getLastPrice(currencyPair), nil
+func (e *Exchange) GetLastPrice(currencyPair string) (float64, error) {
+	return e.currencyPairsInfo.getLastPrice(currencyPair), nil
 }
 
-func (t *TradeContext) GetSellBoardCursor(currencyPair string) (exchange.BoardCursor, error) {
+func (e *Exchange) GetSellBoardCursor(currencyPair string) (exchange.BoardCursor, error) {
 	return &BoardCursor{
 		index:  0,
-		values: t.currencyPairsInfo.getAsks(currencyPair),
+		values: e.currencyPairsInfo.getAsks(currencyPair),
 	}, nil
 }
 
-func (t *TradeContext) GetBuyBoardCursor(currencyPair string) (exchange.BoardCursor, error) {
+func (e *Exchange) GetBuyBoardCursor(currencyPair string) (exchange.BoardCursor, error) {
 
 	return &BoardCursor{
 		index:  0,
-		values: t.currencyPairsInfo.getBids(currencyPair),
+		values: e.currencyPairsInfo.getBids(currencyPair),
 	}, nil
 }
 
-func (t *TradeContext) GetTradesCursor(currencyPair string) (exchange.TradesCursor, error) {
+func (e *Exchange) GetTradesCursor(currencyPair string) (exchange.TradesCursor, error) {
 	return &TradeHistoryCursor{
 		index:  0,
-		values: t.currencyPairsInfo.getTrades(currencyPair),
+		values: e.currencyPairsInfo.getTrades(currencyPair),
 	}, nil
 }
 
-func (t *TradeContext) GetOrderHistoryCursor(count int64) (exchange.OrderCursor, error) {
-	tradeHistoryParams :=  t.requester.NewTradeHistoryParams()
+func (e *Exchange) GetOrderHistoryCursor(count int64) (exchange.OrderCursor, error) {
+	tradeHistoryParams :=  e.requester.NewTradeHistoryParams()
 	tradeHistoryParams.IsToken = false
 	tradeHistoryParams.Count = count
-	tradeHistoryResponse, _, _, err := t.requester.TradeHistory(tradeHistoryParams)
+	tradeHistoryResponse, _, _, err := e.requester.TradeHistory(tradeHistoryParams)
 	if err != nil {
 		return nil, err
 	}
 	if tradeHistoryResponse.Success != 1 {
 		return nil, errors.Errorf("can not get trade history (reason = %v)", tradeHistoryResponse.Error)
 	}
-	tradeHistoryParams =  t.requester.NewTradeHistoryParams()
+	tradeHistoryParams = e.requester.NewTradeHistoryParams()
 	tradeHistoryParams.IsToken = true
 	tradeHistoryParams.Count = count
-	tradeHistoryTokenResponse, _, _, err := t.requester.TradeHistory(tradeHistoryParams)
+	tradeHistoryTokenResponse, _, _, err := e.requester.TradeHistory(tradeHistoryParams)
 	if err != nil {
 		return nil, err
 	}
@@ -403,11 +406,11 @@ func (t *TradeContext) GetOrderHistoryCursor(count int64) (exchange.OrderCursor,
 	return newOrderHistoryCursor(tradeHistoryResponse.Return, tradeHistoryTokenResponse.Return), nil
 }
 
-func (t *TradeContext) GetActiveOrderCursor() (exchange.OrderCursor, error) {
-	tradeActiveOrderParams := t.requester.NewTradeActiveOrderParams()
+func (e *Exchange) GetActiveOrderCursor() (exchange.OrderCursor, error) {
+	tradeActiveOrderParams := e.requester.NewTradeActiveOrderParams()
 
 	tradeActiveOrderParams.IsTokenBoth = true
-	tradeActiveOrderBothResponse, _, _, err := t.requester.TradeActiveOrderBoth(tradeActiveOrderParams)
+	tradeActiveOrderBothResponse, _, _, err := e.requester.TradeActiveOrderBoth(tradeActiveOrderParams)
 	if err != nil {
 		return nil, err
 	}
@@ -417,7 +420,7 @@ func (t *TradeContext) GetActiveOrderCursor() (exchange.OrderCursor, error) {
 	return newActiveOrderCursor(tradeActiveOrderBothResponse.Return.ActiveOrders, tradeActiveOrderBothResponse.Return.TokenActiveOrders), nil
 }
 
-func (t *TradeContext) GetMinPriceUnit(currencyPair string) (float64) {
+func (e *Exchange) GetMinPriceUnit(currencyPair string) (float64) {
 	switch currencyPair {
 	case "btc_jpy":
 		return 5
@@ -450,7 +453,7 @@ func (t *TradeContext) GetMinPriceUnit(currencyPair string) (float64) {
 	}
 }
 
-func (t *TradeContext) GetMinAmountUnit(currencyPair string) (float64) {
+func (e *Exchange) GetMinAmountUnit(currencyPair string) (float64) {
 	switch currencyPair {
 	case "btc_jpy":
 		return 0.0001
@@ -481,48 +484,22 @@ func (t *TradeContext) GetMinAmountUnit(currencyPair string) (float64) {
 	default:
 		return 0
 	}
-}
-
-type Exchange struct {
-	config        *ExchangeConfig
-	requester     *Requester
-	tradeContext  *TradeContext
 }
 
 func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingResponse *StreamingResponse, StreamingCallbackData interface{}) (error) {
-	myTradeContext := StreamingCallbackData.(*TradeContext)
-	myTradeContext.currencyPairsInfo.update(currencyPair, streamingResponse.Bids, streamingResponse.Asks, streamingResponse.LastPrice.Price, streamingResponse.Trades)
-	err := myTradeContext.streamingCallback(currencyPair, myTradeContext)
+
+	e.currencyPairsInfo.update(currencyPair, streamingResponse.Bids, streamingResponse.Asks, streamingResponse.LastPrice.Price, streamingResponse.Trades)
+	err := e.streamingCallback(currencyPair, e)
 	if err != nil {
 		return errors.Wrap(err, "trade update callback error")
 	}
 	return nil
 }
 
-func (e *Exchange) GetName() string {
-	return exchangeName
-}
-
 // Initialize is initalize exchange
-func (e *Exchange) Initialize(streamingCallback exchange.StreamingCallback) (error) {
-	e.tradeContext = &TradeContext{
-		funds:             &CurrencyFunds{
-			funds: make(map[string]float64),
-			mutex: new(sync.Mutex),
-		},
-		requester:         e.requester,
-		streamingCallback: streamingCallback,
-		currencyPairs:     e.config.CurrencyPairs,
-		currencyPairsInfo: &currencyPairsInfo{
-			Bids: make(map[string][][]float64),
-			Asks: make(map[string][][]float64),
-			LastPrice: make(map[string]float64),
-			Trades: make(map[string][]*StreamingTradesResponse),
-			mutex: new(sync.Mutex),
-		},
-	}
+func (e *Exchange) Initialize() (error) {
 	// fundsを初期化時に更新しておく
-	err := updateFunds(e.requester, e.tradeContext.funds)
+	err := updateFunds(e.requester, e.funds)
 	if err != nil {
 		return errors.Wrap(err, "can not update fund")
 	}
@@ -534,17 +511,13 @@ func (e *Exchange) Finalize() (error) {
 	return nil
 }
 
-func (e *Exchange) GetTradeContext() (exchange.TradeContext) {
-	return e.tradeContext
-}
-
 // StreamingStart is start streaming
-func (e *Exchange) StartStreamings(tradeContext exchange.TradeContext) (error) {
+func (e *Exchange) StartStreamings(streamingCallback exchange.StreamingCallback) (error) {
 	// ストリーミングを開始する
-	myTradeContext := tradeContext.(*TradeContext)
-	for _, currencyPair := range myTradeContext.currencyPairs {
+	e.streamingCallback = streamingCallback
+	for _, currencyPair := range e.currencyPairs {
 		currencyPair = strings.ToLower(currencyPair)
-		err := e.requester.StreamingStart(currencyPair, e.exchangeStreamingCallback, tradeContext)
+		err := e.requester.StreamingStart(currencyPair, e.exchangeStreamingCallback, e)
 		if (err != nil) {
 			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair);
 		}
@@ -553,10 +526,10 @@ func (e *Exchange) StartStreamings(tradeContext exchange.TradeContext) (error) {
 }
 
 // StopStreaming is stop streaming
-func (e *Exchange) StopStreamings(tradeContext exchange.TradeContext) (error) {
+func (e *Exchange) StopStreamings() (error) {
 	// ストリーミングを停止する
-	myTradeContext := tradeContext.(*TradeContext)
-	for _, currencyPair := range myTradeContext.currencyPairs {
+
+	for _, currencyPair := range e.currencyPairs {
 		currencyPair = strings.ToLower(currencyPair)
 		e.requester.StreamingStop(currencyPair)
 
@@ -580,7 +553,18 @@ func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 	return &Exchange{
 		config:        myConfig,
 		requester:     NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
-		tradeContext:  nil,
+		funds:             &CurrencyFunds{
+			funds: make(map[string]float64),
+			mutex: new(sync.Mutex),
+		},
+		currencyPairs:     myConfig.CurrencyPairs,
+		currencyPairsInfo: &currencyPairsInfo{
+			Bids: make(map[string][][]float64),
+			Asks: make(map[string][][]float64),
+			LastPrice: make(map[string]float64),
+			Trades: make(map[string][]*StreamingTradesResponse),
+			mutex: new(sync.Mutex),
+		},
 	}, nil
 }
 
