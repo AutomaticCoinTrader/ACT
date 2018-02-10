@@ -54,4 +54,3 @@ func (r *reader) read(configPath string, data interface{}) (error) {
 func newReader() (*reader) {
 	return &reader{}
 }
-

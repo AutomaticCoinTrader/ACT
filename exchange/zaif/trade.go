@@ -385,14 +385,14 @@ func (r *Requester) NewTradeParams() (*TradeParams) {
 type TradeResponse struct {
 	Return struct {
 		Funds struct {
-			Btc  float64 `json:"btc"`
-			Bch  float64 `json:"bch"`
-			Eth  float64 `json:"eth"`
-			Mona float64 `json:"mona"`
-			Xem  float64 `json:"xem"`
-			Jpy  float64 `json:"jpy"`
-			Zaif  float64 `json:"zaif"`
-			Pepecash  float64 `json:"pepecash"`
+			Btc      float64 `json:"btc"`
+			Bch      float64 `json:"bch"`
+			Eth      float64 `json:"eth"`
+			Mona     float64 `json:"mona"`
+			Xem      float64 `json:"xem"`
+			Jpy      float64 `json:"jpy"`
+			Zaif     float64 `json:"zaif"`
+			Pepecash float64 `json:"pepecash"`
 		} `json:"funds"`
 		OrderID  int64   `json:"order_id"`
 		Received float64 `json:"received"`
@@ -451,14 +451,14 @@ func (r *Requester) NewTradeCancelOrderParams() (*TradeCancelOrderParams) {
 type TradeCancelOrderResponse struct {
 	Return struct {
 		Funds struct {
-			Btc  float64 `json:"btc"`
-			Bch  float64 `json:"bch"`
-			Eth  float64 `json:"eth"`
-			Mona float64 `json:"mona"`
-			Xem  float64 `json:"xem"`
-			Jpy  float64 `json:"jpy"`
-			Zaif  float64 `json:"zaif"`
-			Pepecash  float64 `json:"pepecash"`
+			Btc      float64 `json:"btc"`
+			Bch      float64 `json:"bch"`
+			Eth      float64 `json:"eth"`
+			Mona     float64 `json:"mona"`
+			Xem      float64 `json:"xem"`
+			Jpy      float64 `json:"jpy"`
+			Zaif     float64 `json:"zaif"`
+			Pepecash float64 `json:"pepecash"`
 		} `json:"funds"`
 		OrderID int64 `json:"order_id"`
 	} `json:"return"`
@@ -512,14 +512,14 @@ func (r *Requester) NewTradeWithdrawParams() (*TradeWithdrawParams) {
 type TradeWithdrawResponse struct {
 	Return struct {
 		Funds struct {
-			Btc  float64 `json:"btc"`
-			Bch  float64 `json:"bch"`
-			Eth  float64 `json:"eth"`
-			Mona float64 `json:"mona"`
-			Xem  float64 `json:"xem"`
-			Jpy  float64 `json:"jpy"`
-			Zaif  float64 `json:"zaif"`
-			Pepecash  float64 `json:"pepecash"`
+			Btc      float64 `json:"btc"`
+			Bch      float64 `json:"bch"`
+			Eth      float64 `json:"eth"`
+			Mona     float64 `json:"mona"`
+			Xem      float64 `json:"xem"`
+			Jpy      float64 `json:"jpy"`
+			Zaif     float64 `json:"zaif"`
+			Pepecash float64 `json:"pepecash"`
 		} `json:"funds"`
 		Fee  float64 `json:"fee"`
 		TxID string  `json:"txid"`

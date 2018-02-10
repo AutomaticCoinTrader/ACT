@@ -36,8 +36,8 @@ type Integrator struct {
 }
 
 func (i *Integrator) setupRouting(engine *gin.Engine) {
-	engine.HEAD( "/", i.index)
-	engine.GET( "/", i.index)
+	engine.HEAD("/", i.index)
+	engine.GET("/", i.index)
 }
 
 func (i *Integrator) runHttpServer() {
@@ -57,19 +57,19 @@ func (i *Integrator) initHttpServer() (error) {
 	engine := gin.Default()
 	i.setupRouting(engine)
 	server := manners.NewWithServer(&http.Server{
-		Addr:    i.config.Server.AddrPort,
-		Handler: engine,
+		Addr:           i.config.Server.AddrPort,
+		Handler:        engine,
 		ReadTimeout:    60 * time.Second,
 		WriteTimeout:   60 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	})
 	i.gracefulServer = &gracefulServer{
-		server: server,
+		server:    server,
 		startChan: make(chan error),
 	}
 	go i.runHttpServer()
 	select {
-	case err := <- i.gracefulServer.startChan:
+	case err := <-i.gracefulServer.startChan:
 		return errors.Wrap(err, fmt.Sprintf("can not start http server (%s)", i.gracefulServer.server.Addr))
 	case <-time.After(time.Second):
 	}
@@ -112,7 +112,7 @@ func (i *Integrator) Initialize() (error) {
 				continue
 			}
 			log.Printf("%v exchange create", name)
-			ex, err :=  exchangeNewFunc(conf, )
+			ex, err := exchangeNewFunc(conf, )
 			if err != nil {
 				i.Finalize()
 				return errors.Wrap(err, fmt.Sprintf("can not create exchange of %v", name))
@@ -168,12 +168,12 @@ func (i *Integrator) stopInternalTrade() (error) {
 	return nil
 }
 
-func (i *Integrator) externalTradeEventLoop(){
+func (i *Integrator) externalTradeEventLoop() {
 	for {
 		select {
-		case <- i.arbitrageLoopFinishChan:
+		case <-i.arbitrageLoopFinishChan:
 			return
-		case <- time.After(500 * time.Millisecond):
+		case <-time.After(500 * time.Millisecond):
 			err := i.robot.UpdateExternalTradeAlgorithms(i.exchanges)
 			if err != nil {
 				log.Printf("can not update external trade algorithm (reason = %v)", err)
@@ -185,7 +185,7 @@ func (i *Integrator) externalTradeEventLoop(){
 func (i *Integrator) startExternalTrade() (error) {
 	err := i.robot.CreateExternalTradeAlgorithms(i.exchanges)
 	if err != nil {
-		return errors.Wrap(err,"can not create external trade algorithm")
+		return errors.Wrap(err, "can not create external trade algorithm")
 	}
 	go i.externalTradeEventLoop()
 	return nil
@@ -225,15 +225,15 @@ func (i *Integrator) Stop() (error) {
 }
 
 type serverConfig struct {
-	Debug bool                 `json:"debug"     yaml:"debug"     toml:"debug"`
-	AddrPort string            `json:"addrPort"  yaml:"addrPort"  toml:"addrPort"`
+	Debug    bool   `json:"debug"     yaml:"debug"     toml:"debug"`
+	AddrPort string `json:"addrPort"  yaml:"addrPort"  toml:"addrPort"`
 }
 
 type Config struct {
-	Server    *serverConfig     `json:"server"    yaml:"server"    toml:"server"`
-	Exchanges *exchangesConfig  `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
-	Robot      *robot.Config    `json:"robot"     yaml:"robot"     toml:"robot"`
-	Notifier   *notifier.Config `json:"notifier"  yaml:"notifier"  toml:"notifier"`
+	Server    *serverConfig    `json:"server"    yaml:"server"    toml:"server"`
+	Exchanges *exchangesConfig `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
+	Robot     *robot.Config    `json:"robot"     yaml:"robot"     toml:"robot"`
+	Notifier  *notifier.Config `json:"notifier"  yaml:"notifier"  toml:"notifier"`
 }
 
 func NewIntegrator(config *Config, configDir string) (*Integrator, error) {
@@ -243,16 +243,13 @@ func NewIntegrator(config *Config, configDir string) (*Integrator, error) {
 	}
 	rbt, err := robot.NewRobot(config.Robot, configDir, ntf)
 	if err != nil {
-		return nil, errors.Wrap(err,fmt.Sprintf("can not create robot (config dir = %v, reason = %v)", configDir, err))
+		return nil, errors.Wrap(err, fmt.Sprintf("can not create robot (config dir = %v, reason = %v)", configDir, err))
 	}
 	return &Integrator{
-		config: config,
-		exchanges: make(map[string]exchange.Exchange),
+		config:                  config,
+		exchanges:               make(map[string]exchange.Exchange),
 		arbitrageLoopFinishChan: make(chan bool),
-		notifier: ntf,
-		robot: rbt,
+		notifier:                ntf,
+		robot:                   rbt,
 	}, nil
 }
-
-
-

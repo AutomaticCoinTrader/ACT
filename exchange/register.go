@@ -11,4 +11,3 @@ func RegisterExchange(name string, exchangeNewFunc ExchangeNewFunc) {
 func GetRegisterdExchanges() (map[string]ExchangeNewFunc) {
 	return registeredExchanges
 }
-

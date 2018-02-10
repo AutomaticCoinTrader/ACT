@@ -17,9 +17,9 @@ import (
 type Requester struct {
 	httpClient   *utility.HTTPClient
 	wsClients    map[string]*utility.WSClient
-    readBufSize  int
-    writeBufSize int
-    retry        int
+	readBufSize  int
+	writeBufSize int
+	retry        int
 	retryWait    int
 	key          string
 	secret       string
@@ -37,7 +37,7 @@ type requestFunc func(request *utility.HTTPRequest) (interface{}, *http.Response
 func (b urlBuilder) buildURL(resource string) (string) {
 	switch b {
 	case Public:
-		 return "https://api.zaif.jp/api/1" + "/" + resource
+		return "https://api.zaif.jp/api/1" + "/" + resource
 	case Trade:
 		return "https://api.zaif.jp/tapi" + "/" + resource
 	default:
@@ -57,17 +57,17 @@ func (b urlBuilder) getURL() (string) {
 }
 
 func (r *Requester) makePublicRequest(resource string, params string) (*utility.HTTPRequest) {
-	u :=  Public.buildURL(resource)
+	u := Public.buildURL(resource)
 	if params != "" {
 		u += "?" + params
 	}
-	return  &utility.HTTPRequest{
-		URL : u,
+	return &utility.HTTPRequest{
+		URL: u,
 	}
 }
 
 func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTTPRequest) {
-	u :=  Trade.getURL()
+	u := Trade.getURL()
 	values := url.Values{}
 	values.Set("nonce", r.getNonce())
 	values.Set("method", method)
@@ -84,13 +84,13 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 	headers["Sign"] = sign
 	//log.Printf("key = %v, sign = %v", r.key, sign)
 	return &utility.HTTPRequest{
-		URL : u,
-		Headers : headers,
-		Body: body,
+		URL:     u,
+		Headers: headers,
+		Body:    body,
 	}
 }
 
-func (r *Requester) getNonce() (string){
+func (r *Requester) getNonce() (string) {
 	now := time.Now()
 	return strconv.FormatInt(now.Unix(), 10) + "." + fmt.Sprintf("%09d", now.Nanosecond())
 }
@@ -106,14 +106,14 @@ func (r *Requester) unmarshal(requestFunc requestFunc, request *utility.HTTPRequ
 
 // NewRequester is create requester
 func NewRequester(key string, secret string, retry int, retryWait, timeout int, readBufSize int, writeBufSize int) (*Requester) {
-	return &Requester {
-		httpClient : utility.NewHTTPClient(retry, retryWait, timeout),
-		wsClients : make(map[string]*utility.WSClient),
-		readBufSize : readBufSize,
-		writeBufSize : writeBufSize,
-		retry : retry,
-		retryWait: retryWait,
-		key: key,
-		secret: secret,
+	return &Requester{
+		httpClient:   utility.NewHTTPClient(retry, retryWait, timeout),
+		wsClients:    make(map[string]*utility.WSClient),
+		readBufSize:  readBufSize,
+		writeBufSize: writeBufSize,
+		retry:        retry,
+		retryWait:    retryWait,
+		key:          key,
+		secret:       secret,
 	}
 }

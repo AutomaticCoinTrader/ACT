@@ -13,7 +13,7 @@ import (
 
 const (
 	SMTPAuthUnkown  SMTPAuthType = ""
-	SMTPAuthPLAIN 	SMTPAuthType = "PLAIN"
+	SMTPAuthPLAIN   SMTPAuthType = "PLAIN"
 	AMTPAuthCRAMMD5 SMTPAuthType = "CRAM-MD5"
 )
 
@@ -43,7 +43,7 @@ type SMTPClient struct {
 	useTLS      bool
 	useStartTLS bool
 	from        string
-    to          string
+	to          string
 }
 
 func (s *SMTPClient) SendMail(subject string, body string) (error) {
@@ -73,8 +73,8 @@ func (s *SMTPClient) SendMail(subject string, body string) (error) {
 
 	var conn net.Conn
 	if s.useTLS {
-		tlsContext := &tls.Config {
-			ServerName: host,
+		tlsContext := &tls.Config{
+			ServerName:         host,
 			InsecureSkipVerify: false,
 		}
 		conn, err = tls.Dial("tcp", s.hostPort, tlsContext)
@@ -95,8 +95,8 @@ func (s *SMTPClient) SendMail(subject string, body string) (error) {
 	}
 
 	if s.useStartTLS {
-		tlsconfig := &tls.Config {
-			ServerName: host,
+		tlsconfig := &tls.Config{
+			ServerName:         host,
 			InsecureSkipVerify: false,
 		}
 		if err := client.StartTLS(tlsconfig); err != nil {
@@ -115,7 +115,7 @@ func (s *SMTPClient) SendMail(subject string, body string) (error) {
 	}
 
 	var emails []string
-	for _,  to := range toList {
+	for _, to := range toList {
 		emails = append(emails, to.Address)
 	}
 	recept := strings.Join(emails, ",")
@@ -150,13 +150,13 @@ func (s *SMTPClient) SendMail(subject string, body string) (error) {
 // NewSMTPClient is create smtp client
 func NewSMTPClient(hostPort string, username string, password string, authtype SMTPAuthType, useTLS bool, useStartTLS bool, from string, to string) (n *SMTPClient) {
 	return &SMTPClient{
-		hostPort: hostPort,
-		username: username,
-		password: password,
-		authType: authtype,
-		useTLS: useTLS,
+		hostPort:    hostPort,
+		username:    username,
+		password:    password,
+		authType:    authtype,
+		useTLS:      useTLS,
 		useStartTLS: useStartTLS,
-		from: from,
-		to: to,
+		from:        from,
+		to:          to,
 	}
 }

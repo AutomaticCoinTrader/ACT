@@ -16,21 +16,21 @@ type PublicCurrenciesResponse []PublicCurrencyResponse
 
 // PublicCurrency is response of currency
 type PublicCurrencyResponse struct {
-	Name 	string `json:"name"`
+	Name    string `json:"name"`
 	IsToken bool   `json:"is_token"`
 }
 
 // GetCurrencies is get currencies
 func (r *Requester) Currencies(currency string) (*PublicCurrenciesResponse, *utility.HTTPRequest, *http.Response, error) {
 	request := r.makePublicRequest(path.Join("currencies", currency), "")
-	newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err  := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
-			if err != nil {
-				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get currencies (url = %v)", request.URL))
-			}
-			newRes := new(PublicCurrenciesResponse)
-			return newRes, res, resBody, err
-		}, request)
+	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
+		if err != nil {
+			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get currencies (url = %v)", request.URL))
+		}
+		newRes := new(PublicCurrenciesResponse)
+		return newRes, res, resBody, err
+	}, request)
 	return newRes.(*PublicCurrenciesResponse), request, response, err
 }
 
@@ -53,15 +53,15 @@ type PublicCurrencyPairResponse struct {
 
 // CurrencyPairs is get currency pairs
 func (r *Requester) CurrencyPairs(currencyPair string) (*PublicCurrencyPairsResponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("currency_pairs", currencyPair),  "")
-	newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error)  {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
-			if err != nil {
-				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get currency pairs (url = %v)", request.URL))
-			}
-			newRes := new(PublicCurrencyPairsResponse)
-			return newRes, res, resBody, err
-		}, request)
+	request := r.makePublicRequest(path.Join("currency_pairs", currencyPair), "")
+	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
+		if err != nil {
+			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get currency pairs (url = %v)", request.URL))
+		}
+		newRes := new(PublicCurrencyPairsResponse)
+		return newRes, res, resBody, err
+	}, request)
 	return newRes.(*PublicCurrencyPairsResponse), request, response, err
 }
 
@@ -72,15 +72,15 @@ type PublicLastPriceResponse struct {
 
 // LastPricee is get last place
 func (r *Requester) LastPrice(currencyPair string) (*PublicLastPriceResponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("last_price", currencyPair),  "")
-	newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+	request := r.makePublicRequest(path.Join("last_price", currencyPair), "")
+	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
-			if err != nil {
-				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get last price (url = %v)", request.URL))
-			}
-			newRes := new(PublicLastPriceResponse)
-			return newRes, res, resBody, err
-		}, request)
+		if err != nil {
+			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get last price (url = %v)", request.URL))
+		}
+		newRes := new(PublicLastPriceResponse)
+		return newRes, res, resBody, err
+	}, request)
 	return newRes.(*PublicLastPriceResponse), request, response, err
 }
 
@@ -97,15 +97,15 @@ type PublicTickerResponse struct {
 
 // Ticker is get ticker
 func (r *Requester) Ticker(currencyPair string) (*PublicTickerResponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("ticker", currencyPair),  "")
-	newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
-			if err != nil {
-				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get ticker (url = %v)", request.URL))
-			}
-			newRes := new(PublicTickerResponse)
-			return newRes, res, resBody, err
-		}, request)
+	request := r.makePublicRequest(path.Join("ticker", currencyPair), "")
+	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
+		if err != nil {
+			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get ticker (url = %v)", request.URL))
+		}
+		newRes := new(PublicTickerResponse)
+		return newRes, res, resBody, err
+	}, request)
 	return newRes.(*PublicTickerResponse), request, response, err
 }
 
@@ -124,8 +124,8 @@ type PublicTradeResponse struct {
 
 // Trades is get trades
 func (r *Requester) Trades(currencyPair string) (*PublicTradesResponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("trades", currencyPair),  "")
-	newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+	request := r.makePublicRequest(path.Join("trades", currencyPair), "")
+	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 
 		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
 		if err != nil {
@@ -145,8 +145,8 @@ type PublicDepthReaponse struct {
 
 // Depth is get depth
 func (r *Requester) Depth(currencyPair string) (*PublicDepthReaponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("depth", currencyPair),  "")
-	newRes, response, err := r.unmarshal(func (request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+	request := r.makePublicRequest(path.Join("depth", currencyPair), "")
+	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
 		if err != nil {
 			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get depth (url = %v)", request.URL))
@@ -163,11 +163,11 @@ type StreamingResponse struct {
 	Asks         [][]float64 `json:"asks"`
 	Bids         [][]float64 `json:"bids"`
 	CurrencyPair string      `json:"currency_pair"`
-	LastPrice    struct {
+	LastPrice struct {
 		Action string  `json:"action"`
 		Price  float64 `json:"price"`
 	} `json:"last_price"`
-	Timestamp string `json:"timestamp"`
+	Timestamp string                     `json:"timestamp"`
 	Trades    []*StreamingTradesResponse `json:"trades"`
 }
 
@@ -181,12 +181,12 @@ type StreamingTradesResponse struct {
 }
 
 type streaminCallbackData struct {
-	currencyPair    string
-	callback 		StreamingCallback
-	callbackData 	interface{}
+	currencyPair string
+	callback     StreamingCallback
+	callbackData interface{}
 }
 
-func (r Requester) streamingCallback(conn *websocket.Conn, userCallbackData interface{}) (error){
+func (r Requester) streamingCallback(conn *websocket.Conn, userCallbackData interface{}) (error) {
 	streaminCallbackData := userCallbackData.(*streaminCallbackData)
 	messageType, message, err := conn.ReadMessage()
 	if err != nil {
@@ -217,11 +217,11 @@ func (r Requester) StreamingStart(currencyPair string, callback StreamingCallbac
 	requestURL := "wss://ws.zaif.jp/stream?currency_pair=" + currencyPair
 	streaminCallbackData := &streaminCallbackData{
 		currencyPair: currencyPair,
-		callback: callback,
+		callback:     callback,
 		callbackData: callbackData,
 	}
-	newClient := utility.NewWSClient(r.readBufSize,  r.writeBufSize, r.retry, r.retryWait)
-	err := newClient.Start(r.streamingCallback, streaminCallbackData, requestURL,nil)
+	newClient := utility.NewWSClient(r.readBufSize, r.writeBufSize, r.retry, r.retryWait)
+	err := newClient.Start(r.streamingCallback, streaminCallbackData, requestURL, nil)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("can not start streaming (url = %v)", requestURL))
 	}
@@ -244,10 +244,3 @@ func (r Requester) StreamingStopAll(currencyPair string) {
 		client.Stop()
 	}
 }
-
-
-
-
-
-
-

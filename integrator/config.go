@@ -9,4 +9,3 @@ type exchangesConfig struct {
 	Zaif *zaif.ExchangeConfig `json:"zaif" yaml:"zaif" toml:"zaif" config:"zaif"`
 	//Coincheck *coincheck.CoincheckExchangeConfig `json:"coincheck" yaml:"coincheck" config:"coincheck"`
 }
-

@@ -40,7 +40,7 @@ Loop:
 	}
 }
 
-func actStart(integrator *integrator.Integrator) (error){
+func actStart(integrator *integrator.Integrator) (error) {
 	err := integrator.Initialize()
 	if err != nil {
 		return errors.Wrap(err, "initalize error of integrator")
@@ -105,4 +105,3 @@ func main() {
 		log.Printf("can not stop act (reason = %v)", err)
 	}
 }
-

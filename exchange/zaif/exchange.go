@@ -87,15 +87,15 @@ func (t *TradeHistoryCursor) Len() int {
 }
 
 type OrderHistoryCursor struct {
-	index  int
-	keys   []string
-	values map[string]TradeHistoryRecordResponse
+	index       int
+	keys        []string
+	values      map[string]TradeHistoryRecordResponse
 	keysToken   []string
 	valuesToken map[string]TradeHistoryRecordResponse
 }
 
 func (o *OrderHistoryCursor) Next() (int64, exchange.OrderAction, float64, float64, bool) {
-	if o.index >= len(o.keys) + len(o.keysToken) {
+	if o.index >= len(o.keys)+len(o.keysToken) {
 		return 0, "", 0, 0, false
 	}
 	var key string
@@ -104,7 +104,7 @@ func (o *OrderHistoryCursor) Next() (int64, exchange.OrderAction, float64, float
 		key = o.keys[o.index]
 		value = o.values[key]
 	} else {
-		key = o.keysToken[o.index - len(o.keys)]
+		key = o.keysToken[o.index-len(o.keys)]
 		value = o.valuesToken[key]
 	}
 	o.index++
@@ -132,11 +132,11 @@ func (o *OrderHistoryCursor) Len() int {
 }
 
 func newOrderHistoryCursor(values map[string]TradeHistoryRecordResponse, valuesToken map[string]TradeHistoryRecordResponse) (*OrderHistoryCursor) {
-	newOrderHistoryCursor := &OrderHistoryCursor {
-		index: 0,
-		keys: make([]string, 0, len(values)),
-		values: values,
-		keysToken: make([]string, 0, len(valuesToken)),
+	newOrderHistoryCursor := &OrderHistoryCursor{
+		index:       0,
+		keys:        make([]string, 0, len(values)),
+		values:      values,
+		keysToken:   make([]string, 0, len(valuesToken)),
 		valuesToken: valuesToken,
 	}
 	for k := range values {
@@ -149,15 +149,15 @@ func newOrderHistoryCursor(values map[string]TradeHistoryRecordResponse, valuesT
 }
 
 type ActiveOrderCursor struct {
-	index  int
-	keys   []string
-	values map[string]TradeActiveOrderRecordResponse
+	index       int
+	keys        []string
+	values      map[string]TradeActiveOrderRecordResponse
 	keysToken   []string
 	valuesToken map[string]TradeActiveOrderRecordResponse
 }
 
 func (o *ActiveOrderCursor) Next() (int64, exchange.OrderAction, float64, float64, bool) {
-	if o.index >= len(o.keys) + len(o.keys) {
+	if o.index >= len(o.keys)+len(o.keys) {
 		return 0, "", 0, 0, false
 	}
 	var key string
@@ -166,7 +166,7 @@ func (o *ActiveOrderCursor) Next() (int64, exchange.OrderAction, float64, float6
 		key = o.keys[o.index]
 		value = o.values[key]
 	} else {
-		key = o.keysToken[o.index - len(o.keys)]
+		key = o.keysToken[o.index-len(o.keys)]
 		value = o.valuesToken[key]
 	}
 	o.index++
@@ -192,11 +192,11 @@ func (o *ActiveOrderCursor) Len() int {
 }
 
 func newActiveOrderCursor(values map[string]TradeActiveOrderRecordResponse, valuesToken map[string]TradeActiveOrderRecordResponse) (*ActiveOrderCursor) {
-	newActiveOrderCursor := &ActiveOrderCursor {
-		index: 0,
-		keys: make([]string, 0, len(values)),
-		values: values,
-		keysToken: make([]string, 0, len(valuesToken)),
+	newActiveOrderCursor := &ActiveOrderCursor{
+		index:       0,
+		keys:        make([]string, 0, len(values)),
+		values:      values,
+		keysToken:   make([]string, 0, len(valuesToken)),
 		valuesToken: valuesToken,
 	}
 	for k := range values {
@@ -276,17 +276,14 @@ func (c *currencyPairsInfo) getTrades(currencyPair string) ([]*StreamingTradesRe
 	return c.Trades[currencyPair]
 }
 
-
 type Exchange struct {
-	config        *ExchangeConfig
-	requester     *Requester
-	funds                  *CurrencyFunds
-	streamingCallback      exchange.StreamingCallback
-	currencyPairs          []string
-	currencyPairsInfo      *currencyPairsInfo
+	config            *ExchangeConfig
+	requester         *Requester
+	funds             *CurrencyFunds
+	streamingCallback exchange.StreamingCallback
+	currencyPairs     []string
+	currencyPairsInfo *currencyPairsInfo
 }
-
-
 
 func (e *Exchange) GetName() (string) {
 	return exchangeName
@@ -329,7 +326,7 @@ func (e *Exchange) Sell(currencyPair string, price float64, amount float64) (int
 	}
 	err = updateFunds(e.requester, e.funds)
 	if err != nil {
-		return tradeResponse.Return.OrderID, errors.Wrapf(err,"can not update fund (currencyPair = %v)", currencyPair)
+		return tradeResponse.Return.OrderID, errors.Wrapf(err, "can not update fund (currencyPair = %v)", currencyPair)
 	}
 	return tradeResponse.Return.OrderID, nil
 }
@@ -383,7 +380,7 @@ func (e *Exchange) GetTradesCursor(currencyPair string) (exchange.TradesCursor, 
 }
 
 func (e *Exchange) GetOrderHistoryCursor(count int64) (exchange.OrderCursor, error) {
-	tradeHistoryParams :=  e.requester.NewTradeHistoryParams()
+	tradeHistoryParams := e.requester.NewTradeHistoryParams()
 	tradeHistoryParams.IsToken = false
 	tradeHistoryParams.Count = count
 	tradeHistoryResponse, _, _, err := e.requester.TradeHistory(tradeHistoryParams)
@@ -538,32 +535,32 @@ func (e *Exchange) StopStreamings() (error) {
 }
 
 type ExchangeConfig struct {
-	Key           string                        `json:"key"          yaml:"key"          toml:"key"`
-	Secret        string                        `json:"secret"       yaml:"secret"       toml:"secret"`
-	Retry         int                           `json:"retry"        yaml:"retry"        toml:"retry"`
-	RetryWait     int                           `json:"retryWait"    yaml:"retryWait"    toml:"retryWait"`
-	Timeout       int                           `json:"timeout"      yaml:"timeout"      toml:"timeout"`
-	ReadBufSize   int                           `json:"readBufSize"  yaml:"readBufSize"  toml:"readBufSize"`
-	WriteBufSize  int                           `json:"writeBufSize" yaml:"writeBufSize" toml:"writeBufSize"`
-	CurrencyPairs []string                      `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
+	Key           string   `json:"key"          yaml:"key"          toml:"key"`
+	Secret        string   `json:"secret"       yaml:"secret"       toml:"secret"`
+	Retry         int      `json:"retry"        yaml:"retry"        toml:"retry"`
+	RetryWait     int      `json:"retryWait"    yaml:"retryWait"    toml:"retryWait"`
+	Timeout       int      `json:"timeout"      yaml:"timeout"      toml:"timeout"`
+	ReadBufSize   int      `json:"readBufSize"  yaml:"readBufSize"  toml:"readBufSize"`
+	WriteBufSize  int      `json:"writeBufSize" yaml:"writeBufSize" toml:"writeBufSize"`
+	CurrencyPairs []string `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
 }
 
 func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 	myConfig := config.(*ExchangeConfig)
 	return &Exchange{
-		config:        myConfig,
-		requester:     NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
-		funds:             &CurrencyFunds{
+		config:    myConfig,
+		requester: NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
+		funds: &CurrencyFunds{
 			funds: make(map[string]float64),
 			mutex: new(sync.Mutex),
 		},
-		currencyPairs:     myConfig.CurrencyPairs,
+		currencyPairs: myConfig.CurrencyPairs,
 		currencyPairsInfo: &currencyPairsInfo{
-			Bids: make(map[string][][]float64),
-			Asks: make(map[string][][]float64),
+			Bids:      make(map[string][][]float64),
+			Asks:      make(map[string][][]float64),
 			LastPrice: make(map[string]float64),
-			Trades: make(map[string][]*StreamingTradesResponse),
-			mutex: new(sync.Mutex),
+			Trades:    make(map[string][]*StreamingTradesResponse),
+			mutex:     new(sync.Mutex),
 		},
 	}, nil
 }

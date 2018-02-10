@@ -28,7 +28,7 @@ func fixupConfigFilePathPrefix(configFilePathPrefix string) (string) {
 		return configFilePathPrefix
 	}
 	re := regexp.MustCompile("^~/")
-	return re.ReplaceAllString(configFilePathPrefix, u.HomeDir + "/")
+	return re.ReplaceAllString(configFilePathPrefix, u.HomeDir+"/")
 }
 
 func checkConfigFilePath(configFilePathPrefix string) (string, error) {
@@ -51,7 +51,7 @@ func NewConfigurator(configFilePathPrefix string) (*Configurator, error) {
 		return nil, err
 	}
 	return &Configurator{
-		reader : newReader(),
-		configPath : configFilePath,
+		reader:     newReader(),
+		configPath: configFilePath,
 	}, nil
 }

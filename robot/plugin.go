@@ -48,7 +48,7 @@ func (r *Robot) fixupAlgorithmPluginDir(algorithmPluginDir string) (string) {
 		return algorithmPluginDir
 	}
 	re := regexp.MustCompile("^~/")
-	return re.ReplaceAllString(r.config.AlgorithmPluginDir, u.HomeDir + "/")
+	return re.ReplaceAllString(r.config.AlgorithmPluginDir, u.HomeDir+"/")
 }
 
 func (r *Robot) loadPluginFiles() {
@@ -77,4 +77,3 @@ func (r *Robot) loadPluginFiles() {
 		}
 	}
 }
-

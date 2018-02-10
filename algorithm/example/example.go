@@ -68,7 +68,6 @@ func (i *internalTradeExample) Update(currencyPair string, ex exchange.Exchange,
 	}
 	log.Printf(">> sell: %v\n", string(bytes))
 
-
 	return nil
 }
 

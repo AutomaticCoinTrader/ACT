@@ -18,7 +18,7 @@ import (
 type RequestMethod int
 
 const (
-	HTTPMethodHEAD RequestMethod = iota
+	HTTPMethodHEAD   RequestMethod = iota
 	HTTPMethodGET
 	HTTPMethodPUT
 	HTTPMethdoPOST
@@ -28,12 +28,12 @@ const (
 
 // HTTPRequest is http request
 type HTTPRequest struct {
-	URL           string
-	ParsedURL     *url.URL
-	RequestMethod RequestMethod
+	URL                 string
+	ParsedURL           *url.URL
+	RequestMethod       RequestMethod
 	RequestMethodString string
-	Headers       map[string]string
-	Body          string
+	Headers             map[string]string
+	Body                string
 }
 
 type HTTPClient struct {
@@ -143,9 +143,9 @@ func NewHTTPClient(retry int, retryWait int, timeout int) *HTTPClient {
 		timeout = 300
 	}
 	return &HTTPClient{
-		retry: retry,
+		retry:     retry,
 		retryWait: retryWait,
-		timeout: timeout,
+		timeout:   timeout,
 	}
 }
 

@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func dump(t *testing.T, res interface{}, httpReq *utility.HTTPRequest, httpRes *http.Response,) {
+func dump(t *testing.T, res interface{}, httpReq *utility.HTTPRequest, httpRes *http.Response, ) {
 	fmt.Printf("========================\n")
 	fmt.Printf("url: %v, method = %v\n", httpReq.URL, httpReq.RequestMethodString)
 	bytes, err := json.Marshal(httpReq.Headers)
@@ -44,7 +44,7 @@ func callback(currencyPair string, streamingResponse *zaif.StreamingResponse, st
 	return nil
 }
 
-func TestRequester (t *testing.T) {
+func TestRequester(t *testing.T) {
 	cf, err := configurator.NewConfigurator(path.Join("../../config", "act"))
 	if err != nil {
 		log.Printf("can not create configurator (config dir = %v, reason = %v)", "../../config", err)
@@ -57,63 +57,63 @@ func TestRequester (t *testing.T) {
 		t.Fatalf("can not load config")
 	}
 	fmt.Printf("key = %v, secret = %v\n", newConfig.Exchanges.Zaif.Key, newConfig.Exchanges.Zaif.Secret)
-	r := zaif.NewRequester(newConfig.Exchanges.Zaif.Key, newConfig.Exchanges.Zaif.Secret, 10, 500, 600, 10 * 1024 * 1024, 10 * 1024 * 1024)
+	r := zaif.NewRequester(newConfig.Exchanges.Zaif.Key, newConfig.Exchanges.Zaif.Secret, 10, 500, 600, 10*1024*1024, 10*1024*1024)
 
-	res1, httpreq, httpres, err  := r.Currencies("all")
+	res1, httpreq, httpres, err := r.Currencies("all")
 	if (err != nil) {
 		t.Fatalf("Currencies failure")
 	}
 	dump(t, res1, httpreq, httpres)
 
-	res2, httpreq, httpres, err  := r.CurrencyPairs("all")
+	res2, httpreq, httpres, err := r.CurrencyPairs("all")
 	if (err != nil) {
 		t.Fatalf("CurrencyPairs failure")
 	}
 	dump(t, res2, httpreq, httpres)
 
-	res3, httpreq, httpres, err  := r.LastPrice("btc_jpy")
+	res3, httpreq, httpres, err := r.LastPrice("btc_jpy")
 	if (err != nil) {
 		t.Fatalf("LastPrice failure")
 	}
 	dump(t, res3, httpreq, httpres)
 
-	res4, httpreq, httpres, err  := r.Ticker("btc_jpy")
+	res4, httpreq, httpres, err := r.Ticker("btc_jpy")
 	if (err != nil) {
 		t.Fatalf("Ticker failure")
 	}
 	dump(t, res4, httpreq, httpres)
 
-	res5, httpreq, httpres, err  := r.Trades("btc_jpy")
+	res5, httpreq, httpres, err := r.Trades("btc_jpy")
 	if (err != nil) {
 		t.Fatalf("Trades failure")
 	}
 	dump(t, res5, httpreq, httpres)
 
-	res6, httpreq, httpres, err  := r.Depth("btc_jpy")
+	res6, httpreq, httpres, err := r.Depth("btc_jpy")
 	if (err != nil) {
 		t.Fatalf("Depth failure")
 	}
 	dump(t, res6, httpreq, httpres)
 
-	res7, httpreq, httpres, err  := r.GetInfo()
+	res7, httpreq, httpres, err := r.GetInfo()
 	if (err != nil) {
 		t.Fatalf("GetInfo failure")
 	}
 	dump(t, res7, httpreq, httpres)
 
-	res8, httpreq, httpres, err  := r.GetInfo2()
+	res8, httpreq, httpres, err := r.GetInfo2()
 	if (err != nil) {
 		t.Fatalf("GetInfo2 failure")
 	}
 	dump(t, res8, httpreq, httpres)
 
-	res9, httpreq, httpres, err  := r.GetPersonalInfo()
+	res9, httpreq, httpres, err := r.GetPersonalInfo()
 	if (err != nil) {
 		t.Fatalf("GetPersonalInfo failure")
 	}
 	dump(t, res9, httpreq, httpres)
 
-	res10, httpreq, httpres, err  := r.GetIDInfo()
+	res10, httpreq, httpres, err := r.GetIDInfo()
 	if (err != nil) {
 		t.Fatalf("GetIDInfo failure")
 	}
@@ -121,21 +121,21 @@ func TestRequester (t *testing.T) {
 
 	param1 := r.NewTradeHistoryParams()
 	param1.Count = 10
-	res11, httpreq, httpres, err  := r.TradeHistory(param1)
+	res11, httpreq, httpres, err := r.TradeHistory(param1)
 	if (err != nil) {
 		t.Fatalf("TradeHistory failure")
 	}
 	dump(t, res11, httpreq, httpres)
 
 	param2 := r.NewTradeActiveOrderParams()
-	res12, httpreq, httpres, err  := r.TradeActiveOrder(param2)
+	res12, httpreq, httpres, err := r.TradeActiveOrder(param2)
 	if (err != nil) {
 		t.Fatalf("TradeActiveOrder failure")
 	}
 	dump(t, res12, httpreq, httpres)
 
 	param3 := r.NewTradeActiveOrderParams()
-	res13, httpreq, httpres, err  := r.TradeActiveOrderBoth(param3)
+	res13, httpreq, httpres, err := r.TradeActiveOrderBoth(param3)
 	if (err != nil) {
 		t.Fatalf("TradeActiveOrderBoth failure")
 	}
@@ -145,7 +145,7 @@ func TestRequester (t *testing.T) {
 	param4.CurrencyPair = "zaif_jpy"
 	param4.Price = 0.1
 	param4.Amount = 1
-	res14, httpreq, httpres, err  := r.TradeBuy(param4)
+	res14, httpreq, httpres, err := r.TradeBuy(param4)
 	if (err != nil) {
 		t.Fatalf("TradeBuy failure")
 	}
@@ -154,7 +154,7 @@ func TestRequester (t *testing.T) {
 	param5 := r.NewTradeCancelOrderParams()
 	param5.OrderId = res14.Return.OrderID
 	param5.IsToken = true
-	res15, httpreq, httpres, err  := r.TradeCancelOrder(param5)
+	res15, httpreq, httpres, err := r.TradeCancelOrder(param5)
 	if (err != nil) {
 		t.Fatalf("TradeCancelOrder failure")
 	}
