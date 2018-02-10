@@ -223,10 +223,10 @@ func (e *CurrencyFunds) get(name string) (float64) {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
 	fund, ok := e.funds[name]
-	if !ok {
-		return 0
+	if ok {
+		return fund
 	}
-	return fund
+	return -1
 }
 
 func (e *CurrencyFunds) all() (map[string]float64) {
@@ -255,25 +255,45 @@ func (c *currencyPairsInfo) update(currencyPair string, currencyPairsBids [][]fl
 func (c *currencyPairsInfo) getBids(currencyPair string) ([][]float64) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	return c.Bids[currencyPair]
+	bids, ok := c.Bids[currencyPair]
+	if ok {
+		return bids
+	} else {
+		return make([][]float64, 0)
+	}
 }
 
 func (c *currencyPairsInfo) getAsks(currencyPair string) ([][]float64) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	return c.Asks[currencyPair]
+	asks, ok := c.Asks[currencyPair]
+	if ok {
+		return asks
+	} else {
+		return make([][]float64, 0)
+	}
 }
 
 func (c *currencyPairsInfo) getLastPrice(currencyPair string) (float64) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	return c.LastPrice[currencyPair]
+	lastPrice, ok := c.LastPrice[currencyPair]
+	if ok {
+		return lastPrice
+	} else {
+		return -1
+	}
 }
 
 func (c *currencyPairsInfo) getTrades(currencyPair string) ([]*StreamingTradesResponse) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	return c.Trades[currencyPair]
+	trades, ok := c.Trades[currencyPair]
+	if ok {
+		return trades
+	} else {
+		return make([]*StreamingTradesResponse, 0)
+	}
 }
 
 type Exchange struct {

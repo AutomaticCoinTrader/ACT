@@ -8,19 +8,21 @@
 ## サポート環境
 
  - Linux
- - MacOS (制限あり)
- - Windows (制限あり)
+ - MacOS
+ - Windows (pluginが使えないので非推奨)
 
 ## goのバージョン
 
- - 1.8以降
+ - 1.9.2以降
 
 ## 機能
 
- - アルゴリズムによる自動トレード (未実装)
-   - 各銘柄毎の取引、裁定取引に対応予定
+ - 取引所内の取引、取引所を跨いだ取引に対応
+ - アルゴリズムによるトレード
+   - ビルトインアルゴリズム (未実装)
+   - アルゴリズムは独自に追加可能
  - webuiからのマニュアルによるトレード (未実装)
- - アラート通知機能 (未実装)
+ - アラート通知機能
 
 ## アルゴリズム
 
@@ -58,8 +60,7 @@ exchanges:
     key: "key"
     secret: "secret"
     currencyPairs:
-     - src: btc
-       dst: jpy
+     - btc_jpy
     retry: 0
     timeout: 0
     readBufSize: 0
