@@ -162,15 +162,15 @@ type WSClient struct {
 	finished     uint32
 }
 
-func (w *WSClient) messageLoop(callback WSCallback, callbackData interface{}) {
+func (w *WSClient) messageLoop(callback WSCallback, callbackData interface{}) (error) {
 	for {
 		err := callback(w.conn, callbackData)
 		if err != nil {
-			log.Printf("callback error (reason = %v)", err)
+			return errors.Wrapf(err, "callback error (reason = %v)")
 		}
 		if atomic.LoadUint32(&w.finished) == 1 {
 			log.Printf("message loop finished")
-			return
+			return nil
 		}
 	}
 }
@@ -241,7 +241,10 @@ func (w *WSClient) connect(callback WSCallback, callbackData interface{}, reques
 		}
 		w.conn = conn
 		pingChan := w.startPing()
-		w.messageLoop(callback, callbackData)
+		err = w.messageLoop(callback, callbackData)
+		if err != nil {
+			log.Printf("error occuered in message loop: %v", err)
+		}
 		w.stopPing(pingChan)
 		conn.Close()
 		i = 0

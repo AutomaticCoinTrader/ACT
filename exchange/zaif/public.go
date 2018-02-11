@@ -199,11 +199,13 @@ func (r Requester) streamingCallback(conn *websocket.Conn, userCallbackData inte
 	newRes := new(StreamingResponse)
 	err = json.Unmarshal(message, newRes)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not unmarshal message of streaming"))
+		log.Printf("can not unmarshal message of streaming (%v)", message)
+		return nil
 	}
 	err = streaminCallbackData.callback(streaminCallbackData.currencyPair, newRes, streaminCallbackData.callbackData)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("call back error of streaming"))
+		log.Printf("call back error of streaming (%v)", err)
+		return nil
 	}
 	return nil
 }
