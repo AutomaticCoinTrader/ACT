@@ -27,13 +27,13 @@ func (r *Robot) CreateInternalTradeAlgorithms(ex exchange.Exchange) (error) {
 		log.Printf("create %v algorithm", name)
 		newInternalTradeAlgoritm, err := registeredAlgorithm.InternalTradeAlgorithmNewFunc(path.Join(r.configDir, algorithm.AlgorithmConfigDir))
 		if err != nil {
-			log.Printf("can not create algorithm of %v (reason = %v)", name, err)
+			log.Printf("can not create internal algorithm of %v (reason = %v)", name, err)
 			continue
 		}
 		err = newInternalTradeAlgoritm.Initialize(ex, r.notifier)
 		if err != nil {
 			r.DestroyInternalTradeAlgorithms(ex)
-			return errors.Wrap(err, fmt.Sprintf("algorithm initialize error of %v", name))
+			return errors.Wrap(err, fmt.Sprintf("internal algorithm initialize error of %v", name))
 		}
 		r.internalTradeAlgorithms = append(r.internalTradeAlgorithms, newInternalTradeAlgoritm)
 	}
@@ -45,7 +45,7 @@ func (r *Robot) UpdateInternalTradeAlgorithms(currencyPair string, ex exchange.E
 	for _, tradeAlgorithm := range r.internalTradeAlgorithms {
 		err := tradeAlgorithm.Update(currencyPair, ex, r.notifier)
 		if err != nil {
-			log.Printf("algorithm update error (name = %v, reason = %v)", tradeAlgorithm.GetName(), err)
+			log.Printf("internal algorithm update error (name = %v, reason = %v)", tradeAlgorithm.GetName(), err)
 		}
 	}
 	return nil
@@ -55,7 +55,7 @@ func (r *Robot) DestroyInternalTradeAlgorithms(ex exchange.Exchange) (error) {
 	for _, tradeAlgorithm := range r.internalTradeAlgorithms {
 		err := tradeAlgorithm.Finalize(ex, r.notifier)
 		if err != nil {
-			log.Printf("algorithm finalize error (name = %v, reason = %v)", tradeAlgorithm.GetName(), err)
+			log.Printf("internal algorithm finalize error (name = %v, reason = %v)", tradeAlgorithm.GetName(), err)
 		}
 	}
 	return nil
@@ -66,16 +66,16 @@ func (r *Robot) CreateExternalTradeAlgorithms(exchanges map[string]exchange.Exch
 		if registeredAlgorithm.ExternalTradeAlgorithmNewFunc == nil {
 			continue
 		}
-		log.Printf("create %v arbitrage algorithm", name)
+		log.Printf("create %v external algorithm", name)
 		newExternalTradeAlgoritm, err := registeredAlgorithm.ExternalTradeAlgorithmNewFunc(path.Join(r.configDir, algorithm.AlgorithmConfigDir))
 		if err != nil {
-			log.Printf("can not create arbitrage algorithm of %v (reason = %v)", name, err)
+			log.Printf("can not create external algorithm of %v (reason = %v)", name, err)
 			continue
 		}
 		err = newExternalTradeAlgoritm.Initialize(exchanges, r.notifier)
 		if err != nil {
 			r.DestroyExternalTradeAlgorithms(exchanges)
-			return errors.Wrap(err, fmt.Sprintf("arbitrage algorithm initialize error of %v", name))
+			return errors.Wrap(err, fmt.Sprintf("external algorithm initialize error of %v", name))
 		}
 		r.externalTradeAlgorithms = append(r.externalTradeAlgorithms, newExternalTradeAlgoritm)
 	}
@@ -86,7 +86,7 @@ func (r *Robot) UpdateExternalTradeAlgorithms(exchanges map[string]exchange.Exch
 	for _, externalTradeAlgoritm := range r.externalTradeAlgorithms {
 		err := externalTradeAlgoritm.Update(exchanges, r.notifier)
 		if err != nil {
-			log.Printf("arbitrage algorithm update error (name = %v, reason = %v)", externalTradeAlgoritm.GetName(), err)
+			log.Printf("external algorithm update error (name = %v, reason = %v)", externalTradeAlgoritm.GetName(), err)
 		}
 	}
 	return nil
@@ -96,7 +96,7 @@ func (r *Robot) DestroyExternalTradeAlgorithms(exchanges map[string]exchange.Exc
 	for _, externalTradeAlgoritm := range r.externalTradeAlgorithms {
 		err := externalTradeAlgoritm.Finalize(exchanges, r.notifier)
 		if err != nil {
-			log.Printf("arbitrage algorithm finalize error (name = %v, reason = %v)", externalTradeAlgoritm.GetName(), err)
+			log.Printf("external algorithm finalize error (name = %v, reason = %v)", externalTradeAlgoritm.GetName(), err)
 		}
 	}
 	return nil
