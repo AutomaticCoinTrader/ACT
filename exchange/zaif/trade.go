@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"net/http"
 	"github.com/AutomaticCoinTrader/ACT/exchange"
+	"log"
 )
 
 func (r *Requester) GetMinPriceUnit(currencyPair string) (float64) {
@@ -105,10 +106,8 @@ type TradeCommonResponse struct {
 }
 
 func (t TradeCommonResponse) needRetry() (bool) {
-	if t.Success == 0 && t.Error == "nonce not incremented" {
-		return true
-	}
-	if t.Success == 0 && t.Error == "order is too new" {
+	if t.Success == 0 {
+		log.Printf("error message", t.Error)
 		return true
 	}
 	return false
@@ -475,12 +474,12 @@ type TradeResponse struct {
 }
 
 func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.RetryCallback, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
-	tradeParams.fixupPriceAndAmount(r)
-	params, err := query.Values(tradeParams)
-	if err != nil {
-		return nil, nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request parameter of trade (params = %v)", tradeParams))
-	}
 	for {
+		tradeParams.fixupPriceAndAmount(r)
+		params, err := query.Values(tradeParams)
+		if err != nil {
+			return nil, nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request parameter of trade (params = %v)", tradeParams))
+		}
 		request := r.makeTradeRequest("trade", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)

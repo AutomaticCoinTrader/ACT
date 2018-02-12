@@ -320,10 +320,10 @@ func (e *Exchange) Buy(currencyPair string, price float64, amount float64, retry
 	tradeParams.CurrencyPair = currencyPair
 	tradeResponse, _, _, err := e.requester.TradeBuy(tradeParams, retryCallback, retryCallbackData)
 	if err != nil {
-		return 0, errors.Wrapf(err, "can not buy trade (exchange = %v, currencyPair = %v)", exchangeName, currencyPair)
+		return -1, errors.Wrapf(err, "can not buy trade (exchange = %v, currencyPair = %v)", exchangeName, currencyPair)
 	}
 	if tradeResponse.Success != 1 {
-		return 0, errors.Errorf("can not buy trade (exchange = %v, currencyPair = %v, reason = %v)", exchangeName, currencyPair, tradeResponse.Error)
+		return -1, errors.Errorf("can not buy trade (exchange = %v, currencyPair = %v, reason = %v)", exchangeName, currencyPair, tradeResponse.Error)
 	}
 	err = updateFunds(e.requester, e.funds)
 	if err != nil {
@@ -339,10 +339,10 @@ func (e *Exchange) Sell(currencyPair string, price float64, amount float64, retr
 	tradeParams.CurrencyPair = currencyPair
 	tradeResponse, _, _, err := e.requester.TradeSell(tradeParams, retryCallback, retryCallbackData)
 	if err != nil {
-		return 0, errors.Wrapf(err, "can not sell trade (currencyPair = %v)", currencyPair)
+		return -1, errors.Wrapf(err, "can not sell trade (currencyPair = %v)", currencyPair)
 	}
 	if tradeResponse.Success != 1 {
-		return 0, errors.Errorf("can not sell trade (currencyPair = %v, reason = %v)", currencyPair, tradeResponse.Error)
+		return -1, errors.Errorf("can not sell trade (currencyPair = %v, reason = %v)", currencyPair, tradeResponse.Error)
 	}
 	err = updateFunds(e.requester, e.funds)
 	if err != nil {
