@@ -345,23 +345,9 @@ type TradeParams struct {
 	Limit        float64 `url:"limit,omitempty"`
 }
 
-func (t *TradeParams) fixupPriceAndAmount() {
-	var priceUnit float64
-	var amountUnit float64
-
-	switch t.CurrencyPair {
-	case "btc_jpy":
-		priceUnit = 5
-		amountUnit = 0.0001
-	case "mona_jpy":
-		priceUnit = 0.1
-		amountUnit = 1
-	case "mona_btc":
-		priceUnit = 0.00000001
-		amountUnit = 1
-	default:
-		return
-	}
+func (t *TradeParams) fixupPriceAndAmount(ex exchange.Exchange) {
+	priceUnit := ex.GetMinPriceUnit(t.CurrencyPair)
+	amountUnit := ex.GetMinAmountUnit(t.CurrencyPair)
 	fixedPrice := float64(int64(t.Price/priceUnit)) * priceUnit
 	if fixedPrice != t.Price {
 		if t.Action == "bit" {
@@ -402,7 +388,7 @@ type TradeResponse struct {
 }
 
 func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.RetryCallback, ex exchange.Exchange, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
-	tradeParams.fixupPriceAndAmount()
+	tradeParams.fixupPriceAndAmount(ex)
 	params, err := query.Values(tradeParams)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request parameter of trade (params = %v)", tradeParams))
@@ -418,7 +404,7 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeResponse).needRetry() {
-			retry := retryCallback(&tradeParams.Price, &tradeParams.Amount, ex, retryCallbackData)
+			retry := retryCallback(&tradeParams.Price, &tradeParams.Amount, retryCallbackData)
 			if !retry {
 				return newRes.(*TradeResponse), request, response, err
 			}
