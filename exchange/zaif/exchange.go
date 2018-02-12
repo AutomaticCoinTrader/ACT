@@ -4,7 +4,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/AutomaticCoinTrader/ACT/exchange"
 	"strings"
-	"fmt"
 	"sync"
 	"strconv"
 	"log"
@@ -13,26 +12,6 @@ import (
 const (
 	exchangeName = "zaif"
 )
-
-func updateFunds(requester *Requester, funds *CurrencyFunds) (error) {
-	info2Response, _, _, err := requester.GetInfo2()
-	if err != nil {
-		return errors.Wrapf(err, "can not get info2 (exchange = %v, reason = %v)", exchangeName)
-	}
-	if info2Response.Success != 1 {
-		return errors.Errorf("can not buy (exchange = %v, reason = %v)", exchangeName, info2Response.Error)
-	}
-	funds.update(map[string]float64{
-		"btc":      info2Response.Return.Funds.Btc,
-		"bch":      info2Response.Return.Funds.Bch,
-		"eth":      info2Response.Return.Funds.Eth,
-		"mona":     info2Response.Return.Funds.Mona,
-		"xem":      info2Response.Return.Funds.Xem,
-		"jpy":      info2Response.Return.Funds.Jpy,
-		"zaif":     info2Response.Return.Funds.Zaif,
-		"pepecash": info2Response.Return.Funds.Pepecash})
-	return nil
-}
 
 type BoardCursor struct {
 	index  int
@@ -208,33 +187,6 @@ func newActiveOrderCursor(values map[string]TradeActiveOrderRecordResponse, valu
 	return newActiveOrderCursor
 }
 
-type CurrencyFunds struct {
-	funds map[string]float64
-	mutex *sync.Mutex
-}
-
-func (e *CurrencyFunds) update(funds map[string]float64) {
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
-	e.funds = funds
-}
-
-func (e *CurrencyFunds) get(name string) (float64) {
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
-	fund, ok := e.funds[name]
-	if ok {
-		return fund
-	}
-	return -1
-}
-
-func (e *CurrencyFunds) all() (map[string]float64) {
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
-	return e.funds
-}
-
 type currencyPairsInfo struct {
 	Bids      map[string][][]float64
 	Asks      map[string][][]float64
@@ -299,7 +251,6 @@ func (c *currencyPairsInfo) getTrades(currencyPair string) ([]*StreamingTradesRe
 type Exchange struct {
 	config            *ExchangeConfig
 	requester         *Requester
-	funds             *CurrencyFunds
 	streamingCallback exchange.StreamingCallback
 	currencyPairs     []string
 	currencyPairsInfo *currencyPairsInfo
@@ -325,10 +276,6 @@ func (e *Exchange) Buy(currencyPair string, price float64, amount float64, retry
 	if tradeResponse.Success != 1 {
 		return -1, errors.Errorf("can not buy trade (exchange = %v, currencyPair = %v, reason = %v)", exchangeName, currencyPair, tradeResponse.Error)
 	}
-	err = updateFunds(e.requester, e.funds)
-	if err != nil {
-		return tradeResponse.Return.OrderID, errors.Wrapf(err, "can not update fund (exchange = %v, currencyPair = %v)", exchangeName, currencyPair)
-	}
 	return tradeResponse.Return.OrderID, nil
 }
 
@@ -344,10 +291,6 @@ func (e *Exchange) Sell(currencyPair string, price float64, amount float64, retr
 	if tradeResponse.Success != 1 {
 		return -1, errors.Errorf("can not sell trade (currencyPair = %v, reason = %v)", currencyPair, tradeResponse.Error)
 	}
-	err = updateFunds(e.requester, e.funds)
-	if err != nil {
-		return tradeResponse.Return.OrderID, errors.Wrapf(err, "can not update fund (currencyPair = %v)", currencyPair)
-	}
 	return tradeResponse.Return.OrderID, nil
 }
 
@@ -362,15 +305,26 @@ func (e *Exchange) Cancel(orderID int64) (error) {
 	if tradeCancelOrderResponse.Success != 1 {
 		return errors.Errorf("can not cancel order (orderID = %v, reason = %v)", orderID, tradeCancelOrderResponse.Error)
 	}
-	err = updateFunds(e.requester, e.funds)
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("can not update fund (orderID = %v)", orderID))
-	}
 	return nil
 }
 
 func (e *Exchange) GetFunds() (map[string]float64, error) {
-	return e.funds.all(), nil
+	info2Response, _, _, err := e.requester.GetInfo2()
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not get info2 (exchange = %v, reason = %v)", exchangeName)
+	}
+	if info2Response.Success != 1 {
+		return nil, errors.Errorf("can not buy (exchange = %v, reason = %v)", exchangeName, info2Response.Error)
+	}
+	return map[string]float64{
+		"btc":      info2Response.Return.Funds.Btc,
+		"bch":      info2Response.Return.Funds.Bch,
+		"eth":      info2Response.Return.Funds.Eth,
+		"mona":     info2Response.Return.Funds.Mona,
+		"xem":      info2Response.Return.Funds.Xem,
+		"jpy":      info2Response.Return.Funds.Jpy,
+		"zaif":     info2Response.Return.Funds.Zaif,
+		"pepecash": info2Response.Return.Funds.Pepecash}, nil
 }
 
 func (e *Exchange) GetLastPrice(currencyPair string) (float64, error) {
@@ -457,11 +411,6 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 
 // Initialize is initalize exchange
 func (e *Exchange) Initialize() (error) {
-	// fundsを初期化時に更新しておく
-	err := updateFunds(e.requester, e.funds)
-	if err != nil {
-		return errors.Wrap(err, "can not update fund")
-	}
 	return nil
 }
 
@@ -512,10 +461,6 @@ func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 	return &Exchange{
 		config:    myConfig,
 		requester: NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
-		funds: &CurrencyFunds{
-			funds: make(map[string]float64),
-			mutex: new(sync.Mutex),
-		},
 		currencyPairs: myConfig.CurrencyPairs,
 		currencyPairsInfo: &currencyPairsInfo{
 			Bids:      make(map[string][][]float64),
