@@ -313,12 +313,12 @@ func (e *Exchange) GetCurrencyPairs() ([]string) {
 	return e.currencyPairs
 }
 
-func (e *Exchange) Buy(currencyPair string, price float64, amount float64) (int64, error) {
+func (e *Exchange) Buy(currencyPair string, price float64, amount float64, retryCallback exchange.RetryCallback, retryCallbackData interface{}) (int64, error) {
 	tradeParams := e.requester.NewTradeParams()
 	tradeParams.Price = price
 	tradeParams.Amount = amount
 	tradeParams.CurrencyPair = currencyPair
-	tradeResponse, _, _, err := e.requester.TradeBuy(tradeParams)
+	tradeResponse, _, _, err := e.requester.TradeBuy(tradeParams, retryCallback, e, retryCallbackData)
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not buy trade (exchange = %v, currencyPair = %v)", exchangeName, currencyPair)
 	}
@@ -332,12 +332,12 @@ func (e *Exchange) Buy(currencyPair string, price float64, amount float64) (int6
 	return tradeResponse.Return.OrderID, nil
 }
 
-func (e *Exchange) Sell(currencyPair string, price float64, amount float64) (int64, error) {
+func (e *Exchange) Sell(currencyPair string, price float64, amount float64, retryCallback exchange.RetryCallback, retryCallbackData interface{}) (int64, error) {
 	tradeParams := e.requester.NewTradeParams()
 	tradeParams.Price = price
 	tradeParams.Amount = amount
 	tradeParams.CurrencyPair = currencyPair
-	tradeResponse, _, _, err := e.requester.TradeSell(tradeParams)
+	tradeResponse, _, _, err := e.requester.TradeSell(tradeParams, retryCallback, e, retryCallbackData)
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not sell trade (currencyPair = %v)", currencyPair)
 	}

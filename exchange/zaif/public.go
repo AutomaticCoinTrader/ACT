@@ -24,7 +24,7 @@ type PublicCurrencyResponse struct {
 func (r *Requester) Currencies(currency string) (*PublicCurrenciesResponse, *utility.HTTPRequest, *http.Response, error) {
 	request := r.makePublicRequest(path.Join("currencies", currency), "")
 	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
+		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
 		if err != nil {
 			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get currencies (url = %v)", request.URL))
 		}
@@ -55,7 +55,7 @@ type PublicCurrencyPairResponse struct {
 func (r *Requester) CurrencyPairs(currencyPair string) (*PublicCurrencyPairsResponse, *utility.HTTPRequest, *http.Response, error) {
 	request := r.makePublicRequest(path.Join("currency_pairs", currencyPair), "")
 	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
+		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
 		if err != nil {
 			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get currency pairs (url = %v)", request.URL))
 		}
@@ -74,7 +74,7 @@ type PublicLastPriceResponse struct {
 func (r *Requester) LastPrice(currencyPair string) (*PublicLastPriceResponse, *utility.HTTPRequest, *http.Response, error) {
 	request := r.makePublicRequest(path.Join("last_price", currencyPair), "")
 	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
+		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
 		if err != nil {
 			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get last price (url = %v)", request.URL))
 		}
@@ -99,7 +99,7 @@ type PublicTickerResponse struct {
 func (r *Requester) Ticker(currencyPair string) (*PublicTickerResponse, *utility.HTTPRequest, *http.Response, error) {
 	request := r.makePublicRequest(path.Join("ticker", currencyPair), "")
 	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
+		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
 		if err != nil {
 			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get ticker (url = %v)", request.URL))
 		}
@@ -127,7 +127,7 @@ func (r *Requester) Trades(currencyPair string) (*PublicTradesResponse, *utility
 	request := r.makePublicRequest(path.Join("trades", currencyPair), "")
 	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
+		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
 		if err != nil {
 			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get trades (url = %v)", request.URL))
 		}
@@ -147,7 +147,7 @@ type PublicDepthReaponse struct {
 func (r *Requester) Depth(currencyPair string) (*PublicDepthReaponse, *utility.HTTPRequest, *http.Response, error) {
 	request := r.makePublicRequest(path.Join("depth", currencyPair), "")
 	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request)
+		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
 		if err != nil {
 			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get depth (url = %v)", request.URL))
 		}

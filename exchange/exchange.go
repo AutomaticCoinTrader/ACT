@@ -29,12 +29,13 @@ type TradesCursor interface {
 
 // トレードコンテキストが更新されるたびに呼ばれる
 type StreamingCallback func(currencyPair string, ex Exchange) (error)
+type RetryCallback func(price *float64, amount *float64, ex Exchange, retryCallbackData interface{}) (bool)
 
 type Exchange interface {
 	GetName() string
 	GetCurrencyPairs() ([]string)
-	Buy(currencyPair string, price float64, amount float64) (int64, error)
-	Sell(currencyPair string, price float64, amount float64) (int64, error)
+	Buy(currencyPair string, price float64, amount float64, retryCallback RetryCallback, retryCallbackData interface{}) (int64, error)
+	Sell(currencyPair string, price float64, amount float64, retryCallback RetryCallback, retryCallbackData interface{}) (int64, error)
 	Cancel(orderID int64) (error)
 	GetFunds() (map[string]float64, error)
 	GetLastPrice(currencyPair string) (float64, error)

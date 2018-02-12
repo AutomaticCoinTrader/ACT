@@ -90,10 +90,10 @@ func (c *HTTPClient) methodFuncBase(method string, request *HTTPRequest) (*http.
 	return res, resBody, nil
 }
 
-func (c *HTTPClient) retryRequest(request *HTTPRequest) (*http.Response, []byte, error) {
+func (c *HTTPClient) retryRequest(request *HTTPRequest, noRetry bool) (*http.Response, []byte, error) {
 	for i := 0; i <= c.retry; i++ {
 		res, resBody, err := c.methodFuncBase(request.RequestMethodString, request)
-		if err != nil {
+		if !noRetry && err != nil {
 			log.Printf("request is failure, retry... (url = %v, method = %v, reason = %v)", request.URL, request.RequestMethod, err)
 			if (c.retryWait != 0) {
 				time.Sleep(time.Duration(c.retryWait) * time.Millisecond)
@@ -105,7 +105,7 @@ func (c *HTTPClient) retryRequest(request *HTTPRequest) (*http.Response, []byte,
 	return nil, nil, errors.Errorf("give up retry (url = %v, method = %v)", request.URL, request.RequestMethod)
 }
 
-func (c *HTTPClient) DoRequest(requestMethod RequestMethod, request *HTTPRequest) (*http.Response, []byte, error) {
+func (c *HTTPClient) DoRequest(requestMethod RequestMethod, request *HTTPRequest, noRetry bool) (*http.Response, []byte, error) {
 	u, err := url.Parse(request.URL)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, fmt.Sprintf("can not parse url (url = %v, method = %v)", request.URL, requestMethod))
@@ -128,7 +128,7 @@ func (c *HTTPClient) DoRequest(requestMethod RequestMethod, request *HTTPRequest
 	default:
 		return nil, nil, errors.Wrap(err, fmt.Sprintf("unsupported request method (url = %v, method = %v)", request.URL, requestMethod))
 	}
-	res, resBody, err := c.retryRequest(request)
+	res, resBody, err := c.retryRequest(request, noRetry)
 	if err != nil {
 		return res, resBody, errors.Wrap(err, fmt.Sprintf("request is failure (url = %v, method = %v)", request.URL, request.RequestMethod))
 	}
