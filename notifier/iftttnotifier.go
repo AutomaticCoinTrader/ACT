@@ -27,7 +27,7 @@ func (n *IFTTTNotifier) Notify(msg string) error {
 		URL: fmt.Sprintf("https://maker.ifttt.com/trigger/%s/with/key/%s", EventName, n.Key),
 	}
 
-	resp, _, err := n.httpClient.DoRequest(utility.HTTPMethodGET, req)
+	resp, _, err := n.httpClient.DoRequest(utility.HTTPMethodGET, req, false)
 	if err != nil {
 		return err
 	}
