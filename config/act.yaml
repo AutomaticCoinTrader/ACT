@@ -6,6 +6,18 @@ exchanges:
     secret: "secret"
     currencyPairs:
       - btc_jpy
+      - xem_jpy
+      - mona_jpy
+      - bch_jpy
+      - eth_jpy
+      - zaif_jpy
+      - pepecash_jpy
+      - xem_btc
+      - mona_btc
+      - bch_btc
+      - eth_btc
+      - zaif_btc
+      - pepecash_btc
     retry: 0
     retryWait: 0
     timeout: 0
