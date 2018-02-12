@@ -44,6 +44,10 @@ func callback(currencyPair string, streamingResponse *zaif.StreamingResponse, st
 	return nil
 }
 
+func retryCallback(price *float64, amount *float64, retryCallbackData interface{}) (bool) {
+	return true
+}
+
 func TestRequester(t *testing.T) {
 	cf, err := configurator.NewConfigurator(path.Join("../../config", "act"))
 	if err != nil {
@@ -145,7 +149,7 @@ func TestRequester(t *testing.T) {
 	param4.CurrencyPair = "zaif_jpy"
 	param4.Price = 0.1
 	param4.Amount = 1
-	res14, httpreq, httpres, err := r.TradeBuy(param4)
+	res14, httpreq, httpres, err := r.TradeBuy(param4, retryCallback, nil)
 	if (err != nil) {
 		t.Fatalf("TradeBuy failure")
 	}
