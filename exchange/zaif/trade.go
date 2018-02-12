@@ -12,6 +12,93 @@ import (
 	"github.com/AutomaticCoinTrader/ACT/exchange"
 )
 
+func (r *Requester) GetMinPriceUnit(currencyPair string) (float64) {
+	switch currencyPair {
+	case "btc_jpy":
+		return 5
+	case "xem_jpy":
+		return 0.0001
+	case "mona_jpy":
+		return 0.1
+	case "bch_jpy":
+		return 5
+	case "eth_jpy":
+		return 5
+	case "zaif_jpy":
+		return 0.0001
+	case "pepecash_jpy":
+		return 0.0001
+	case "xem_btc":
+		return 0.00000001
+	case "mona_btc":
+		return 0.00000001
+	case "bch_btc":
+		return 0.0001
+	case "eth_btc":
+		return 0.0001
+	case "zaif_btc":
+		return 0.00000001
+	case "pepecash_btc":
+		return 0.00000001
+	default:
+		return 0
+	}
+}
+
+func (r *Requester) GetMinAmountUnit(currencyPair string) (float64) {
+	switch currencyPair {
+	case "btc_jpy":
+		return 0.0001
+	case "xem_jpy":
+		return 0.1
+	case "mona_jpy":
+		return 1
+	case "bch_jpy":
+		return 0.0001
+	case "eth_jpy":
+		return 0.0001
+	case "zaif_jpy":
+		return 0.1
+	case "pepecash_jpy":
+		return 0.0001
+	case "xem_btc":
+		return 1
+	case "mona_btc":
+		return 1
+	case "bch_btc":
+		return 0.0001
+	case "eth_btc":
+		return 0.0001
+	case "zaif_btc":
+		return 1
+	case "pepecash_btc":
+		return 1
+	default:
+		return 0
+	}
+}
+
+func (r *Requester) GetMinFee(currency string) (float64) {
+	switch currency {
+	case "btc":
+		return 0.00001
+	case "xem":
+		return 2
+	case "mona":
+		return 0
+	case "bch":
+		return 0
+	case "eth":
+		return 0
+	case "zaif":
+		return 0
+	case "pepecash":
+		return 0
+	default:
+		return 0
+	}
+}
+
 type TradeCommonResponse struct {
 	Success int    `json:"success"`
 	Error   string `json:"error"`
@@ -345,9 +432,9 @@ type TradeParams struct {
 	Limit        float64 `url:"limit,omitempty"`
 }
 
-func (t *TradeParams) fixupPriceAndAmount(ex exchange.Exchange) {
-	priceUnit := ex.GetMinPriceUnit(t.CurrencyPair)
-	amountUnit := ex.GetMinAmountUnit(t.CurrencyPair)
+func (t *TradeParams) fixupPriceAndAmount(r *Requester) {
+	priceUnit := r.GetMinPriceUnit(t.CurrencyPair)
+	amountUnit := r.GetMinAmountUnit(t.CurrencyPair)
 	fixedPrice := float64(int64(t.Price/priceUnit)) * priceUnit
 	if fixedPrice != t.Price {
 		if t.Action == "bit" {
@@ -387,8 +474,8 @@ type TradeResponse struct {
 	TradeCommonResponse
 }
 
-func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.RetryCallback, ex exchange.Exchange, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
-	tradeParams.fixupPriceAndAmount(ex)
+func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.RetryCallback, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
+	tradeParams.fixupPriceAndAmount(r)
 	params, err := query.Values(tradeParams)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request parameter of trade (params = %v)", tradeParams))
@@ -415,15 +502,15 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 }
 
 // TradeBuy is buy trade
-func (r *Requester) TradeBuy(tradeParams *TradeParams, retryCallback exchange.RetryCallback, ex exchange.Exchange, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
+func (r *Requester) TradeBuy(tradeParams *TradeParams, retryCallback exchange.RetryCallback, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
 	tradeParams.Action = "bid"
-	return r.tradeBase(tradeParams, retryCallback, ex, retryCallbackData)
+	return r.tradeBase(tradeParams, retryCallback, retryCallbackData)
 }
 
 // TradeSell is sell trade
-func (r *Requester) TradeSell(tradeParams *TradeParams, retryCallback exchange.RetryCallback, ex exchange.Exchange, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
+func (r *Requester) TradeSell(tradeParams *TradeParams, retryCallback exchange.RetryCallback, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
 	tradeParams.Action = "ask"
-	return r.tradeBase(tradeParams, retryCallback, ex, retryCallbackData)
+	return r.tradeBase(tradeParams, retryCallback, retryCallbackData)
 }
 
 // TradeCancelOrderParams is parameter of cancel order
@@ -487,9 +574,18 @@ type TradeWithdrawParams struct {
 	OptFee   float64 `url:"opt_fee,omitempty"`
 }
 
-func (t *TradeWithdrawParams) fixupFee() {
-	if t.Currency == "xem" {
-		t.OptFee = 0
+func (t *TradeWithdrawParams) fixupFee(r *Requester) {
+	switch t.Currency {
+	case "btc":
+		if t.OptFee < r.GetMinFee(t.Currency) {
+			t.OptFee = r.GetMinFee(t.Currency)
+		}
+	case "xem":
+		if t.OptFee < r.GetMinFee(t.Currency) {
+			t.OptFee = r.GetMinFee(t.Currency)
+		}
+	default:
+		t.OptFee = r.GetMinFee(t.Currency)
 	}
 }
 
@@ -519,7 +615,7 @@ type TradeWithdrawResponse struct {
 
 // TradeCancelOrder is cancel order
 func (r *Requester) TradeWithdraw(tradeWithdrawParams *TradeWithdrawParams) (*TradeWithdrawResponse, *utility.HTTPRequest, *http.Response, error) {
-	tradeWithdrawParams.fixupFee()
+	tradeWithdrawParams.fixupFee(r)
 	params, err := query.Values(tradeWithdrawParams)
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request parameter of Withdraw (params = %v)", tradeWithdrawParams))

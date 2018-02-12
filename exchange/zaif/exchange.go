@@ -318,7 +318,7 @@ func (e *Exchange) Buy(currencyPair string, price float64, amount float64, retry
 	tradeParams.Price = price
 	tradeParams.Amount = amount
 	tradeParams.CurrencyPair = currencyPair
-	tradeResponse, _, _, err := e.requester.TradeBuy(tradeParams, retryCallback, e, retryCallbackData)
+	tradeResponse, _, _, err := e.requester.TradeBuy(tradeParams, retryCallback, retryCallbackData)
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not buy trade (exchange = %v, currencyPair = %v)", exchangeName, currencyPair)
 	}
@@ -337,7 +337,7 @@ func (e *Exchange) Sell(currencyPair string, price float64, amount float64, retr
 	tradeParams.Price = price
 	tradeParams.Amount = amount
 	tradeParams.CurrencyPair = currencyPair
-	tradeResponse, _, _, err := e.requester.TradeSell(tradeParams, retryCallback, e, retryCallbackData)
+	tradeResponse, _, _, err := e.requester.TradeSell(tradeParams, retryCallback, retryCallbackData)
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not sell trade (currencyPair = %v)", currencyPair)
 	}
@@ -438,69 +438,11 @@ func (e *Exchange) GetActiveOrderCursor() (exchange.OrderCursor, error) {
 }
 
 func (e *Exchange) GetMinPriceUnit(currencyPair string) (float64) {
-	switch currencyPair {
-	case "btc_jpy":
-		return 5
-	case "xem_jpy":
-		return 0.0001
-	case "mona_jpy":
-		return 0.1
-	case "bch_jpy":
-		return 5
-	case "eth_jpy":
-		return 5
-	case "zaif_jpy":
-		return 0.0001
-	case "pepecash_jpy":
-		return 0.0001
-	case "xem_btc":
-		return 0.00000001
-	case "mona_btc":
-		return 0.00000001
-	case "bch_btc":
-		return 0.0001
-	case "eth_btc":
-		return 0.0001
-	case "zaif_btc":
-		return 0.00000001
-	case "pepecash_btc":
-		return 0.00000001
-	default:
-		return 0
-	}
+	return e.requester.GetMinPriceUnit(currencyPair)
 }
 
 func (e *Exchange) GetMinAmountUnit(currencyPair string) (float64) {
-	switch currencyPair {
-	case "btc_jpy":
-		return 0.0001
-	case "xem_jpy":
-		return 0.1
-	case "mona_jpy":
-		return 1
-	case "bch_jpy":
-		return 0.0001
-	case "eth_jpy":
-		return 0.0001
-	case "zaif_jpy":
-		return 0.1
-	case "pepecash_jpy":
-		return 0.0001
-	case "xem_btc":
-		return 1
-	case "mona_btc":
-		return 1
-	case "bch_btc":
-		return 0.0001
-	case "eth_btc":
-		return 0.0001
-	case "zaif_btc":
-		return 1
-	case "pepecash_btc":
-		return 1
-	default:
-		return 0
-	}
+	return e.requester.GetMinAmountUnit(currencyPair)
 }
 
 func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingResponse *StreamingResponse, StreamingCallbackData interface{}) (error) {
