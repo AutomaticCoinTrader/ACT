@@ -16,15 +16,15 @@ import (
 func (r *Requester) GetMinPriceUnit(currencyPair string) (float64) {
 	switch currencyPair {
 	case "btc_jpy":
-		return 5
+		return 5.0
 	case "xem_jpy":
 		return 0.0001
 	case "mona_jpy":
 		return 0.1
 	case "bch_jpy":
-		return 5
+		return 5.0
 	case "eth_jpy":
-		return 5
+		return 5.0
 	case "zaif_jpy":
 		return 0.0001
 	case "pepecash_jpy":
@@ -42,7 +42,7 @@ func (r *Requester) GetMinPriceUnit(currencyPair string) (float64) {
 	case "pepecash_btc":
 		return 0.00000001
 	default:
-		return 0
+		return 0.0
 	}
 }
 
@@ -53,7 +53,7 @@ func (r *Requester) GetMinAmountUnit(currencyPair string) (float64) {
 	case "xem_jpy":
 		return 0.1
 	case "mona_jpy":
-		return 1
+		return 1.0
 	case "bch_jpy":
 		return 0.0001
 	case "eth_jpy":
@@ -63,19 +63,19 @@ func (r *Requester) GetMinAmountUnit(currencyPair string) (float64) {
 	case "pepecash_jpy":
 		return 0.0001
 	case "xem_btc":
-		return 1
+		return 1.0
 	case "mona_btc":
-		return 1
+		return 1.0
 	case "bch_btc":
 		return 0.0001
 	case "eth_btc":
 		return 0.0001
 	case "zaif_btc":
-		return 1
+		return 1.0
 	case "pepecash_btc":
-		return 1
+		return 1.0
 	default:
-		return 0
+		return 0.0
 	}
 }
 
@@ -84,19 +84,19 @@ func (r *Requester) GetMinFee(currency string) (float64) {
 	case "btc":
 		return 0.00001
 	case "xem":
-		return 2
+		return 2.0
 	case "mona":
-		return 0
+		return 0.0
 	case "bch":
-		return 0
+		return 0.0
 	case "eth":
-		return 0
+		return 0.0
 	case "zaif":
-		return 0
+		return 0.0
 	case "pepecash":
-		return 0
+		return 0.0
 	default:
-		return 0
+		return 0.0
 	}
 }
 
@@ -434,20 +434,20 @@ type TradeParams struct {
 func (t *TradeParams) fixupPriceAndAmount(r *Requester) {
 	priceUnit := r.GetMinPriceUnit(t.CurrencyPair)
 	amountUnit := r.GetMinAmountUnit(t.CurrencyPair)
-	fixedPrice := float64(int64(t.Price/priceUnit)) * priceUnit
+	fixedPrice := math.Floor((float64(int64(t.Price/priceUnit)) * priceUnit) * 100000000)/100000000
 	if fixedPrice != t.Price {
-		if t.Action == "bit" {
+		if t.Action == "bid" {
 			t.Price = math.Floor((fixedPrice + priceUnit) * 100000000)/100000000
 		} else if t.Action == "ask" {
-			t.Price = math.Floor(fixedPrice * 100000000) / 100000000
+			t.Price = fixedPrice
 		}
 	}
-	fixedAmount := float64(int64(t.Amount/amountUnit)) * amountUnit
+	fixedAmount := math.Floor((float64(int64(t.Amount/amountUnit)) * amountUnit) * 10000)/10000
 	if fixedAmount != t.Amount {
-		if t.Action == "bit" {
+		if t.Action == "bid" {
 			t.Amount = math.Floor((fixedAmount + amountUnit) * 10000)/10000
 		} else if t.Action == "ask" {
-			t.Amount = math.Floor(fixedAmount *10000) / 10000
+			t.Amount = fixedAmount
 		}
 	}
 }

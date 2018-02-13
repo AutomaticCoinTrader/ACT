@@ -436,7 +436,6 @@ func (e *Exchange) StartStreamings(streamingCallback exchange.StreamingCallback)
 // StopStreaming is stop streaming
 func (e *Exchange) StopStreamings() (error) {
 	// ストリーミングを停止する
-
 	for _, currencyPair := range e.currencyPairs {
 		currencyPair = strings.ToLower(currencyPair)
 		e.requester.StreamingStop(currencyPair)
