@@ -110,6 +110,7 @@ func (t TradeCommonResponse) needRetry() (bool) {
 		log.Printf(" error message (%v)", t.Error)
 		return true
 	}
+	log.Printf(" error message (%v)", t.Error)
 	return false
 }
 
