@@ -480,12 +480,12 @@ type TradeResponse struct {
 func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.RetryCallback, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
 		tradeParams.fixupPriceAndAmount(r)
-		log.Printf("action = %v, currency pair = %v, price = %v, amount = %v", tradeParams.Action, tradeParams.CurrencyPair, tradeParams.Price, tradeParams.Amount)
 		params, err := query.Values(tradeParams)
 		if err != nil {
 			return nil, nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request parameter of trade (params = %v)", tradeParams))
 		}
 		request := r.makeTradeRequest("trade", params.Encode())
+		log.Printf("action = %v, currency pair = %v, price = %v, amount = %v, params = %v", tradeParams.Action, tradeParams.CurrencyPair, tradeParams.Price, tradeParams.Amount, params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
