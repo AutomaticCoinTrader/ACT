@@ -107,7 +107,7 @@ type TradeCommonResponse struct {
 
 func (t TradeCommonResponse) needRetry() (bool) {
 	if t.Success == 0 {
-		log.Printf("error message", t.Error)
+		log.Printf(" error message (%v)", t.Error)
 		return true
 	}
 	return false
@@ -499,6 +499,7 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 			if !retry {
 				return newRes.(*TradeResponse), request, response, err
 			}
+			log.Printf("retry %v %v trade", tradeParams.Action, tradeParams.CurrencyPair)
 			continue
 		}
 		return newRes.(*TradeResponse), request, response, err
