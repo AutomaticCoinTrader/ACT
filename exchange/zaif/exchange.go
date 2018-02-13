@@ -136,7 +136,7 @@ type ActiveOrderCursor struct {
 }
 
 func (o *ActiveOrderCursor) Next() (int64, exchange.OrderAction, float64, float64, bool) {
-	if o.index >= len(o.keys)+len(o.keys) {
+	if o.index >= len(o.keys)+len(o.keysToken) {
 		return 0, "", 0, 0, false
 	}
 	var key string
