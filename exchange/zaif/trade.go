@@ -494,6 +494,9 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 			newRes := new(TradeResponse)
 			return newRes, res, resBody, err
 		}, request)
+		if (err != nil) {
+			log.Printf("currency pair = %v, err = %v", tradeParams.CurrencyPair, err)
+		}
 		if err != nil || newRes.(*TradeResponse).needRetry() {
 			retry := retryCallback(&tradeParams.Price, &tradeParams.Amount, retryCallbackData)
 			if !retry {
