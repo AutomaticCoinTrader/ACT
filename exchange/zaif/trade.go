@@ -434,18 +434,18 @@ type TradeParams struct {
 func (t *TradeParams) fixupPriceAndAmount(r *Requester) {
 	priceUnit := r.GetMinPriceUnit(t.CurrencyPair)
 	amountUnit := r.GetMinAmountUnit(t.CurrencyPair)
-	fixedPrice := math.Floor((float64(int64(t.Price/priceUnit)) * priceUnit) * 100000000)/100000000
+	fixedPrice := math.Floor((float64(int64(t.Price/priceUnit))*priceUnit)*100000000) / 100000000
 	if fixedPrice != t.Price {
 		if t.Action == "bid" {
-			t.Price = math.Floor((fixedPrice + priceUnit) * 100000000)/100000000
+			t.Price = math.Floor((fixedPrice+priceUnit)*100000000) / 100000000
 		} else if t.Action == "ask" {
 			t.Price = fixedPrice
 		}
 	}
-	fixedAmount := math.Floor((float64(int64(t.Amount/amountUnit)) * amountUnit) * 10000)/10000
+	fixedAmount := math.Floor((float64(int64(t.Amount/amountUnit))*amountUnit)*10000) / 10000
 	if fixedAmount != t.Amount {
 		if t.Action == "bid" {
-			t.Amount = math.Floor((fixedAmount + amountUnit) * 10000)/10000
+			t.Amount = math.Floor((fixedAmount+amountUnit)*10000) / 10000
 		} else if t.Action == "ask" {
 			t.Amount = fixedAmount
 		}
@@ -480,6 +480,7 @@ type TradeResponse struct {
 func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.RetryCallback, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
 		tradeParams.fixupPriceAndAmount(r)
+		log.Printf("action = %v, currency pair = %v, price = %v, amount = %v", tradeParams.Action, tradeParams.CurrencyPair, tradeParams.Price, tradeParams.Amount)
 		params, err := query.Values(tradeParams)
 		if err != nil {
 			return nil, nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request parameter of trade (params = %v)", tradeParams))

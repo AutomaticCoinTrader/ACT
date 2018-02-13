@@ -458,8 +458,8 @@ type ExchangeConfig struct {
 func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 	myConfig := config.(*ExchangeConfig)
 	return &Exchange{
-		config:    myConfig,
-		requester: NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
+		config:        myConfig,
+		requester:     NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
 		currencyPairs: myConfig.CurrencyPairs,
 		currencyPairsInfo: &currencyPairsInfo{
 			Bids:      make(map[string][][]float64),
