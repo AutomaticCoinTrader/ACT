@@ -437,14 +437,18 @@ func (t *TradeParams) fixupPriceAndAmount(r *Requester) {
 	fixedPrice := float64(int64(t.Price/priceUnit)) * priceUnit
 	if fixedPrice != t.Price {
 		if t.Action == "bit" {
-			t.Price = fixedPrice + priceUnit
+			t.Price = math.Floor((fixedPrice + priceUnit) * 100000000)/100000000
 		} else if t.Action == "ask" {
-			t.Price = fixedPrice
+			t.Price = math.Floor(fixedPrice * 100000000) / 100000000
 		}
 	}
 	fixedAmount := float64(int64(t.Amount/amountUnit)) * amountUnit
 	if fixedAmount != t.Amount {
-		t.Amount = fixedAmount
+		if t.Action == "bit" {
+			t.Amount = math.Floor((fixedAmount + amountUnit) * 10000)/10000
+		} else if t.Action == "ask" {
+			t.Amount = math.Floor(fixedAmount *10000) / 10000
+		}
 	}
 }
 
