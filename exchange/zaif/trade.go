@@ -570,7 +570,7 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 			if !retry {
 				return newRes.(*TradeResponse), request, response, err
 			}
-			log.Printf("retry trade action = v, currency pair = %v (%v)", tradeParams.Action, tradeParams.CurrencyPair, err)
+			log.Printf("retry trade action = v, currency pair = %v", tradeParams.Action, tradeParams.CurrencyPair)
 			continue
 		}
 		log.Printf("trade done action = %v, currency pair = %v, price = %v, amount = %v", tradeParams.Action, tradeParams.CurrencyPair, tradeParams.Price, tradeParams.Amount)
