@@ -339,7 +339,6 @@ func (e *Exchange) GetSellBoardCursor(currencyPair string) (exchange.BoardCursor
 }
 
 func (e *Exchange) GetBuyBoardCursor(currencyPair string) (exchange.BoardCursor, error) {
-
 	return &BoardCursor{
 		index:  0,
 		values: e.currencyPairsInfo.getBids(currencyPair),
