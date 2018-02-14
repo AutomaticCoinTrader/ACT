@@ -178,7 +178,6 @@ func (t TradeCommonResponse) needRetry() (bool) {
 		log.Printf(" error message (%v)", t.Error)
 		return true
 	}
-	log.Printf(" error message (%v)", t.Error)
 	return false
 }
 
@@ -554,7 +553,7 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 			params.Add("limit", strconv.FormatFloat(tradeParams.Limit, 'f', r.getPricePrec(tradeParams.CurrencyPair), 64))
 		}
 		request := r.makeTradeRequest("trade", params.Encode())
-		log.Printf("action = %v, currency pair = %v, price = %v, amount = %v, params = %v", tradeParams.Action, tradeParams.CurrencyPair, tradeParams.Price, tradeParams.Amount, params.Encode())
+		log.Printf("try trade action = %v, currency pair = %v, price = %v, amount = %v, params = %v", tradeParams.Action, tradeParams.CurrencyPair, tradeParams.Price, tradeParams.Amount, params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
@@ -563,19 +562,17 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 			newRes := new(TradeResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if (err != nil) {
-			log.Printf("currency pair = %v, err = %v", tradeParams.CurrencyPair, err)
-		}
 		if err != nil || newRes.(*TradeResponse).needRetry() {
-			log.Printf("%v call retry callback", tradeParams.CurrencyPair)
+			if (err != nil) {
+				log.Printf("error occured currency pair = %v (%v)", tradeParams.CurrencyPair, err)
+			}
 			retry := retryCallback(&tradeParams.Price, &tradeParams.Amount, retryCallbackData)
-			log.Printf("%v retry callback result %v", tradeParams.CurrencyPair, retry)
 			if !retry {
 				return newRes.(*TradeResponse), request, response, err
 			}
-			log.Printf("retry %v %v trade", tradeParams.Action, tradeParams.CurrencyPair)
 			continue
 		}
+		log.Printf("trade done action = %v, currency pair = %v, price = %v, amount = %v, params = %v", tradeParams.Action, tradeParams.CurrencyPair, tradeParams.Price, tradeParams.Amount)
 		return newRes.(*TradeResponse), request, response, err
 	}
 }
