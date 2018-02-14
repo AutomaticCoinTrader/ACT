@@ -34,8 +34,8 @@ type RetryCallback func(price *float64, amount *float64, retryCallbackData inter
 type Exchange interface {
 	GetName() string
 	GetCurrencyPairs() ([]string)
-	Buy(currencyPair string, price float64, amount float64, retryCallback RetryCallback, retryCallbackData interface{}) (int64, error)
-	Sell(currencyPair string, price float64, amount float64, retryCallback RetryCallback, retryCallbackData interface{}) (int64, error)
+	Buy(currencyPair string, price float64, amount float64, retryCallback RetryCallback, retryCallbackData interface{}) (int64, float64, float64, error)
+	Sell(currencyPair string, price float64, amount float64, retryCallback RetryCallback, retryCallbackData interface{}) (int64, float64, float64, error)
 	Cancel(orderID int64) (error)
 	GetFunds() (map[string]float64, error)
 	GetLastPrice(currencyPair string) (float64, error)
