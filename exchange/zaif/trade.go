@@ -11,20 +11,21 @@ import (
 	"net/http"
 	"github.com/AutomaticCoinTrader/ACT/exchange"
 	"log"
+	"net/url"
 )
 
 func (r *Requester) GetMinPriceUnit(currencyPair string) (float64) {
 	switch currencyPair {
 	case "btc_jpy":
-		return 5.0
+		return 5
 	case "xem_jpy":
 		return 0.0001
 	case "mona_jpy":
 		return 0.1
 	case "bch_jpy":
-		return 5.0
+		return 5
 	case "eth_jpy":
-		return 5.0
+		return 5
 	case "zaif_jpy":
 		return 0.0001
 	case "pepecash_jpy":
@@ -42,7 +43,40 @@ func (r *Requester) GetMinPriceUnit(currencyPair string) (float64) {
 	case "pepecash_btc":
 		return 0.00000001
 	default:
-		return 0.0
+		return -1
+	}
+}
+
+func (r *Requester) getPricePrec(currencyPair string) (int) {
+	switch currencyPair {
+	case "btc_jpy":
+		return 0
+	case "xem_jpy":
+		return 4
+	case "mona_jpy":
+		return 1
+	case "bch_jpy":
+		return 0
+	case "eth_jpy":
+		return 0
+	case "zaif_jpy":
+		return 4
+	case "pepecash_jpy":
+		return 4
+	case "xem_btc":
+		return 8
+	case "mona_btc":
+		return 8
+	case "bch_btc":
+		return 4
+	case "eth_btc":
+		return 4
+	case "zaif_btc":
+		return 8
+	case "pepecash_btc":
+		return 8
+	default:
+		return -1
 	}
 }
 
@@ -53,7 +87,7 @@ func (r *Requester) GetMinAmountUnit(currencyPair string) (float64) {
 	case "xem_jpy":
 		return 0.1
 	case "mona_jpy":
-		return 1.0
+		return 1
 	case "bch_jpy":
 		return 0.0001
 	case "eth_jpy":
@@ -63,40 +97,74 @@ func (r *Requester) GetMinAmountUnit(currencyPair string) (float64) {
 	case "pepecash_jpy":
 		return 0.0001
 	case "xem_btc":
-		return 1.0
+		return 1
 	case "mona_btc":
-		return 1.0
+		return 1
 	case "bch_btc":
 		return 0.0001
 	case "eth_btc":
 		return 0.0001
 	case "zaif_btc":
-		return 1.0
+		return 1
 	case "pepecash_btc":
-		return 1.0
+		return 1
 	default:
-		return 0.0
+		return -1
 	}
 }
+
+func (r *Requester) getAmountPrec(currencyPair string) (int) {
+	switch currencyPair {
+	case "btc_jpy":
+		return 4
+	case "xem_jpy":
+		return 1
+	case "mona_jpy":
+		return 0
+	case "bch_jpy":
+		return 4
+	case "eth_jpy":
+		return 4
+	case "zaif_jpy":
+		return 1
+	case "pepecash_jpy":
+		return 4
+	case "xem_btc":
+		return 0
+	case "mona_btc":
+		return 0
+	case "bch_btc":
+		return 4
+	case "eth_btc":
+		return 4
+	case "zaif_btc":
+		return 0
+	case "pepecash_btc":
+		return 0
+	default:
+		return -1
+	}
+}
+
 
 func (r *Requester) GetMinFee(currency string) (float64) {
 	switch currency {
 	case "btc":
 		return 0.00001
 	case "xem":
-		return 2.0
+		return 2
 	case "mona":
-		return 0.0
+		return 0
 	case "bch":
-		return 0.0
+		return 0
 	case "eth":
-		return 0.0
+		return 0
 	case "zaif":
-		return 0.0
+		return 0
 	case "pepecash":
-		return 0.0
+		return 0
 	default:
-		return 0.0
+		return -1
 	}
 }
 
@@ -481,9 +549,13 @@ type TradeResponse struct {
 func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.RetryCallback, retryCallbackData interface{}) (*TradeResponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
 		tradeParams.fixupPriceAndAmount(r)
-		params, err := query.Values(tradeParams)
-		if err != nil {
-			return nil, nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request parameter of trade (params = %v)", tradeParams))
+		params := make(url.Values)
+		params.Add("currency_pair", tradeParams.CurrencyPair)
+		params.Add("action", tradeParams.Action)
+		params.Add("price", strconv.FormatFloat(tradeParams.Price, 'f', r.getPricePrec(tradeParams.CurrencyPair), 64))
+		params.Add("amount", strconv.FormatFloat(tradeParams.Amount, 'f', r.getAmountPrec(tradeParams.CurrencyPair), 64))
+		if tradeParams.Limit != 0 {
+			params.Add("limit", strconv.FormatFloat(tradeParams.Limit, 'f', r.getPricePrec(tradeParams.CurrencyPair), 64))
 		}
 		request := r.makeTradeRequest("trade", params.Encode())
 		log.Printf("action = %v, currency pair = %v, price = %v, amount = %v, params = %v", tradeParams.Action, tradeParams.CurrencyPair, tradeParams.Price, tradeParams.Amount, params.Encode())
@@ -499,7 +571,9 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 			log.Printf("currency pair = %v, err = %v", tradeParams.CurrencyPair, err)
 		}
 		if err != nil || newRes.(*TradeResponse).needRetry() {
+			log.Printf("%v call retry callback", tradeParams.CurrencyPair)
 			retry := retryCallback(&tradeParams.Price, &tradeParams.Amount, retryCallbackData)
+			log.Printf("%v retry callback result %v", tradeParams.CurrencyPair, retry)
 			if !retry {
 				return newRes.(*TradeResponse), request, response, err
 			}

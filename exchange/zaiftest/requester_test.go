@@ -164,6 +164,26 @@ func TestRequester(t *testing.T) {
 	}
 	dump(t, res15, httpreq, httpres)
 
+	param6 := r.NewTradeParams()
+	param6.CurrencyPair = "xem_btc"
+	param6.Price = 3.3333e-07
+	param6.Amount = 1
+	res16, httpreq, httpres, err := r.TradeBuy(param6, retryCallback, nil)
+	if (err != nil) {
+		t.Fatalf("TradeBuy failure")
+	}
+	dump(t, res16, httpreq, httpres)
+
+	param7 := r.NewTradeCancelOrderParams()
+	param7.OrderId = res16.Return.OrderID
+	param7.IsToken = true
+	res17, httpreq, httpres, err := r.TradeCancelOrder(param7)
+	if (err != nil) {
+		t.Fatalf("TradeCancelOrder failure")
+	}
+	dump(t, res17, httpreq, httpres)
+
+
 	r.StreamingStart("btc_jpy", callback, t)
 
 	time.Sleep(time.Duration(60 * time.Second))
