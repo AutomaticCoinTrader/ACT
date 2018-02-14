@@ -9,7 +9,7 @@ const (
 )
 
 type OrderCursor interface {
-	Next() (orderID int64, action OrderAction, price float64, amount float64, ok bool)
+	Next() (orderID int64, currencyPair string, action OrderAction, price float64, amount float64, ok bool)
 	Reset()
 	Len() int
 }

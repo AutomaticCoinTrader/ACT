@@ -73,9 +73,9 @@ type OrderHistoryCursor struct {
 	valuesToken map[string]TradeHistoryRecordResponse
 }
 
-func (o *OrderHistoryCursor) Next() (int64, exchange.OrderAction, float64, float64, bool) {
+func (o *OrderHistoryCursor) Next() (int64, string, exchange.OrderAction, float64, float64, bool) {
 	if o.index >= len(o.keys)+len(o.keysToken) {
-		return 0, "", 0, 0, false
+		return 0, "", exchange.OrderActUnkown, 0, 0, false
 	}
 	var key string
 	var value TradeHistoryRecordResponse
@@ -99,7 +99,7 @@ func (o *OrderHistoryCursor) Next() (int64, exchange.OrderAction, float64, float
 	if err != nil {
 		log.Printf("can not parse id (exchange = %v, reason = %v)", exchangeName, err)
 	}
-	return id, action, value.Price, value.Amount, true
+	return id, value.CurrencyPair, action, value.Price, value.Amount, true
 }
 
 func (o *OrderHistoryCursor) Reset() {
@@ -135,9 +135,9 @@ type ActiveOrderCursor struct {
 	valuesToken map[string]TradeActiveOrderRecordResponse
 }
 
-func (o *ActiveOrderCursor) Next() (int64, exchange.OrderAction, float64, float64, bool) {
+func (o *ActiveOrderCursor) Next() (int64, string, exchange.OrderAction, float64, float64, bool) {
 	if o.index >= len(o.keys)+len(o.keysToken) {
-		return 0, "", 0, 0, false
+		return 0, "", exchange.OrderActUnkown, 0, 0, false
 	}
 	var key string
 	var value TradeActiveOrderRecordResponse
@@ -159,7 +159,7 @@ func (o *ActiveOrderCursor) Next() (int64, exchange.OrderAction, float64, float6
 	if err != nil {
 		log.Printf("can not parse id (exchange = %v, reason = %v)", exchangeName, err)
 	}
-	return id, action, value.Price, value.Amount, true
+	return id, value.CurrencyPair, action, value.Price, value.Amount, true
 }
 
 func (o *ActiveOrderCursor) Reset() {
