@@ -239,7 +239,7 @@ type Config struct {
 	Exchanges *exchangesConfig `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
 	Robot     *robot.Config    `json:"robot"     yaml:"robot"     toml:"robot"`
 	Notifier  *notifier.Config `json:"notifier"  yaml:"notifier"  toml:"notifier"`
-	Logger    *loggerConfig    `json:"loggerConfig"  yaml:"loggerConfig"  toml:"loggerConfig"`
+	Logger    *loggerConfig    `json:"logger"    yaml:"logger"    toml:"logger"`
 }
 
 func NewIntegrator(config *Config, configDir string) (*Integrator, error) {

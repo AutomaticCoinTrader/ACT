@@ -41,3 +41,5 @@ notifier:
     to:
   ifttt:
     key: "webhook-key"
+logger:
+  output: "stdout"
