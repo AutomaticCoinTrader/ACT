@@ -176,6 +176,9 @@ type TradeCommonResponse struct {
 func (t TradeCommonResponse) needRetry() (bool) {
 	if t.Success == 0 {
 		log.Printf(" error message (%v)", t.Error)
+		if (t.Error == "order not found") {
+			return false
+		}
 		return true
 	}
 	return false

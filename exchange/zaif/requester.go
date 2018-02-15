@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net/http"
 	"encoding/json"
+	"sync/atomic"
 )
 
 type Requester struct {
@@ -31,6 +32,8 @@ const (
 	Public urlBuilder = iota
 	Trade
 )
+
+var seq int64
 
 type requestFunc func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error)
 
@@ -92,7 +95,8 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 
 func (r *Requester) getNonce() (string) {
 	now := time.Now()
-	return strconv.FormatInt(now.Unix(), 10) + "." + fmt.Sprintf("%09d", now.Nanosecond())
+	s:= atomic.AddInt64(&seq, 1)
+	return strconv.FormatInt(now.Unix(), 10) + "." + fmt.Sprintf("%06d", now.Nanosecond() / 1000) + fmt.Sprintf("%03d", s % 1000)
 }
 
 func (r *Requester) unmarshal(requestFunc requestFunc, request *utility.HTTPRequest) (interface{}, *http.Response, error) {
