@@ -166,7 +166,7 @@ func TestRequester(t *testing.T) {
 
 	param6 := r.NewTradeParams()
 	param6.CurrencyPair = "xem_btc"
-	param6.Price = 3.3333e-07
+	param6.Price = 1.3333e-07
 	param6.Amount = 1
 	res16, httpreq, httpres, err := r.TradeBuy(param6, retryCallback, nil)
 	if (err != nil) {
