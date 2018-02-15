@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"net/http"
 	"github.com/AutomaticCoinTrader/ACT/notifier"
+	"log/syslog"
 )
 
 type StartStreamingCallback func(ex exchange.Exchange, userCallbackData interface{}) (error)
@@ -229,21 +230,34 @@ type serverConfig struct {
 	AddrPort string `json:"addrPort"  yaml:"addrPort"  toml:"addrPort"`
 }
 
+type loggerConfig struct {
+	Output   string   `json:"output"    yaml:"output"    toml:"output"`
+}
+
 type Config struct {
 	Server    *serverConfig    `json:"server"    yaml:"server"    toml:"server"`
 	Exchanges *exchangesConfig `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
 	Robot     *robot.Config    `json:"robot"     yaml:"robot"     toml:"robot"`
 	Notifier  *notifier.Config `json:"notifier"  yaml:"notifier"  toml:"notifier"`
+	Logger    *loggerConfig    `json:"loggerConfig"  yaml:"loggerConfig"  toml:"loggerConfig"`
 }
 
 func NewIntegrator(config *Config, configDir string) (*Integrator, error) {
 	ntf, err := notifier.NewMailNotifier(config.Notifier)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("can not create notifier (config dir = %v, reason = %v)", configDir, err))
+		return nil, errors.Wrapf(err, "can not create notifier (config dir = %v, reason = %v)", configDir, err)
 	}
 	rbt, err := robot.NewRobot(config.Robot, configDir, ntf)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("can not create robot (config dir = %v, reason = %v)", configDir, err))
+		return nil, errors.Wrapf(err, "can not create robot (config dir = %v, reason = %v)", configDir, err)
+	}
+	log.SetFlags(log.Ldate|log.Ltime)
+	if config.Logger != nil && config.Logger.Output == "syslog" {
+		logger, err := syslog.New(syslog.LOG_NOTICE|syslog.LOG_USER, "ACT")
+		if err != nil {
+			return nil, errors.Wrapf(err, "can not open syslog", err)
+		}
+		log.SetOutput(logger)
 	}
 	return &Integrator{
 		config:                  config,

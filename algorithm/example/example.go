@@ -16,9 +16,11 @@ const (
 )
 
 type internalTradeConfig struct {
+	Message string `json:"message" yaml:"message" toml:"message"`
 }
 
 type externalTradeConfig struct {
+	Message string `json:"message" yaml:"message" toml:"message"`
 }
 
 type config struct {
