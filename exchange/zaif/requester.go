@@ -99,7 +99,7 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 	headers["Conent-Type"] = "application/x-www-form-urlencoded"
 	headers["Key"] = key
 	headers["Sign"] = sign
-	log.Printf("key = %v, sign = %v", key, sign)
+	//log.Printf("key = %v, sign = %v", key, sign)
 	return &utility.HTTPRequest{
 		URL:     u,
 		Headers: headers,
