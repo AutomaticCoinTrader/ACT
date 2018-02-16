@@ -443,9 +443,13 @@ func (e *Exchange) StopStreamings() (error) {
 	return nil
 }
 
-type ExchangeConfig struct {
+type ExchangeKeyConfig struct {
 	Key           string   `json:"key"          yaml:"key"          toml:"key"`
 	Secret        string   `json:"secret"       yaml:"secret"       toml:"secret"`
+}
+
+type ExchangeConfig struct {
+	Keys          []*ExchangeKeyConfig   `json:"keys"          yaml:"keys"          toml:"keys"`
 	Retry         int      `json:"retry"        yaml:"retry"        toml:"retry"`
 	RetryWait     int      `json:"retryWait"    yaml:"retryWait"    toml:"retryWait"`
 	Timeout       int      `json:"timeout"      yaml:"timeout"      toml:"timeout"`
@@ -456,9 +460,13 @@ type ExchangeConfig struct {
 
 func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 	myConfig := config.(*ExchangeConfig)
+	requesterKeys := make([]*RequesterKey, 0, len(myConfig.Keys))
+	for _, key := range myConfig.Keys {
+		requesterKeys = append(requesterKeys, &RequesterKey{key : key.Key, secret:key.Secret})
+	}
 	return &Exchange{
 		config:        myConfig,
-		requester:     NewRequester(myConfig.Key, myConfig.Secret, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
+		requester:     NewRequester(requesterKeys, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
 		currencyPairs: myConfig.CurrencyPairs,
 		currencyPairsInfo: &currencyPairsInfo{
 			Bids:      make(map[string][][]float64),

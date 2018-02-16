@@ -13,7 +13,14 @@ import (
 	"net/http"
 	"encoding/json"
 	"sync/atomic"
+	"sync"
+	"log"
 )
+
+type RequesterKey struct {
+	key    string
+	secret string
+}
 
 type Requester struct {
 	httpClient   *utility.HTTPClient
@@ -22,8 +29,9 @@ type Requester struct {
 	writeBufSize int
 	retry        int
 	retryWait    int
-	key          string
-	secret       string
+	keys         []*RequesterKey
+	keyIndex     int
+	keysMutex    *sync.Mutex
 }
 
 type urlBuilder int
@@ -78,14 +86,20 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 	if params != "" {
 		body += "&" + params
 	}
-	mac := hmac.New(sha512.New, []byte(r.secret))
+	r.keysMutex.Lock()
+	key := r.keys[r.keyIndex].key
+	secret := r.keys[r.keyIndex].secret
+	r.keyIndex++
+	r.keyIndex = r.keyIndex % len(r.keys)
+	r.keysMutex.Unlock()
+	mac := hmac.New(sha512.New, []byte(secret))
 	mac.Write([]byte(body))
 	sign := hex.EncodeToString(mac.Sum(nil))
 	headers := make(map[string]string)
 	headers["Conent-Type"] = "application/x-www-form-urlencoded"
-	headers["Key"] = r.key
+	headers["Key"] = key
 	headers["Sign"] = sign
-	//log.Printf("key = %v, sign = %v", r.key, sign)
+	log.Printf("key = %v, sign = %v", key, sign)
 	return &utility.HTTPRequest{
 		URL:     u,
 		Headers: headers,
@@ -109,7 +123,7 @@ func (r *Requester) unmarshal(requestFunc requestFunc, request *utility.HTTPRequ
 }
 
 // NewRequester is create requester
-func NewRequester(key string, secret string, retry int, retryWait, timeout int, readBufSize int, writeBufSize int) (*Requester) {
+func NewRequester(keys []*RequesterKey, retry int, retryWait, timeout int, readBufSize int, writeBufSize int) (*Requester) {
 	return &Requester{
 		httpClient:   utility.NewHTTPClient(retry, retryWait, timeout),
 		wsClients:    make(map[string]*utility.WSClient),
@@ -117,7 +131,8 @@ func NewRequester(key string, secret string, retry int, retryWait, timeout int, 
 		writeBufSize: writeBufSize,
 		retry:        retry,
 		retryWait:    retryWait,
-		key:          key,
-		secret:       secret,
+		keys:         keys,
+		keyIndex:     0,
+		keysMutex:    new(sync.Mutex),
 	}
 }
