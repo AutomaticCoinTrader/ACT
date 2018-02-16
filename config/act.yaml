@@ -2,8 +2,9 @@ robot:
   algorithmPluginDir: "plugin"
 exchanges:
   zaif:
-    key: "key"
-    secret: "secret"
+    keys:
+      - key: "key"
+        secret: "secret"
     currencyPairs:
       - btc_jpy
       - xem_jpy
