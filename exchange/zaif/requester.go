@@ -89,8 +89,7 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 	r.keysMutex.Lock()
 	key := r.keys[r.keyIndex].key
 	secret := r.keys[r.keyIndex].secret
-	r.keyIndex++
-	r.keyIndex = r.keyIndex % len(r.keys)
+	r.keyIndex = (r.keyIndex + 1) % len(r.keys)
 	r.keysMutex.Unlock()
 	mac := hmac.New(sha512.New, []byte(secret))
 	mac.Write([]byte(body))
