@@ -14,7 +14,6 @@ import (
 	"encoding/json"
 	"sync/atomic"
 	"sync"
-	"log"
 )
 
 type RequesterKey struct {
