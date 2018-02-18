@@ -631,6 +631,7 @@ func (r *Requester) TradeSell(tradeParams *TradeParams, retryCallback exchange.R
 // TradeCancelOrderParams is parameter of cancel order
 type TradeCancelOrderParams struct {
 	OrderId int64 `url:"order_id"`
+	CurrencyPair string `url:"currency_pair"`
 	IsToken bool  `url:"is_token,omitempty"`
 }
 

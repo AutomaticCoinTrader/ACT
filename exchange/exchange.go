@@ -36,7 +36,7 @@ type Exchange interface {
 	GetCurrencyPairs() ([]string)
 	Buy(currencyPair string, price float64, amount float64, retryCallback RetryCallback, retryCallbackData interface{}) (int64, float64, float64, error)
 	Sell(currencyPair string, price float64, amount float64, retryCallback RetryCallback, retryCallbackData interface{}) (int64, float64, float64, error)
-	Cancel(orderID int64) (error)
+	Cancel(orderID int64, currencyPair string) (error)
 	GetFunds() (map[string]float64, error)
 	GetLastPrice(currencyPair string) (float64, error)
 	GetSellBoardCursor(currencyPair string) (BoardCursor, error)

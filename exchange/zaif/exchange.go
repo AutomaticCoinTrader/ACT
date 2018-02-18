@@ -294,9 +294,9 @@ func (e *Exchange) Sell(currencyPair string, price float64, amount float64, retr
 	return tradeResponse.Return.OrderID, tradeParams.Price, tradeParams.Amount, nil
 }
 
-func (e *Exchange) Cancel(orderID int64) (error) {
+func (e *Exchange) Cancel(orderID int64, currencyPair string) (error) {
 	tradeCancelOrderParams := e.requester.NewTradeCancelOrderParams()
-	tradeCancelOrderParams.IsToken = false
+	tradeCancelOrderParams.CurrencyPair = currencyPair
 	tradeCancelOrderParams.OrderId = orderID
 	tradeCancelOrderResponse, _, _, err := e.requester.TradeCancelOrder(tradeCancelOrderParams)
 	if err != nil {
