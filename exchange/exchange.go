@@ -46,6 +46,7 @@ type Exchange interface {
 	GetActiveOrderCursor() (OrderCursor, error)
 	GetMinPriceUnit(currencyPair string) (float64)
 	GetMinAmountUnit(currencyPair string) (float64)
+	GetTradeFeeRate(currencyPair string) (float64)
 	Initialize() (error)
 	Finalize() (error)
 	StartStreamings(streamingCallback StreamingCallback) (error)

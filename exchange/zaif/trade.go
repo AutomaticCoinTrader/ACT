@@ -146,8 +146,40 @@ func (r *Requester) getAmountPrec(currencyPair string) (int) {
 	}
 }
 
+func (r *Requester) GetTradeFeeRate(currencyPair string) (float64) {
+	switch currencyPair {
+	case "btc_jpy":
+		return 0
+	case "xem_jpy":
+		return 0.1
+	case "mona_jpy":
+		return 0.1
+	case "bch_jpy":
+		return 0.3
+	case "eth_jpy":
+		return 0.1
+	case "zaif_jpy":
+		return 0.1
+	case "pepecash_jpy":
+		return 0.1
+	case "xem_btc":
+		return 0.1
+	case "mona_btc":
+		return 0.1
+	case "bch_btc":
+		return 0.3
+	case "eth_btc":
+		return 0.1
+	case "zaif_btc":
+		return 0.1
+	case "pepecash_btc":
+		return 0.1
+	default:
+		return -1
+	}
+}
 
-func (r *Requester) GetMinFee(currency string) (float64) {
+func (r *Requester) GetWidthrowMinFee(currency string) (float64) {
 	switch currency {
 	case "btc":
 		return 0.00001
@@ -507,7 +539,8 @@ type TradeParams struct {
 func (t *TradeParams) fixupPriceAndAmount(r *Requester) {
 	priceUnit := r.GetMinPriceUnit(t.CurrencyPair)
 	amountUnit := r.GetMinAmountUnit(t.CurrencyPair)
-	fixedPrice := math.Floor((float64(int64(t.Price/priceUnit))*priceUnit)*100000000) / 100000000
+
+	fixedPrice := math.Floor((float64(int64((t.Price/priceUnit) + (priceUnit/100000000)))*priceUnit)*100000000) / 100000000
 	if fixedPrice != t.Price {
 		if t.Action == "bid" {
 			t.Price = math.Floor((fixedPrice+priceUnit)*100000000) / 100000000
@@ -515,7 +548,7 @@ func (t *TradeParams) fixupPriceAndAmount(r *Requester) {
 			t.Price = fixedPrice
 		}
 	}
-	fixedAmount := math.Floor((float64(int64(t.Amount/amountUnit))*amountUnit)*10000) / 10000
+	fixedAmount := math.Floor((float64(int64((t.Amount/amountUnit) + (amountUnit/10000)))*amountUnit)*10000) / 10000
 	if fixedAmount != t.Amount {
 		t.Amount = fixedAmount
 	}
@@ -659,15 +692,15 @@ type TradeWithdrawParams struct {
 func (t *TradeWithdrawParams) fixupFee(r *Requester) {
 	switch t.Currency {
 	case "btc":
-		if t.OptFee < r.GetMinFee(t.Currency) {
-			t.OptFee = r.GetMinFee(t.Currency)
+		if t.OptFee < r.GetWidthrowMinFee(t.Currency) {
+			t.OptFee = r.GetWidthrowMinFee(t.Currency)
 		}
 	case "xem":
-		if t.OptFee < r.GetMinFee(t.Currency) {
-			t.OptFee = r.GetMinFee(t.Currency)
+		if t.OptFee < r.GetWidthrowMinFee(t.Currency) {
+			t.OptFee = r.GetWidthrowMinFee(t.Currency)
 		}
 	default:
-		t.OptFee = r.GetMinFee(t.Currency)
+		t.OptFee = r.GetWidthrowMinFee(t.Currency)
 	}
 }
 

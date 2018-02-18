@@ -398,6 +398,10 @@ func (e *Exchange) GetMinAmountUnit(currencyPair string) (float64) {
 	return e.requester.GetMinAmountUnit(currencyPair)
 }
 
+func (e *Exchange) GetTradeFeeRate(currencyPair string) (float64) {
+	return e.requester.GetTradeFeeRate(currencyPair)
+}
+
 func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingResponse *StreamingResponse, StreamingCallbackData interface{}) (error) {
 
 	e.currencyPairsInfo.update(currencyPair, streamingResponse.Bids, streamingResponse.Asks, streamingResponse.LastPrice.Price, streamingResponse.Trades)
