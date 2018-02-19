@@ -24,7 +24,7 @@ func (r *Robot) CreateInternalTradeAlgorithms(ex exchange.Exchange) (error) {
 		if registeredAlgorithm.InternalTradeAlgorithmNewFunc == nil {
 			continue
 		}
-		log.Printf("create %v algorithm", name)
+		log.Printf("create %v internal algorithm", name)
 		newInternalTradeAlgoritm, err := registeredAlgorithm.InternalTradeAlgorithmNewFunc(path.Join(r.configDir, algorithm.AlgorithmConfigDir))
 		if err != nil {
 			log.Printf("can not create internal algorithm of %v (reason = %v)", name, err)
