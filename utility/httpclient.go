@@ -166,7 +166,7 @@ func (w *WSClient) messageLoop(callback WSCallback, callbackData interface{}) (e
 	for {
 		err := callback(w.conn, callbackData)
 		if err != nil {
-			return errors.Wrapf(err, "callback error (reason = %v)")
+			return errors.Wrapf(err, "callback error (reason = %v)", err)
 		}
 		if atomic.LoadUint32(&w.finished) == 1 {
 			log.Printf("message loop finished")
