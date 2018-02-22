@@ -178,8 +178,10 @@ func (w *WSClient) messageLoop(callback WSCallback, callbackData interface{}) (e
 func (w *WSClient) pingLoop(pingChan chan bool) {
 	for {
 		select {
-		case <-pingChan:
-			return
+		case _, ok := <-pingChan:
+			if !ok {
+				return
+			}
 		case <-time.After(5 * time.Second):
 			deadline := time.Now()
 			deadline.Add(30 * time.Second)
