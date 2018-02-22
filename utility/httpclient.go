@@ -175,11 +175,12 @@ func (w *WSClient) messageLoop(callback WSCallback, callbackData interface{}) (e
 	}
 }
 
-func (w *WSClient) pingLoop(pingChan chan bool) {
+func (w *WSClient) pingLoop(pingStopChan chan bool, pingStopCompleteChan chan bool) {
 	for {
 		select {
-		case _, ok := <-pingChan:
+		case _, ok := <-pingStopChan:
 			if !ok {
+				close(pingStopCompleteChan)
 				return
 			}
 		case <-time.After(5 * time.Second):
@@ -190,14 +191,17 @@ func (w *WSClient) pingLoop(pingChan chan bool) {
 	}
 }
 
-func (w *WSClient) startPing() chan bool {
-	pingChan := make(chan bool)
-	go w.pingLoop(pingChan)
-	return pingChan
+func (w *WSClient) startPing() (chan bool, chan bool) {
+	pingStopChan := make(chan bool)
+	pingStopCompleteChan := make(chan bool)
+	go w.pingLoop(pingStopChan, pingStopCompleteChan)
+	return pingStopChan, pingStopCompleteChan
 }
 
-func (w *WSClient) stopPing(pingChan chan bool) {
-	close(pingChan)
+func (w *WSClient) stopPing(pingStopChan chan bool, pingStopCompleteChan chan bool) {
+	close(pingStopChan)
+	<-pingStopCompleteChan
+	return
 }
 
 func (w *WSClient) connect(callback WSCallback, callbackData interface{}, requestURL string, requestHeaders map[string]string) {
@@ -242,12 +246,12 @@ func (w *WSClient) connect(callback WSCallback, callbackData interface{}, reques
 			w.started = true
 		}
 		w.conn = conn
-		pingChan := w.startPing()
+		pingStopChan, pingStopCompleteChan := w.startPing()
 		err = w.messageLoop(callback, callbackData)
 		if err != nil {
 			log.Printf("error occuered in message loop: %v", err)
 		}
-		w.stopPing(pingChan)
+		w.stopPing(pingStopChan, pingStopCompleteChan)
 		conn.Close()
 		i = 0
 		if atomic.LoadUint32(&w.finished) == 1 {
