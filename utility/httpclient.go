@@ -238,7 +238,7 @@ func (w *WSClient) connect(callback WSCallback, callbackData interface{}, reques
 				time.Sleep(500 * time.Millisecond)
 				continue
 			}
-			w.connChan <- errors.Wrap(err, fmt.Sprintf("can not dial (URL = %v, header = %v)", requestURL, requestHeaders))
+			log.Printf("can not dial (URL = %v, header = %v)", requestURL, requestHeaders)
 			continue
 		}
 		if !w.started {
@@ -259,7 +259,7 @@ func (w *WSClient) connect(callback WSCallback, callbackData interface{}, reques
 			return
 		}
 	}
-	w.connChan <- errors.Errorf("give up retry (url = %v, header = %v)", requestURL, requestHeaders)
+	log.Printf("give up retry (url = %v, header = %v)", requestURL, requestHeaders)
 }
 
 func (w *WSClient) Start(callback WSCallback, callbackData interface{}, requestURL string, requestHeaders map[string]string) error {
@@ -268,15 +268,16 @@ func (w *WSClient) Start(callback WSCallback, callbackData interface{}, requestU
 	select {
 	case err := <-w.connChan:
 		if err != nil {
+			close(w.connChan)
 			return errors.Wrap(err, fmt.Sprintf("can not connect (URL = %v, header = %v)", requestURL, requestHeaders))
 		}
 	}
-	close(w.connChan)
 	return nil
 }
 
 func (w *WSClient) Stop() {
 	atomic.StoreUint32(&w.finished, 1)
+	close(w.connChan)
 }
 
 // Send ...
