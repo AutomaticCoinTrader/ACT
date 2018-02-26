@@ -211,7 +211,9 @@ func (t TradeCommonResponse) needRetry() (bool) {
 		if t.Error == "order not found" {
 			return false
 		} else if t.Error == "time wait restriction, please try later." {
-			time.Sleep(1 * time.Second)
+			time.Sleep(500 * time.Millisecond)
+		} else if t.Error == "insufficient funds" {
+			time.Sleep(500 * time.Millisecond)
 		}
 		return true
 	}
