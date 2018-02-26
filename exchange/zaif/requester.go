@@ -17,8 +17,8 @@ import (
 )
 
 type RequesterKey struct {
-	key    string
-	secret string
+	Key    string
+	Secret string
 }
 
 type Requester struct {
@@ -86,8 +86,8 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 		body += "&" + params
 	}
 	r.keysMutex.Lock()
-	key := r.keys[r.keyIndex].key
-	secret := r.keys[r.keyIndex].secret
+	key := r.keys[r.keyIndex].Key
+	secret := r.keys[r.keyIndex].Secret
 	r.keyIndex = (r.keyIndex + 1) % len(r.keys)
 	r.keysMutex.Unlock()
 	mac := hmac.New(sha512.New, []byte(secret))

@@ -466,7 +466,7 @@ func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 	myConfig := config.(*ExchangeConfig)
 	requesterKeys := make([]*RequesterKey, 0, len(myConfig.Keys))
 	for _, key := range myConfig.Keys {
-		requesterKeys = append(requesterKeys, &RequesterKey{key : key.Key, secret:key.Secret})
+		requesterKeys = append(requesterKeys, &RequesterKey{Key : key.Key, Secret:key.Secret})
 	}
 	return &Exchange{
 		config:        myConfig,

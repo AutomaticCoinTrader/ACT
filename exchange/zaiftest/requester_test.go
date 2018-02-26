@@ -60,8 +60,12 @@ func TestRequester(t *testing.T) {
 		log.Printf("can not load config (config dir = %v, reason = %v)", "../../config", err)
 		t.Fatalf("can not load config")
 	}
-	fmt.Printf("key = %v, secret = %v\n", newConfig.Exchanges.Zaif.Key, newConfig.Exchanges.Zaif.Secret)
-	r := zaif.NewRequester(newConfig.Exchanges.Zaif.Key, newConfig.Exchanges.Zaif.Secret, 10, 500, 600, 10*1024*1024, 10*1024*1024)
+	fmt.Printf("keys = %v\n", newConfig.Exchanges.Zaif.Keys)
+	requesterKeys := make([]*zaif.RequesterKey, 0, len(newConfig.Exchanges.Zaif.Keys))
+	for _, key := range newConfig.Exchanges.Zaif.Keys {
+		requesterKeys = append(requesterKeys, &zaif.RequesterKey{Key : key.Key, Secret:key.Secret})
+	}
+	r := zaif.NewRequester(requesterKeys, 10, 500, 600, 10*1024*1024, 10*1024*1024)
 
 	res1, httpreq, httpres, err := r.Currencies("all")
 	if (err != nil) {
