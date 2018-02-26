@@ -73,9 +73,9 @@ type OrderHistoryCursor struct {
 	valuesToken map[string]TradeHistoryRecordResponse
 }
 
-func (o *OrderHistoryCursor) Next() (int64, string, exchange.OrderAction, float64, float64, bool) {
+func (o *OrderHistoryCursor) Next() (int64, string, exchange.OrderAction, float64, float64, int64, bool) {
 	if o.index >= len(o.keys)+len(o.keysToken) {
-		return 0, "", exchange.OrderActUnkown, 0, 0, false
+		return 0, "", exchange.OrderActUnkown, 0, 0, 0, false
 	}
 	var key string
 	var value TradeHistoryRecordResponse
@@ -98,8 +98,14 @@ func (o *OrderHistoryCursor) Next() (int64, string, exchange.OrderAction, float6
 	id, err := strconv.ParseInt(key, 10, 64)
 	if err != nil {
 		log.Printf("can not parse id (exchange = %v, reason = %v)", exchangeName, err)
+		return 0, "", exchange.OrderActUnkown, 0, 0, 0, false
 	}
-	return id, value.CurrencyPair, action, value.Price, value.Amount, true
+	ts, err := strconv.ParseInt(value.Timestamp, 10, 64)
+	if err != nil {
+		log.Printf("can not parse timestamp (exchange = %v, reason = %v)", exchangeName, err)
+		return 0, "", exchange.OrderActUnkown, 0, 0, 0, false
+	}
+	return id, value.CurrencyPair, action, value.Price, value.Amount, ts, true
 }
 
 func (o *OrderHistoryCursor) Reset() {
@@ -135,9 +141,9 @@ type ActiveOrderCursor struct {
 	valuesToken map[string]TradeActiveOrderRecordResponse
 }
 
-func (o *ActiveOrderCursor) Next() (int64, string, exchange.OrderAction, float64, float64, bool) {
+func (o *ActiveOrderCursor) Next() (int64, string, exchange.OrderAction, float64, float64, int64, bool) {
 	if o.index >= len(o.keys)+len(o.keysToken) {
-		return 0, "", exchange.OrderActUnkown, 0, 0, false
+		return 0, "", exchange.OrderActUnkown, 0, 0, 0, false
 	}
 	var key string
 	var value TradeActiveOrderRecordResponse
@@ -158,8 +164,14 @@ func (o *ActiveOrderCursor) Next() (int64, string, exchange.OrderAction, float64
 	id, err := strconv.ParseInt(key, 10, 64)
 	if err != nil {
 		log.Printf("can not parse id (exchange = %v, reason = %v)", exchangeName, err)
+		return 0, "", exchange.OrderActUnkown, 0, 0, 0, false
 	}
-	return id, value.CurrencyPair, action, value.Price, value.Amount, true
+	ts, err := strconv.ParseInt(value.Timestamp, 10, 64)
+	if err != nil {
+		log.Printf("can not parse timestamp (exchange = %v, reason = %v)", exchangeName, err)
+		return 0, "", exchange.OrderActUnkown, 0, 0, 0, false
+	}
+	return id, value.CurrencyPair, action, value.Price, value.Amount, ts, true
 }
 
 func (o *ActiveOrderCursor) Reset() {
