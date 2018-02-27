@@ -603,12 +603,16 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeResponse).needRetry() {
-			if (err != nil) {
+			if err != nil {
 				log.Printf("error occured currency pair = %v (%v)", tradeParams.CurrencyPair, err)
 			}
 			retry := retryCallback(&tradeParams.Price, &tradeParams.Amount, retryCallbackData)
 			if !retry {
-				return newRes.(*TradeResponse), request, response, err
+				if err != nil {
+					return nil, request, response, err
+				} else {
+					return newRes.(*TradeResponse), request, response, nil
+				}
 			}
 			log.Printf("retry trade action = %v, currency pair = %v", tradeParams.Action, tradeParams.CurrencyPair)
 			continue
