@@ -47,8 +47,8 @@ type Exchange interface {
 	GetMinPriceUnit(currencyPair string) (float64)
 	GetMinAmountUnit(currencyPair string) (float64)
 	GetTradeFeeRate(currencyPair string) (float64)
-	Initialize() (error)
+	Initialize(streamingCallback StreamingCallback) (error)
 	Finalize() (error)
-	StartStreamings(streamingCallback StreamingCallback) (error)
+	StartStreamings() (error)
 	StopStreamings() (error)
 }

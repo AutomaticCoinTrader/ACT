@@ -118,7 +118,7 @@ func (i *Integrator) Initialize() (error) {
 				i.Finalize()
 				return errors.Wrap(err, fmt.Sprintf("can not create exchange of %v", name))
 			}
-			ex.Initialize()
+			ex.Initialize(i.streamingCallback)
 			// 作った取引所を保存しておく
 			i.exchanges[name] = ex
 		}
@@ -141,7 +141,7 @@ func (i *Integrator) startInternalTrade() (error) {
 			return errors.Wrap(err, fmt.Sprintf("can not create algorithm  (name = %v)", ex.GetName()))
 		}
 		// ストリーミングを開始
-		err = ex.StartStreamings(i.streamingCallback)
+		err = ex.StartStreamings()
 		if err != nil {
 			i.stopInternalTrade()
 			return errors.Wrap(err, fmt.Sprintf("can not start streaming (name = %v)", ex.GetName()))

@@ -425,7 +425,8 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 }
 
 // Initialize is initalize exchange
-func (e *Exchange) Initialize() (error) {
+func (e *Exchange) Initialize(streamingCallback exchange.StreamingCallback) (error) {
+	e.streamingCallback = streamingCallback
 	return nil
 }
 
@@ -435,9 +436,8 @@ func (e *Exchange) Finalize() (error) {
 }
 
 // StreamingStart is start streaming
-func (e *Exchange) StartStreamings(streamingCallback exchange.StreamingCallback) (error) {
+func (e *Exchange) StartStreamings() (error) {
 	// ストリーミングを開始する
-	e.streamingCallback = streamingCallback
 	for _, currencyPair := range e.currencyPairs {
 		currencyPair = strings.ToLower(currencyPair)
 		err := e.requester.StreamingStart(currencyPair, e.exchangeStreamingCallback, e)
