@@ -436,7 +436,7 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 func  (e *Exchange) pollingLoop(currencyPair string) {
 	for {
 		select {
-		case <- time.After(100 * time.Millisecond):
+		case <- time.After(200 * time.Millisecond):
 			depthResponse, _, _, err := e.requester.Depth(currencyPair)
 			if err != nil {
 				log.Printf("can not get depth currency pair = %v", currencyPair)
