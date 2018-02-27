@@ -7,6 +7,7 @@ import (
 	"sync"
 	"strconv"
 	"log"
+	"time"
 )
 
 const (
@@ -216,6 +217,13 @@ func (c *currencyPairsInfo) update(currencyPair string, currencyPairsBids [][]fl
 	c.Trades[currencyPair] = currencyPairsTrades
 }
 
+func (c *currencyPairsInfo) updateDepth(currencyPair string, currencyPairsBids [][]float64, currencyPairsAsks [][]float64) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.Bids[currencyPair] = currencyPairsBids
+	c.Asks[currencyPair] = currencyPairsAsks
+}
+
 func (c *currencyPairsInfo) getBids(currencyPair string) ([][]float64) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -266,6 +274,7 @@ type Exchange struct {
 	streamingCallback exchange.StreamingCallback
 	currencyPairs     []string
 	currencyPairsInfo *currencyPairsInfo
+	pollingStopChan   chan bool
 }
 
 func (e *Exchange) GetName() (string) {
@@ -419,9 +428,29 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 	e.currencyPairsInfo.update(currencyPair, streamingResponse.Bids, streamingResponse.Asks, streamingResponse.LastPrice.Price, streamingResponse.Trades)
 	err := e.streamingCallback(currencyPair, e)
 	if err != nil {
-		return errors.Wrap(err, "trade update callback error")
+		return errors.Wrap(err, "streaming callback error")
 	}
 	return nil
+}
+
+func  (e *Exchange) pollingLoop(currencyPair string) {
+	for {
+		select {
+		case <- time.After(100 * time.Millisecond):
+			depthResponse, _, _, err := e.requester.Depth(currencyPair)
+			if err != nil {
+				log.Printf("can not get depth currency pair = %v", currencyPair)
+				continue
+			}
+			e.currencyPairsInfo.updateDepth(currencyPair, depthResponse.Bids, depthResponse.Asks)
+			err = e.streamingCallback(currencyPair, e)
+			if err != nil {
+				log.Printf("streaming callback error in polling loop (%v)", err)
+			}
+		case <- e.pollingStopChan:
+			break
+		}
+	}
 }
 
 // Initialize is initalize exchange
@@ -445,6 +474,10 @@ func (e *Exchange) StartStreamings() (error) {
 			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair);
 		}
 	}
+	for _, currencyPair := range e.currencyPairs {
+		currencyPair = strings.ToLower(currencyPair)
+		go e.pollingLoop(currencyPair)
+	}
 	return nil
 }
 
@@ -456,6 +489,7 @@ func (e *Exchange) StopStreamings() (error) {
 		e.requester.StreamingStop(currencyPair)
 
 	}
+	close(e.pollingStopChan)
 	return nil
 }
 
@@ -491,6 +525,7 @@ func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 			Trades:    make(map[string][]*StreamingTradesResponse),
 			mutex:     new(sync.Mutex),
 		},
+		pollingStopChan: make(chan bool),
 	}, nil
 }
 
