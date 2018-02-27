@@ -208,7 +208,7 @@ type TradeCommonResponse struct {
 func (t TradeCommonResponse) needRetry() (bool) {
 	if t.Success == 0 {
 		log.Printf(" error message (%v)", t.Error)
-		if t.Error == "order not found" {
+		if t.Error == "order not found" || t.Error == "invalid order_id parameter" {
 			return false
 		} else if t.Error == "time wait restriction, please try later." {
 			time.Sleep(500 * time.Millisecond)
