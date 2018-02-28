@@ -16,7 +16,7 @@ const (
 )
 
 const (
-	pollingInterval = 12
+	pollingInterval = 10
 )
 
 type BoardCursor struct {
