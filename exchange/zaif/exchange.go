@@ -15,6 +15,10 @@ const (
 	exchangeName = "zaif"
 )
 
+const (
+	pollingInterval = 12
+)
+
 type BoardCursor struct {
 	index  int
 	values [][]float64
@@ -434,28 +438,33 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 	return nil
 }
 
-func  (e *Exchange) pollingLoop(currencyPair string) {
-	lastAsks := [][]float64{}
-	lastBids := [][]float64{}
+func  (e *Exchange) pollingLoop() {
+	lastBidsMap := make(map[string][][]float64)
+	lastAsksMap := make(map[string][][]float64)
 	for {
-		select {
-		case <- time.After(100 * time.Millisecond):
-			depthResponse, _, _, err := e.requester.Depth(currencyPair)
-			if err != nil {
-				log.Printf("can not get depth currency pair = %v", currencyPair)
-				continue
-			}
-			if reflect.DeepEqual(lastBids, depthResponse.Bids) == false || reflect.DeepEqual(lastAsks, depthResponse.Asks) == false {
-				e.currencyPairsInfo.updateDepth(currencyPair, depthResponse.Bids, depthResponse.Asks)
-				err = e.streamingCallback(currencyPair, e)
+		for _, currencyPair := range e.currencyPairs {
+			currencyPair = strings.ToLower(currencyPair)
+			select {
+			case <- time.After(pollingInterval * time.Millisecond):
+				depthResponse, _, _, err := e.requester.Depth(currencyPair)
 				if err != nil {
-					log.Printf("streaming callback error in polling loop (%v)", err)
+					log.Printf("can not get depth currency pair = %v", currencyPair)
+					continue
 				}
+				lastBids, bidsOk := lastBidsMap[currencyPair]
+				lastAsks, asksOk := lastAsksMap[currencyPair]
+				if !bidsOk || !asksOk || reflect.DeepEqual(lastBids, depthResponse.Bids) == false || reflect.DeepEqual(lastAsks, depthResponse.Asks) == false {
+					e.currencyPairsInfo.updateDepth(currencyPair, depthResponse.Bids, depthResponse.Asks)
+					err = e.streamingCallback(currencyPair, e)
+					if err != nil {
+						log.Printf("streaming callback error in polling loop (%v)", err)
+					}
+					lastBidsMap[currencyPair] = depthResponse.Bids
+					lastAsksMap[currencyPair] = depthResponse.Asks
+				}
+			case <- e.pollingStopChan:
+				break
 			}
-			lastBids = depthResponse.Bids
-			lastAsks = depthResponse.Asks
-		case <- e.pollingStopChan:
-			break
 		}
 	}
 }
@@ -481,10 +490,7 @@ func (e *Exchange) StartStreamings() (error) {
 			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair);
 		}
 	}
-	for _, currencyPair := range e.currencyPairs {
-		currencyPair = strings.ToLower(currencyPair)
-		go e.pollingLoop(currencyPair)
-	}
+	go e.pollingLoop()
 	return nil
 }
 
