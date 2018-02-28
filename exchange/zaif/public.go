@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+const retryWait = 150
 const pollingInterval = 150
 
 // PublicCurrenciesResponse is response of currencies
@@ -87,7 +88,7 @@ func (r *Requester) LastPrice(currencyPair string) (*PublicLastPriceResponse, *u
 		}, request)
 		if err != nil {
 			log.Printf("retry last price (currency pair = %v, err: %v)", currencyPair, err)
-			time.Sleep(pollingInterval * time.Millisecond)
+			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*PublicLastPriceResponse), request, response, err
@@ -119,7 +120,7 @@ func (r *Requester) Ticker(currencyPair string) (*PublicTickerResponse, *utility
 		}, request)
 		if err != nil {
 			log.Printf("retry ticker (currency pair = %v, err: %v)", currencyPair, err)
-			time.Sleep(pollingInterval * time.Millisecond)
+			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*PublicTickerResponse), request, response, err
@@ -153,7 +154,7 @@ func (r *Requester) Trades(currencyPair string) (*PublicTradesResponse, *utility
 		}, request)
 		if err != nil {
 			log.Printf("retry terades (currency pair = %v, err: %v)", currencyPair, err)
-			time.Sleep(pollingInterval * time.Millisecond)
+			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*PublicTradesResponse), request, response, err
