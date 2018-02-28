@@ -15,6 +15,10 @@ const (
 	exchangeName = "zaif"
 )
 
+const (
+	pollings = 3
+)
+
 type BoardCursor struct {
 	index  int
 	values [][]float64
@@ -472,7 +476,7 @@ func  (e *Exchange) pollingRequestLoop() {
 	lastAsksMap := make(map[string][][]float64)
 	lastBidsAsksMutex := new(sync.Mutex)
 	pollingRequestChan := make(chan string)
-	for i := 0; i < 4; i++ {
+	for i := 0; i < pollings; i++ {
 		go e.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
 	}
 FINISH:
