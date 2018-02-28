@@ -538,7 +538,7 @@ func (r *Requester) TradeActiveOrderBoth(tradeActiveOrderParams *TradeActiveOrde
 			newRes := new(TradeActiveOrderBothResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if err != nil || newRes.(*TradeActiveOrderResponse).needRetry() {
+		if err != nil || newRes.(*TradeActiveOrderBothResponse).needRetry() {
 			log.Printf("retry active order both (err: %v)", err)
 			time.Sleep(retryWait * time.Millisecond)
 			continue
