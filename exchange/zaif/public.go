@@ -84,7 +84,7 @@ func (r *Requester) LastPrice(currencyPair string) (*PublicLastPriceResponse, *u
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil {
-			log.Printf("retry last price (err: %v)", err)
+			log.Printf("retry last price (currency pair = %v, err: %v)", currencyPair, err)
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
@@ -116,7 +116,7 @@ func (r *Requester) Ticker(currencyPair string) (*PublicTickerResponse, *utility
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil {
-			log.Printf("retry ticker (err: %v)", err)
+			log.Printf("retry ticker (currency pair = %v, err: %v)", currencyPair, err)
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
@@ -150,7 +150,7 @@ func (r *Requester) Trades(currencyPair string) (*PublicTradesResponse, *utility
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil {
-			log.Printf("retry terades (err: %v)", err)
+			log.Printf("retry terades (currency pair = %v, err: %v)", currencyPair, err)
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
@@ -177,7 +177,7 @@ func (r *Requester) Depth(currencyPair string) (*PublicDepthReaponse, *utility.H
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil {
-			log.Printf("retry depth (err: %v)", err)
+			log.Printf("retry depth (currency pair = %v, err: %v)", currencyPair, err)
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
