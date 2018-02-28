@@ -531,14 +531,16 @@ func (r *Requester) TradeActiveOrderBoth(tradeActiveOrderParams *TradeActiveOrde
 	for {
 		request := r.makeTradeRequest("active_orders", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get active order with both (url = %v, params = %v)", request.URL, params.Encode()))
 			}
 			newRes := new(TradeActiveOrderBothResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if newRes.(*TradeActiveOrderBothResponse).needRetry() {
+		if err != nil || newRes.(*TradeActiveOrderResponse).needRetry() {
+			log.Printf("retry active order both (err: %v)", err)
+			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*TradeActiveOrderBothResponse), request, response, err
@@ -689,14 +691,16 @@ func (r *Requester) TradeCancelOrder(tradeCancelOrderParams *TradeCancelOrderPar
 	for {
 		request := r.makeTradeRequest("cancel_order", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not cancel order (url = %v, params = %v)", request.URL, params.Encode()))
 			}
 			newRes := new(TradeCancelOrderResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if newRes.(*TradeCancelOrderResponse).needRetry() {
+		if err != nil || newRes.(*TradeCancelOrderResponse).needRetry() {
+			log.Printf("retry cancel (err: %v)", err)
+			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*TradeCancelOrderResponse), request, response, err
