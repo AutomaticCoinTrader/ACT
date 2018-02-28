@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"path"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -104,4 +105,5 @@ func main() {
 	if err != nil {
 		log.Printf("can not stop act (reason = %v)", err)
 	}
+	time.Sleep(1 * time.Second)
 }

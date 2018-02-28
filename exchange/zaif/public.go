@@ -164,24 +164,30 @@ type PublicDepthReaponse struct {
 	Bids [][]float64 `json:"bids"`
 }
 
+// DepthNoRetry is get depth with no retry
+func (r *Requester) DepthNoRetry(currencyPair string) (*PublicDepthReaponse, *utility.HTTPRequest, *http.Response, error) {
+	request := r.makePublicRequest(path.Join("depth", currencyPair), "")
+	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
+		if err != nil {
+			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get depth (url = %v)", request.URL))
+		}
+		newRes := new(PublicDepthReaponse)
+		return newRes, res, resBody, err
+	}, request)
+	return newRes.(*PublicDepthReaponse), request, response, err
+}
+
 // Depth is get depth
 func (r *Requester) Depth(currencyPair string) (*PublicDepthReaponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
-		request := r.makePublicRequest(path.Join("depth", currencyPair), "")
-		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
-			if err != nil {
-				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get depth (url = %v)", request.URL))
-			}
-			newRes := new(PublicDepthReaponse)
-			return newRes, res, resBody, err
-		}, request)
+		newRes, request, response, err := r.DepthNoRetry(currencyPair)
 		if err != nil {
 			log.Printf("retry depth (currency pair = %v, err: %v)", currencyPair, err)
-			time.Sleep(pollingInterval * time.Millisecond)
+			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
-		return newRes.(*PublicDepthReaponse), request, response, err
+		return newRes, request, response, err
 	}
 }
 

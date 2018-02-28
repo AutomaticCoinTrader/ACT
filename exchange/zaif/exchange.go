@@ -7,16 +7,12 @@ import (
 	"sync"
 	"strconv"
 	"log"
-	"time"
 	"reflect"
+	"sync/atomic"
 )
 
 const (
 	exchangeName = "zaif"
-)
-
-const (
-	pollingInterval = 10
 )
 
 type BoardCursor struct {
@@ -279,7 +275,7 @@ type Exchange struct {
 	streamingCallback exchange.StreamingCallback
 	currencyPairs     []string
 	currencyPairsInfo *currencyPairsInfo
-	pollingStopChan   chan bool
+	pollingFinish     int32
 }
 
 func (e *Exchange) GetName() (string) {
@@ -438,35 +434,55 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 	return nil
 }
 
-func  (e *Exchange) pollingLoop() {
-	lastBidsMap := make(map[string][][]float64)
-	lastAsksMap := make(map[string][][]float64)
+func  (e *Exchange) pollingLoop(pollingRequestChan chan string, lastBidsMap map[string][][]float64, lastAsksMap map[string][][]float64, lastBidsAsksMutex *sync.Mutex) {
 	for {
-		for _, currencyPair := range e.currencyPairs {
-			currencyPair = strings.ToLower(currencyPair)
-			select {
-			case <- time.After(pollingInterval * time.Millisecond):
-				depthResponse, _, _, err := e.requester.Depth(currencyPair)
-				if err != nil {
-					log.Printf("can not get depth currency pair = %v", currencyPair)
-					continue
-				}
-				lastBids, bidsOk := lastBidsMap[currencyPair]
-				lastAsks, asksOk := lastAsksMap[currencyPair]
-				if !bidsOk || !asksOk || reflect.DeepEqual(lastBids, depthResponse.Bids) == false || reflect.DeepEqual(lastAsks, depthResponse.Asks) == false {
-					e.currencyPairsInfo.updateDepth(currencyPair, depthResponse.Bids, depthResponse.Asks)
-					err = e.streamingCallback(currencyPair, e)
-					if err != nil {
-						log.Printf("streaming callback error in polling loop (%v)", err)
-					}
-					lastBidsMap[currencyPair] = depthResponse.Bids
-					lastAsksMap[currencyPair] = depthResponse.Asks
-				}
-			case <- e.pollingStopChan:
-				return
+		currencyPair, ok := <- pollingRequestChan
+		if !ok {
+			return
+		}
+		lastBidsAsksMutex.Lock()
+		lastBids, bidsOk := lastBidsMap[currencyPair]
+		lastAsks, asksOk := lastAsksMap[currencyPair]
+		lastBidsAsksMutex.Unlock()
+
+		depthResponse, _, _, err := e.requester.DepthNoRetry(currencyPair)
+		if err != nil {
+			log.Printf("can not get depth currency pair = %v", currencyPair)
+			continue
+		}
+		if !bidsOk || !asksOk || reflect.DeepEqual(lastBids, depthResponse.Bids) == false || reflect.DeepEqual(lastAsks, depthResponse.Asks) == false {
+			e.currencyPairsInfo.updateDepth(currencyPair, depthResponse.Bids, depthResponse.Asks)
+			err = e.streamingCallback(currencyPair, e)
+			if err != nil {
+				log.Printf("streaming callback error in polling loop (%v)", err)
 			}
+			lastBidsAsksMutex.Lock()
+			lastBidsMap[currencyPair] = depthResponse.Bids
+			lastAsksMap[currencyPair] = depthResponse.Asks
+			lastBidsAsksMutex.Unlock()
 		}
 	}
+}
+
+func  (e *Exchange) pollingRequestLoop() {
+	atomic.StoreInt32(&e.pollingFinish, 0)
+	lastBidsMap := make(map[string][][]float64)
+	lastAsksMap := make(map[string][][]float64)
+	lastBidsAsksMutex := new(sync.Mutex)
+	pollingRequestChan := make(chan string)
+	for i := 0; i < 4; i++ {
+		go e.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
+	}
+FINISH:
+	for {
+		for _, currencyPair := range e.currencyPairs {
+			if atomic.LoadInt32(&e.pollingFinish) == 1{
+				break FINISH
+			}
+			pollingRequestChan <- currencyPair
+		}
+	}
+
 }
 
 // Initialize is initalize exchange
@@ -490,7 +506,7 @@ func (e *Exchange) StartStreamings() (error) {
 			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair);
 		}
 	}
-	go e.pollingLoop()
+	go e.pollingRequestLoop()
 	return nil
 }
 
@@ -502,7 +518,7 @@ func (e *Exchange) StopStreamings() (error) {
 		e.requester.StreamingStop(currencyPair)
 
 	}
-	close(e.pollingStopChan)
+	atomic.StoreInt32(&e.pollingFinish, 1)
 	return nil
 }
 
@@ -538,7 +554,7 @@ func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 			Trades:    make(map[string][]*StreamingTradesResponse),
 			mutex:     new(sync.Mutex),
 		},
-		pollingStopChan: make(chan bool),
+		pollingFinish: 0,
 	}, nil
 }
 
