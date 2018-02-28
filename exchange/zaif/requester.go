@@ -41,9 +41,9 @@ const (
 )
 
 const (
-	retryWait = 100
+	retryWait = 200
     pollingInterval = 200
-	longWait = 1000
+	longWait = 800
 )
 
 var seq int64
