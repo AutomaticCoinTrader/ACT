@@ -42,7 +42,7 @@ const (
 
 const (
 	retryWait = 100
-    pollingInterval = 100
+    pollingInterval = 150
 	longWait = 1000
 )
 
