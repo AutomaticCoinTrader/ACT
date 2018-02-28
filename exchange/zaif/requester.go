@@ -43,7 +43,7 @@ const (
 const (
 	retryWait = 100
     pollingInterval = 100
-	longWait = 500
+	longWait = 1000
 )
 
 var seq int64
