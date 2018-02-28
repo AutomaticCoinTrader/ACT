@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"encoding/json"
 	"log"
+	"time"
 )
 
 // PublicCurrenciesResponse is response of currencies
@@ -72,16 +73,23 @@ type PublicLastPriceResponse struct {
 
 // LastPricee is get last place
 func (r *Requester) LastPrice(currencyPair string) (*PublicLastPriceResponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("last_price", currencyPair), "")
-	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
+	for {
+		request := r.makePublicRequest(path.Join("last_price", currencyPair), "")
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
+			if err != nil {
+				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get last price (url = %v)", request.URL))
+			}
+			newRes := new(PublicLastPriceResponse)
+			return newRes, res, resBody, err
+		}, request)
 		if err != nil {
-			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get last price (url = %v)", request.URL))
+			log.Printf("retry last price (err: %v)", err)
+			time.Sleep(100 * time.Millisecond)
+			continue
 		}
-		newRes := new(PublicLastPriceResponse)
-		return newRes, res, resBody, err
-	}, request)
-	return newRes.(*PublicLastPriceResponse), request, response, err
+		return newRes.(*PublicLastPriceResponse), request, response, err
+	}
 }
 
 // PublicTickerResponse is response of ticker
@@ -97,16 +105,23 @@ type PublicTickerResponse struct {
 
 // Ticker is get ticker
 func (r *Requester) Ticker(currencyPair string) (*PublicTickerResponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("ticker", currencyPair), "")
-	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
+	for {
+		request := r.makePublicRequest(path.Join("ticker", currencyPair), "")
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
+			if err != nil {
+				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get ticker (url = %v)", request.URL))
+			}
+			newRes := new(PublicTickerResponse)
+			return newRes, res, resBody, err
+		}, request)
 		if err != nil {
-			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get ticker (url = %v)", request.URL))
+			log.Printf("retry ticker (err: %v)", err)
+			time.Sleep(100 * time.Millisecond)
+			continue
 		}
-		newRes := new(PublicTickerResponse)
-		return newRes, res, resBody, err
-	}, request)
-	return newRes.(*PublicTickerResponse), request, response, err
+		return newRes.(*PublicTickerResponse), request, response, err
+	}
 }
 
 // PublicTradesResponse is response of trades
@@ -124,17 +139,23 @@ type PublicTradeResponse struct {
 
 // Trades is get trades
 func (r *Requester) Trades(currencyPair string) (*PublicTradesResponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("trades", currencyPair), "")
-	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
+	for {
+		request := r.makePublicRequest(path.Join("trades", currencyPair), "")
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
+			if err != nil {
+				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get trades (url = %v)", request.URL))
+			}
+			newRes := new(PublicTradesResponse)
+			return newRes, res, resBody, err
+		}, request)
 		if err != nil {
-			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get trades (url = %v)", request.URL))
+			log.Printf("retry terades (err: %v)", err)
+			time.Sleep(100 * time.Millisecond)
+			continue
 		}
-		newRes := new(PublicTradesResponse)
-		return newRes, res, resBody, err
-	}, request)
-	return newRes.(*PublicTradesResponse), request, response, err
+		return newRes.(*PublicTradesResponse), request, response, err
+	}
 }
 
 // PublicDepthReaponse is response of depth
@@ -145,16 +166,23 @@ type PublicDepthReaponse struct {
 
 // Depth is get depth
 func (r *Requester) Depth(currencyPair string) (*PublicDepthReaponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("depth", currencyPair), "")
-	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
+	for {
+		request := r.makePublicRequest(path.Join("depth", currencyPair), "")
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
+			if err != nil {
+				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get depth (url = %v)", request.URL))
+			}
+			newRes := new(PublicDepthReaponse)
+			return newRes, res, resBody, err
+		}, request)
 		if err != nil {
-			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get depth (url = %v)", request.URL))
+			log.Printf("retry depth (err: %v)", err)
+			time.Sleep(100 * time.Millisecond)
+			continue
 		}
-		newRes := new(PublicDepthReaponse)
-		return newRes, res, resBody, err
-	}, request)
-	return newRes.(*PublicDepthReaponse), request, response, err
+		return newRes.(*PublicDepthReaponse), request, response, err
+	}
 }
 
 type StreamingCallback func(currencyPair string, streamingResponse *StreamingResponse, streamingCallbackData interface{}) (error)
