@@ -211,9 +211,9 @@ func (t TradeCommonResponse) needRetry() (bool) {
 		if t.Error == "order not found" {
 			return false
 		} else if t.Error == "time wait restriction, please try later." {
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(longWait * time.Millisecond)
 		} else if t.Error == "insufficient funds" {
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(longWait * time.Millisecond)
 		}
 		return true
 	}
@@ -259,16 +259,23 @@ type TradeGetInfoResponse struct {
 
 // GetInfo is get informarion
 func (r *Requester) GetInfo() (*TradeGetInfoResponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makeTradeRequest("get_info", "")
-	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
-		if err != nil {
-			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get info (url = %v)", request.URL))
+	for {
+		request := r.makeTradeRequest("get_info", "")
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			if err != nil {
+				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get info (url = %v)", request.URL))
+			}
+			newRes := new(TradeGetInfoResponse)
+			return newRes, res, resBody, err
+		}, request)
+		if err != nil || newRes.(*TradeGetInfoResponse).needRetry() {
+			log.Printf("retry get info (err: %v)", err)
+			time.Sleep(retryWait * time.Millisecond)
+			continue
 		}
-		newRes := new(TradeGetInfoResponse)
-		return newRes, res, resBody, err
-	}, request)
-	return newRes.(*TradeGetInfoResponse), request, response, err
+		return newRes.(*TradeGetInfoResponse), request, response, err
+	}
 }
 
 // TradeGetInfo2 is response of informarion2
@@ -308,16 +315,23 @@ type TradeGetInfo2Response struct {
 
 // GetInfo is get informarion2
 func (r *Requester) GetInfo2() (*TradeGetInfo2Response, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makeTradeRequest("get_info2", "")
-	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
-		if err != nil {
-			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get info2 (url = %v)", request.URL))
+	for {
+		request := r.makeTradeRequest("get_info2", "")
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			if err != nil {
+				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get info2 (url = %v)", request.URL))
+			}
+			newRes := new(TradeGetInfo2Response)
+			return newRes, res, resBody, err
+		}, request)
+		if err != nil || newRes.(*TradeGetInfo2Response).needRetry() {
+			log.Printf("retry get info 2 (err: %v)", err)
+			time.Sleep(retryWait * time.Millisecond)
+			continue
 		}
-		newRes := new(TradeGetInfo2Response)
-		return newRes, res, resBody, err
-	}, request)
-	return newRes.(*TradeGetInfo2Response), request, response, err
+		return newRes.(*TradeGetInfo2Response), request, response, err
+	}
 }
 
 // TradeGetPersonalInfo is response of get id information
@@ -491,14 +505,16 @@ func (r *Requester) TradeActiveOrder(tradeActiveOrderParams *TradeActiveOrderPar
 	for {
 		request := r.makeTradeRequest("active_orders", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get active order (url = %v, params = %v)", request.URL, params.Encode()))
 			}
 			newRes := new(TradeActiveOrderResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if newRes.(*TradeActiveOrderResponse).needRetry() {
+		if err != nil || newRes.(*TradeActiveOrderResponse).needRetry() {
+			log.Printf("retry active order (err: %v)", err)
+			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*TradeActiveOrderResponse), request, response, err

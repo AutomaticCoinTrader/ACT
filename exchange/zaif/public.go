@@ -12,9 +12,6 @@ import (
 	"time"
 )
 
-const retryWait = 150
-const pollingInterval = 150
-
 // PublicCurrenciesResponse is response of currencies
 type PublicCurrenciesResponse []PublicCurrencyResponse
 

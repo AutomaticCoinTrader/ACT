@@ -40,6 +40,12 @@ const (
 	Trade
 )
 
+const (
+	retryWait = 100
+    pollingInterval = 100
+	longWait = 500
+)
+
 var seq int64
 
 type requestFunc func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error)
