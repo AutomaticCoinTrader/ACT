@@ -100,6 +100,9 @@ func (c *HTTPClient) retryRequest(request *HTTPRequest, noRetry bool) (*http.Res
 			}
 			continue
 		}
+		if noRetry {
+			log.Printf("request is failure (url = %v, method = %v, reason = %v)", request.URL, request.RequestMethod, err)
+		}
 		return res, resBody, err
 	}
 	return nil, nil, errors.Errorf("give up retry (url = %v, method = %v)", request.URL, request.RequestMethod)
