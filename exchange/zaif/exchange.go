@@ -232,7 +232,7 @@ func (c *currencyPairsInfo) getBids(currencyPair string) ([][]float64) {
 	if ok {
 		return bids
 	} else {
-		return [][]float64{{}}
+		return [][]float64{}
 	}
 }
 
@@ -243,7 +243,7 @@ func (c *currencyPairsInfo) getAsks(currencyPair string) ([][]float64) {
 	if ok {
 		return asks
 	} else {
-		return [][]float64{{}}
+		return [][]float64{}
 	}
 }
 
@@ -435,8 +435,8 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 }
 
 func  (e *Exchange) pollingLoop(currencyPair string) {
-	lastAsks := [][]float64{{}}
-	lastBids := [][]float64{{}}
+	lastAsks := [][]float64{}
+	lastBids := [][]float64{}
 	for {
 		select {
 		case <- time.After(100 * time.Millisecond):
