@@ -435,8 +435,8 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 }
 
 func  (e *Exchange) pollingLoop(currencyPair string) {
-	lastBids := [][]float64{}
-	lastAsks := [][]float64{}
+	lastBids := [][]float64{{}}
+	lastAsks := [][]float64{{}}
 	for {
 		select {
 		case <- time.After(100 * time.Millisecond):
