@@ -435,16 +435,17 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 }
 
 func  (e *Exchange) pollingLoop(pollingRequestChan chan string, lastBidsMap map[string][][]float64, lastAsksMap map[string][][]float64, lastBidsAsksMutex *sync.Mutex) {
+	log.Printf("start polling loop")
 	for {
 		currencyPair, ok := <- pollingRequestChan
 		if !ok {
+			log.Printf("finish polling loop")
 			return
 		}
 		lastBidsAsksMutex.Lock()
 		lastBids, bidsOk := lastBidsMap[currencyPair]
 		lastAsks, asksOk := lastAsksMap[currencyPair]
 		lastBidsAsksMutex.Unlock()
-
 		depthResponse, _, _, err := e.requester.DepthNoRetry(currencyPair)
 		if err != nil {
 			log.Printf("can not get depth currency pair = %v", currencyPair)
@@ -465,6 +466,7 @@ func  (e *Exchange) pollingLoop(pollingRequestChan chan string, lastBidsMap map[
 }
 
 func  (e *Exchange) pollingRequestLoop() {
+	log.Printf("start polling request loop")
 	atomic.StoreInt32(&e.pollingFinish, 0)
 	lastBidsMap := make(map[string][][]float64)
 	lastAsksMap := make(map[string][][]float64)
@@ -482,7 +484,8 @@ FINISH:
 			pollingRequestChan <- currencyPair
 		}
 	}
-
+	close(pollingRequestChan)
+	log.Printf("finish polling request loop")
 }
 
 // Initialize is initalize exchange
@@ -512,13 +515,12 @@ func (e *Exchange) StartStreamings() (error) {
 
 // StopStreaming is stop streaming
 func (e *Exchange) StopStreamings() (error) {
+	atomic.StoreInt32(&e.pollingFinish, 1)
 	// ストリーミングを停止する
 	for _, currencyPair := range e.currencyPairs {
 		currencyPair = strings.ToLower(currencyPair)
 		e.requester.StreamingStop(currencyPair)
-
 	}
-	atomic.StoreInt32(&e.pollingFinish, 1)
 	return nil
 }
 

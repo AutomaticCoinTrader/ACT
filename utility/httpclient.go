@@ -154,14 +154,15 @@ func NewHTTPClient(retry int, retryWait int, timeout int) *HTTPClient {
 type WSCallback func(conn *websocket.Conn, data interface{}) error
 
 type WSClient struct {
-	readBufSize  int
-	writeBufSize int
-	retry        int
-	retryWait    int
-	conn         *websocket.Conn
-	connChan     chan error
-	started      bool
-	finished     uint32
+	readBufSize           int
+	writeBufSize          int
+	retry                 int
+	retryWait             int
+	conn                  *websocket.Conn
+	connChan              chan error
+	started               bool
+	finished              uint32
+	connectLoopFinishChan chan bool
 }
 
 func (w *WSClient) messageLoop(callback WSCallback, callbackData interface{}) (error) {
@@ -258,6 +259,7 @@ func (w *WSClient) connect(callback WSCallback, callbackData interface{}, reques
 		i = 0
 		if atomic.LoadUint32(&w.finished) == 1 {
 			log.Printf("connect loop finished")
+			close(w.connectLoopFinishChan)
 			return
 		}
 	}
@@ -280,6 +282,10 @@ func (w *WSClient) Start(callback WSCallback, callbackData interface{}, requestU
 func (w *WSClient) Stop() {
 	atomic.StoreUint32(&w.finished, 1)
 	close(w.connChan)
+	select {
+	case <-time.After(1 * time.Second):
+	case <-w.connectLoopFinishChan:
+	}
 }
 
 // Send ...
@@ -296,10 +302,11 @@ func NewWSClient(readBufSize int, writeBufSize int, retry int, retryWait int) *W
 		writeBufSize = 1024 * 1024 * 2
 	}
 	return &WSClient{
-		readBufSize:  readBufSize,
-		writeBufSize: writeBufSize,
-		retry:        retry,
-		retryWait:    retryWait,
-		connChan:     make(chan error),
+		readBufSize:           readBufSize,
+		writeBufSize:          writeBufSize,
+		retry:                 retry,
+		retryWait:             retryWait,
+		connChan:              make(chan error),
+		connectLoopFinishChan: make(chan bool),
 	}
 }

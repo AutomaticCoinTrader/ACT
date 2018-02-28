@@ -175,7 +175,11 @@ func (r *Requester) DepthNoRetry(currencyPair string) (*PublicDepthReaponse, *ut
 		newRes := new(PublicDepthReaponse)
 		return newRes, res, resBody, err
 	}, request)
-	return newRes.(*PublicDepthReaponse), request, response, err
+	if err != nil {
+		return nil, request, response, err
+	} else {
+		return newRes.(*PublicDepthReaponse), request, response, nil
+	}
 }
 
 // Depth is get depth
