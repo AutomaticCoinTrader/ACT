@@ -463,7 +463,7 @@ func  (e *Exchange) pollingLoop() {
 					lastAsksMap[currencyPair] = depthResponse.Asks
 				}
 			case <- e.pollingStopChan:
-				break
+				return
 			}
 		}
 	}
