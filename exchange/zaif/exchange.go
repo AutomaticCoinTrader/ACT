@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"log"
 	"time"
+	"reflect"
 )
 
 const (
@@ -434,19 +435,25 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 }
 
 func  (e *Exchange) pollingLoop(currencyPair string) {
+	lastBids := [][]float64{}
+	lastAsks := [][]float64{}
 	for {
 		select {
-		case <- time.After(200 * time.Millisecond):
+		case <- time.After(100 * time.Millisecond):
 			depthResponse, _, _, err := e.requester.Depth(currencyPair)
 			if err != nil {
 				log.Printf("can not get depth currency pair = %v", currencyPair)
 				continue
 			}
-			e.currencyPairsInfo.updateDepth(currencyPair, depthResponse.Bids, depthResponse.Asks)
-			err = e.streamingCallback(currencyPair, e)
-			if err != nil {
-				log.Printf("streaming callback error in polling loop (%v)", err)
+			if reflect.DeepEqual(lastBids, depthResponse.Bids) == false || reflect.DeepEqual(lastAsks, depthResponse.Asks) == false {
+				e.currencyPairsInfo.updateDepth(currencyPair, depthResponse.Bids, depthResponse.Asks)
+				err = e.streamingCallback(currencyPair, e)
+				if err != nil {
+					log.Printf("streaming callback error in polling loop (%v)", err)
+				}
 			}
+			lastBids = depthResponse.Bids
+			lastAsks = depthResponse.Asks
 		case <- e.pollingStopChan:
 			break
 		}
