@@ -123,7 +123,7 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 			// 古いやつだけ消す
 			r.lastTradeApiHistory = r.lastTradeApiHistory[lastIdx:]
 		}
-		if len(r.lastTradeApiHistory) < 10 {
+		if len(r.lastTradeApiHistory) < tradeApiGurdCount {
 			r.lastTradeApiHistory = append(r.lastTradeApiHistory, now.UnixNano())
 			break
 		}
