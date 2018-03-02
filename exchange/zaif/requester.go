@@ -118,7 +118,7 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 		}
 		if lastIdx == -1 && len(r.lastTradeApiHistory) > 0 {
 			// 全部ふるいから消す
-			r.lastTradeApiHistory = r.lastTradeApiHistory[len(r.lastTradeApiHistory):len(r.lastTradeApiHistory)]
+			r.lastTradeApiHistory = make([]int64, 0, tradeApiGurdCount)
 		} else if lastIdx > 0 {
 			// 古いやつだけ消す
 			r.lastTradeApiHistory = r.lastTradeApiHistory[lastIdx:]
@@ -189,7 +189,7 @@ func NewRequester(keys []*RequesterKey, retry int, retryWait, timeout int, readB
 		keysMutex:    new(sync.Mutex),
 		lastPulblicApiNanoTs: 0,
 		lastPulblicApiNanoTsMutex: new(sync.Mutex),
-		lastTradeApiHistory:  make([]int64, 0, tradeApiGurdCount),
+		lastTradeApiHistory: make([]int64, 0, tradeApiGurdCount),
 		lastTradeApiHistoryMutex: new(sync.Mutex),
 	}
 }
