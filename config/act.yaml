@@ -24,6 +24,7 @@ exchanges:
     timeout: 0
     readBufSize: 0
     writeBufSize: 0
+    pollingConcurrency: 4
   coincheck:
     apikey: "key"
     apisecret: "secret"
