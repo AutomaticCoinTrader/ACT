@@ -13,7 +13,7 @@ import (
 
 const (
 	exchangeName = "zaif"
-	defaultPollingConcurrency = 8
+	defaultPollingConcurrency = 4
 )
 
 type BoardCursor struct {
