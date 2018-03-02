@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"encoding/json"
 	"log"
-	"time"
 )
 
 // PublicCurrenciesResponse is response of currencies
@@ -23,16 +22,22 @@ type PublicCurrencyResponse struct {
 
 // GetCurrencies is get currencies
 func (r *Requester) Currencies(currency string) (*PublicCurrenciesResponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("currencies", currency), "")
-	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
+	for {
+		request := r.makePublicRequest(path.Join("currencies", currency), "")
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
+			if err != nil {
+				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get currencies (url = %v)", request.URL))
+			}
+			newRes := new(PublicCurrenciesResponse)
+			return newRes, res, resBody, err
+		}, request)
 		if err != nil {
-			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get currencies (url = %v)", request.URL))
+			log.Printf("retry currencies (currency = %v, err: %v)", currency, err)
+			continue
 		}
-		newRes := new(PublicCurrenciesResponse)
-		return newRes, res, resBody, err
-	}, request)
-	return newRes.(*PublicCurrenciesResponse), request, response, err
+		return newRes.(*PublicCurrenciesResponse), request, response, err
+	}
 }
 
 // PublicCurrencyPairsResponse is response of currency pairs
@@ -54,16 +59,22 @@ type PublicCurrencyPairResponse struct {
 
 // CurrencyPairs is get currency pairs
 func (r *Requester) CurrencyPairs(currencyPair string) (*PublicCurrencyPairsResponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("currency_pairs", currencyPair), "")
-	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, false)
+	for {
+		request := r.makePublicRequest(path.Join("currency_pairs", currencyPair), "")
+		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
+			if err != nil {
+				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get currency pairs (url = %v)", request.URL))
+			}
+			newRes := new(PublicCurrencyPairsResponse)
+			return newRes, res, resBody, err
+		}, request)
 		if err != nil {
-			return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get currency pairs (url = %v)", request.URL))
+			log.Printf("retry currency pairs (currency pair = %v, err: %v)", currencyPair, err)
+			continue
 		}
-		newRes := new(PublicCurrencyPairsResponse)
-		return newRes, res, resBody, err
-	}, request)
-	return newRes.(*PublicCurrencyPairsResponse), request, response, err
+		return newRes.(*PublicCurrencyPairsResponse), request, response, err
+	}
 }
 
 // PublicLastPriceResponse is response of last price
@@ -85,7 +96,6 @@ func (r *Requester) LastPrice(currencyPair string) (*PublicLastPriceResponse, *u
 		}, request)
 		if err != nil {
 			log.Printf("retry last price (currency pair = %v, err: %v)", currencyPair, err)
-			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*PublicLastPriceResponse), request, response, err
@@ -117,7 +127,6 @@ func (r *Requester) Ticker(currencyPair string) (*PublicTickerResponse, *utility
 		}, request)
 		if err != nil {
 			log.Printf("retry ticker (currency pair = %v, err: %v)", currencyPair, err)
-			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*PublicTickerResponse), request, response, err
@@ -151,7 +160,6 @@ func (r *Requester) Trades(currencyPair string) (*PublicTradesResponse, *utility
 		}, request)
 		if err != nil {
 			log.Printf("retry terades (currency pair = %v, err: %v)", currencyPair, err)
-			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*PublicTradesResponse), request, response, err
@@ -188,7 +196,6 @@ func (r *Requester) Depth(currencyPair string) (*PublicDepthReaponse, *utility.H
 		newRes, request, response, err := r.DepthNoRetry(currencyPair)
 		if err != nil {
 			log.Printf("retry depth (currency pair = %v, err: %v)", currencyPair, err)
-			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes, request, response, err

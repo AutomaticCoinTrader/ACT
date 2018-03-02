@@ -31,6 +31,10 @@ type Requester struct {
 	keys         []*RequesterKey
 	keyIndex     int
 	keysMutex    *sync.Mutex
+	lastPulblicApiNanoTs int64
+	lastPulblicApiNanoTsMutex *sync.Mutex
+	lastTradeApiHistory  []int64
+	lastTradeApiHistoryMutex *sync.Mutex
 }
 
 type urlBuilder int
@@ -41,8 +45,10 @@ const (
 )
 
 const (
-	retryWait = 200
-	longWait = 800
+	restrictionWait = 20
+	insufficientWait = 100
+	publicApiGurdTime = 10
+	tradeApiGurdCount = 50
 )
 
 var seq int64
@@ -72,6 +78,16 @@ func (b urlBuilder) getURL() (string) {
 }
 
 func (r *Requester) makePublicRequest(resource string, params string) (*utility.HTTPRequest) {
+	r.lastPulblicApiNanoTsMutex.Lock()
+	for {
+		now := time.Now()
+		if now.UnixNano() >= r.lastPulblicApiNanoTs+(publicApiGurdTime*time.Millisecond.Nanoseconds()) {
+			r.lastPulblicApiNanoTs = now.UnixNano()
+			break
+		}
+		time.Sleep(time.Duration(r.lastPulblicApiNanoTs + (publicApiGurdTime*time.Millisecond.Nanoseconds()) - now.UnixNano()) * time.Nanosecond)
+	}
+	r.lastPulblicApiNanoTsMutex.Unlock()
 	u := Public.buildURL(resource)
 	if params != "" {
 		u += "?" + params
@@ -82,6 +98,28 @@ func (r *Requester) makePublicRequest(resource string, params string) (*utility.
 }
 
 func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTTPRequest) {
+	r.lastTradeApiHistoryMutex.Lock()
+	for {
+		now := time.Now()
+		lastIdx := 0
+		var lastTs int64 = 0
+		for idx, ts := range r.lastTradeApiHistory {
+			if ts > now.UnixNano() -  time.Second.Nanoseconds() {
+				lastIdx = idx
+				lastTs = ts
+				break;
+			}
+		}
+		if lastIdx > 0 {
+			r.lastTradeApiHistory = r.lastTradeApiHistory[lastIdx:]
+		}
+		if len(r.lastTradeApiHistory) < tradeApiGurdCount {
+			r.lastTradeApiHistory = append(r.lastTradeApiHistory, now.UnixNano())
+			break
+		}
+		time.Sleep(time.Duration(lastTs - (now.UnixNano() - time.Second.Nanoseconds())) * time.Nanosecond)
+	}
+	r.lastTradeApiHistoryMutex.Unlock()
 	u := Trade.getURL()
 	values := url.Values{}
 	values.Set("nonce", r.getNonce())
@@ -137,5 +175,9 @@ func NewRequester(keys []*RequesterKey, retry int, retryWait, timeout int, readB
 		keys:         keys,
 		keyIndex:     0,
 		keysMutex:    new(sync.Mutex),
+		lastPulblicApiNanoTs: 0,
+		lastPulblicApiNanoTsMutex: new(sync.Mutex),
+		lastTradeApiHistory:  make([]int64, 0, tradeApiGurdCount),
+		lastTradeApiHistoryMutex: new(sync.Mutex),
 	}
 }

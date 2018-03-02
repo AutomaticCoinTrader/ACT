@@ -211,9 +211,9 @@ func (t TradeCommonResponse) needRetry() (bool) {
 		if t.Error == "order not found" {
 			return false
 		} else if t.Error == "time wait restriction, please try later." {
-			time.Sleep(longWait * time.Millisecond)
+			time.Sleep(restrictionWait * time.Millisecond)
 		} else if t.Error == "insufficient funds" {
-			time.Sleep(longWait * time.Millisecond)
+			time.Sleep(insufficientWait * time.Millisecond)
 		}
 		return true
 	}
@@ -271,7 +271,6 @@ func (r *Requester) GetInfo() (*TradeGetInfoResponse, *utility.HTTPRequest, *htt
 		}, request)
 		if err != nil || newRes.(*TradeGetInfoResponse).needRetry() {
 			log.Printf("retry get info (err: %v)", err)
-			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*TradeGetInfoResponse), request, response, err
@@ -327,7 +326,6 @@ func (r *Requester) GetInfo2() (*TradeGetInfo2Response, *utility.HTTPRequest, *h
 		}, request)
 		if err != nil || newRes.(*TradeGetInfo2Response).needRetry() {
 			log.Printf("retry get info 2 (err: %v)", err)
-			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*TradeGetInfo2Response), request, response, err
@@ -348,14 +346,15 @@ func (r *Requester) GetPersonalInfo() (*TradeGetPersonalInfoResponse, *utility.H
 	for {
 		request := r.makeTradeRequest("get_personal_info", "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get personal info (url = %v)", request.URL))
 			}
 			newRes := new(TradeGetPersonalInfoResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if newRes.(*TradeGetPersonalInfoResponse).needRetry() {
+		if err != nil || newRes.(*TradeGetPersonalInfoResponse).needRetry() {
+			log.Printf("retry get personal info (err: %v)", err)
 			continue
 		}
 		return newRes.(*TradeGetPersonalInfoResponse), request, response, err
@@ -381,14 +380,15 @@ func (r *Requester) GetIDInfo() (*TradeGetIDInfoResponse, *utility.HTTPRequest, 
 	for {
 		request := r.makeTradeRequest("get_id_info", "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get id info (url = %v)", request.URL))
 			}
 			newRes := new(TradeGetIDInfoResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if newRes.(*TradeGetIDInfoResponse).needRetry() {
+		if err != nil || newRes.(*TradeGetIDInfoResponse).needRetry() {
+			log.Printf("retry get id info (err: %v)", err)
 			continue
 		}
 		return newRes.(*TradeGetIDInfoResponse), request, response, err
@@ -445,14 +445,15 @@ func (r *Requester) TradeHistory(tradeHistoryParams *TradeHistoryParams) (*Trade
 	for {
 		request := r.makeTradeRequest("trade_history", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get trade history (url = %v, params = %v)", request.URL, params.Encode()))
 			}
 			newRes := new(TradeHistoryResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if newRes.(*TradeHistoryResponse).needRetry() {
+		if err != nil || newRes.(*TradeHistoryResponse).needRetry() {
+			log.Printf("retry get trade history (err: %v)", err)
 			continue
 		}
 		return newRes.(*TradeHistoryResponse), request, response, err
@@ -514,7 +515,6 @@ func (r *Requester) TradeActiveOrder(tradeActiveOrderParams *TradeActiveOrderPar
 		}, request)
 		if err != nil || newRes.(*TradeActiveOrderResponse).needRetry() {
 			log.Printf("retry active order (err: %v)", err)
-			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*TradeActiveOrderResponse), request, response, err
@@ -540,7 +540,6 @@ func (r *Requester) TradeActiveOrderBoth(tradeActiveOrderParams *TradeActiveOrde
 		}, request)
 		if err != nil || newRes.(*TradeActiveOrderBothResponse).needRetry() {
 			log.Printf("retry active order both (err: %v)", err)
-			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*TradeActiveOrderBothResponse), request, response, err
@@ -700,7 +699,6 @@ func (r *Requester) TradeCancelOrder(tradeCancelOrderParams *TradeCancelOrderPar
 		}, request)
 		if err != nil || newRes.(*TradeCancelOrderResponse).needRetry() {
 			log.Printf("retry cancel (err: %v)", err)
-			time.Sleep(retryWait * time.Millisecond)
 			continue
 		}
 		return newRes.(*TradeCancelOrderResponse), request, response, err
@@ -765,14 +763,15 @@ func (r *Requester) TradeWithdraw(tradeWithdrawParams *TradeWithdrawParams) (*Tr
 	for {
 		request := r.makeTradeRequest("withdraw", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not Withdraw (url = %v, params = %v)", request.URL, params.Encode()))
 			}
 			newRes := new(TradeWithdrawResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if newRes.(*TradeWithdrawResponse).needRetry() {
+		if err != nil || newRes.(*TradeWithdrawResponse).needRetry() {
+			log.Printf("retry widthrow (err: %v)", err)
 			continue
 		}
 		return newRes.(*TradeWithdrawResponse), request, response, err
@@ -822,14 +821,15 @@ func (r *Requester) TradeDepositHistory(tradeDepositHistoryParams *TradeDepositH
 	for {
 		request := r.makeTradeRequest("deposit_history", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get deposit history (url = %v, params = %v)", request.URL, params.Encode()))
 			}
 			newRes := new(TradeDepositHistoryResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if newRes.(*TradeDepositHistoryResponse).needRetry() {
+		if err != nil || newRes.(*TradeDepositHistoryResponse).needRetry() {
+			log.Printf("retry deposit (err: %v)", err)
 			continue
 		}
 		return newRes.(*TradeDepositHistoryResponse), request, response, err
@@ -879,14 +879,15 @@ func (r *Requester) TradeWithdrawHistory(tradeWithdrawHistoryParams *TradeWithdr
 	for {
 		request := r.makeTradeRequest("withdraw_history", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, false)
+			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get withdraw history (url = %v, params = %v)", request.URL, params.Encode()))
 			}
 			newRes := new(TradeWithdrawHistoryResponse)
 			return newRes, res, resBody, err
 		}, request)
-		if newRes.(*TradeWithdrawHistoryResponse).needRetry() {
+		if err != nil || newRes.(*TradeWithdrawHistoryResponse).needRetry() {
+			log.Printf("retry width history (err: %v)", err)
 			continue
 		}
 		return newRes.(*TradeWithdrawHistoryResponse), request, response, err
