@@ -78,8 +78,11 @@ func (b urlBuilder) getURL() (string) {
 }
 
 func (r *Requester) makePublicRequest(resource string, params string) (*utility.HTTPRequest) {
+	// waitを入れる処理
 	r.lastPulblicApiNanoTsMutex.Lock()
 	for {
+		// waitを入れる処理
+		// ４０３ Forbiddenを緩和する
 		now := time.Now()
 		if now.UnixNano() >= r.lastPulblicApiNanoTs+(publicApiGurdTime*time.Millisecond.Nanoseconds()) {
 			r.lastPulblicApiNanoTs = now.UnixNano()
@@ -100,24 +103,33 @@ func (r *Requester) makePublicRequest(resource string, params string) (*utility.
 func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTTPRequest) {
 	r.lastTradeApiHistoryMutex.Lock()
 	for {
+		// waitを入れる処理
+		// time wait restriction, please try later.を緩和する
 		now := time.Now()
-		lastIdx := 0
+		lastIdx := -1
 		var lastTs int64 = 0
 		for idx, ts := range r.lastTradeApiHistory {
 			if ts > now.UnixNano() -  time.Second.Nanoseconds() {
+				// １秒以内のものになったらbreak
 				lastIdx = idx
 				lastTs = ts
 				break;
 			}
 		}
-		if lastIdx > 0 {
+		if lastIdx == -1 && len(r.lastTradeApiHistory) > 0 {
+			// 全部ふるいから消す
+			r.lastTradeApiHistory = r.lastTradeApiHistory[len(r.lastTradeApiHistory):len(r.lastTradeApiHistory)]
+		} else if lastIdx > 0 {
+			// 古いやつだけ消す
 			r.lastTradeApiHistory = r.lastTradeApiHistory[lastIdx:]
 		}
-		if len(r.lastTradeApiHistory) < tradeApiGurdCount {
+		if len(r.lastTradeApiHistory) < 10 {
 			r.lastTradeApiHistory = append(r.lastTradeApiHistory, now.UnixNano())
 			break
 		}
-		time.Sleep(time.Duration(lastTs - (now.UnixNano() - time.Second.Nanoseconds())) * time.Nanosecond)
+		if lastTs > 0 {
+			time.Sleep(time.Duration(lastTs-(now.UnixNano()-time.Second.Nanoseconds())) * time.Nanosecond)
+		}
 	}
 	r.lastTradeApiHistoryMutex.Unlock()
 	u := Trade.getURL()
