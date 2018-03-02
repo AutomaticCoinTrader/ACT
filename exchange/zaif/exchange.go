@@ -13,6 +13,7 @@ import (
 
 const (
 	exchangeName = "zaif"
+	defaultPollingConcurrency = 3
 )
 
 type BoardCursor struct {
@@ -472,7 +473,7 @@ func  (e *Exchange) pollingRequestLoop() {
 	lastAsksMap := make(map[string][][]float64)
 	lastBidsAsksMutex := new(sync.Mutex)
 	pollingRequestChan := make(chan string)
-	for i := 0; i < 4; i++ {
+	for i := 0; i < e.config.PollingConcurrency; i++ {
 		go e.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
 	}
 FINISH:
@@ -505,8 +506,8 @@ func (e *Exchange) StartStreamings() (error) {
 	for _, currencyPair := range e.currencyPairs {
 		currencyPair = strings.ToLower(currencyPair)
 		err := e.requester.StreamingStart(currencyPair, e.exchangeStreamingCallback, e)
-		if (err != nil) {
-			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair);
+		if err != nil {
+			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair)
 		}
 	}
 	go e.pollingRequestLoop()
@@ -537,6 +538,7 @@ type ExchangeConfig struct {
 	ReadBufSize   int      `json:"readBufSize"  yaml:"readBufSize"  toml:"readBufSize"`
 	WriteBufSize  int      `json:"writeBufSize" yaml:"writeBufSize" toml:"writeBufSize"`
 	CurrencyPairs []string `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
+	PollingConcurrency int `json:"pollingConcurrency" yaml:"pollingConcurrency" toml:"pollingConcurrency"`
 }
 
 func newZaifExchange(config interface{}) (exchange.Exchange, error) {
@@ -544,6 +546,9 @@ func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 	requesterKeys := make([]*RequesterKey, 0, len(myConfig.Keys))
 	for _, key := range myConfig.Keys {
 		requesterKeys = append(requesterKeys, &RequesterKey{Key : key.Key, Secret:key.Secret})
+	}
+	if myConfig.PollingConcurrency == 0 {
+		myConfig.PollingConcurrency = defaultPollingConcurrency
 	}
 	return &Exchange{
 		config:        myConfig,
