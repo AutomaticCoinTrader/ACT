@@ -45,7 +45,7 @@ const (
 )
 
 const (
-	restrictionWait = 100
+	restrictionWait = 1000
 	insufficientWait = 100
 	publicApiGurdTime = 10
 	tradeApiGurdCount = 50
@@ -104,7 +104,7 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 	r.lastTradeApiHistoryMutex.Lock()
 	for {
 		// waitを入れる処理
-		// time wait restriction, please try later.を緩和する
+		// ４０３ Forbiddenを緩和する
 		now := time.Now()
 		lastIdx := -1
 		var lastTs int64 = 0
