@@ -46,7 +46,7 @@ const (
 
 const (
 	restrictionWait = 1000
-	insufficientWait = 500
+	insufficientWait = 1000
 	publicApiGurdTime = 10
 	tradeApiGurdCount = 50
 )
