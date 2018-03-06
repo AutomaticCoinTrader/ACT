@@ -541,7 +541,7 @@ type ExchangeConfig struct {
 	PollingConcurrency int `json:"pollingConcurrency" yaml:"pollingConcurrency" toml:"pollingConcurrency"`
 }
 
-func newZaifExchange(config interface{}) (exchange.Exchange, error) {
+func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
 	myConfig := config.(*ExchangeConfig)
 	requesterKeys := make([]*RequesterKey, 0, len(myConfig.Keys))
 	for _, key := range myConfig.Keys {
@@ -566,5 +566,5 @@ func newZaifExchange(config interface{}) (exchange.Exchange, error) {
 }
 
 func init() {
-	exchange.RegisterExchange(exchangeName, newZaifExchange)
+	exchange.RegisterExchange(exchangeName, NewZaifExchange)
 }
