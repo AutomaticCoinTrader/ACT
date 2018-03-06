@@ -5,7 +5,7 @@ import (
 	//"github.com/AutomaticCoinTrader/ACT/exchange/coincheck"
 )
 
-type exchangesConfig struct {
+type ExchangesConfig struct {
 	Zaif *zaif.ExchangeConfig `json:"zaif" yaml:"zaif" toml:"zaif" config:"zaif"`
 	//Coincheck *coincheck.CoincheckExchangeConfig `json:"coincheck" yaml:"coincheck" config:"coincheck"`
 }
