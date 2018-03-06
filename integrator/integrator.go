@@ -236,7 +236,7 @@ type loggerConfig struct {
 
 type Config struct {
 	Server    *serverConfig    `json:"server"    yaml:"server"    toml:"server"`
-	Exchanges *exchangesConfig `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
+	Exchanges *ExchangesConfig `json:"exchanges" yaml:"exchanges" toml:"exchanges"`
 	Robot     *robot.Config    `json:"robot"     yaml:"robot"     toml:"robot"`
 	Notifier  *notifier.Config `json:"notifier"  yaml:"notifier"  toml:"notifier"`
 	Logger    *loggerConfig    `json:"logger"    yaml:"logger"    toml:"logger"`
