@@ -451,8 +451,7 @@ func  (e *Exchange) pollingLoop(pollingRequestChan chan string, lastBidsMap map[
 		depthResponse, _, httpResponse, err := e.requester.DepthNoRetry(currencyPair)
 		if err != nil {
 			if httpResponse.StatusCode == 403 {
-				log.Printf("occured 403 Forbidden currency pair = %v", currencyPair)
-				time.Sleep(10 * time.Second)
+				log.Fatal("occured 403 Forbidden currency pair = %v", currencyPair)
 			}
 			log.Printf("can not get depth currency pair = %v", currencyPair)
 			continue
@@ -483,6 +482,7 @@ func  (e *Exchange) pollingRequestLoop() {
 	}
 FINISH:
 	for {
+		log.Printf("start get depth of currency Pairs (%v)", time.Now().UnixNano())
 		for _, currencyPair := range e.currencyPairs {
 			if atomic.LoadInt32(&e.pollingFinish) == 1{
 				break FINISH

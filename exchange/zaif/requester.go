@@ -105,9 +105,9 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 	for {
 		// waitを入れる処理
 		// ４０３ Forbiddenを緩和する
-		now := time.Now()
 		lastIdx := -1
 		var lastTs int64 = 0
+		now := time.Now()
 		for idx, ts := range r.lastTradeApiHistory {
 			if ts > now.UnixNano() -  time.Second.Nanoseconds() {
 				// １秒以内のものになったらbreak
