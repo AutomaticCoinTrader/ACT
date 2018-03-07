@@ -459,7 +459,6 @@ func (e *Exchange) StartStreamings() (error) {
 
 // StopStreaming is stop streaming
 func (e *Exchange) StopStreamings() (error) {
-
 	// ストリーミングを停止する
 	for _, currencyPair := range e.currencyPairs {
 		currencyPair = strings.ToLower(currencyPair)
@@ -469,19 +468,19 @@ func (e *Exchange) StopStreamings() (error) {
 }
 
 type ExchangeKeyConfig struct {
-	Key           string   `json:"key"          yaml:"key"          toml:"key"`
-	Secret        string   `json:"secret"       yaml:"secret"       toml:"secret"`
+	Key           string `json:"key"          yaml:"key"          toml:"key"`
+	Secret        string `json:"secret"       yaml:"secret"       toml:"secret"`
 }
 
 type ExchangeConfig struct {
-	Keys          []*ExchangeKeyConfig   `json:"keys"          yaml:"keys"          toml:"keys"`
-	Retry         int      `json:"retry"        yaml:"retry"        toml:"retry"`
-	RetryWait     int      `json:"retryWait"    yaml:"retryWait"    toml:"retryWait"`
-	Timeout       int      `json:"timeout"      yaml:"timeout"      toml:"timeout"`
-	ReadBufSize   int      `json:"readBufSize"  yaml:"readBufSize"  toml:"readBufSize"`
-	WriteBufSize  int      `json:"writeBufSize" yaml:"writeBufSize" toml:"writeBufSize"`
-	CurrencyPairs []string `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
-
+	Keys          []*ExchangeKeyConfig `json:"keys"          yaml:"keys"          toml:"keys"`
+	Retry         int                  `json:"retry"         yaml:"retry"         toml:"retry"`
+	RetryWait     int                  `json:"retryWait"     yaml:"retryWait"     toml:"retryWait"`
+	Timeout       int                  `json:"timeout"       yaml:"timeout"       toml:"timeout"`
+	ReadBufSize   int                  `json:"readBufSize"   yaml:"readBufSize"   toml:"readBufSize"`
+	WriteBufSize  int                  `json:"writeBufSize"  yaml:"writeBufSize"  toml:"writeBufSize"`
+	CurrencyPairs []string             `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
+	ProxyURL      string               `json:"proxy"         yaml:"proxy"         toml:"proxy"`
 }
 
 func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
