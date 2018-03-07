@@ -9,6 +9,7 @@ import (
 	"log"
 	"reflect"
 	"sync/atomic"
+	"time"
 )
 
 const (
@@ -447,8 +448,12 @@ func  (e *Exchange) pollingLoop(pollingRequestChan chan string, lastBidsMap map[
 		lastBids, bidsOk := lastBidsMap[currencyPair]
 		lastAsks, asksOk := lastAsksMap[currencyPair]
 		lastBidsAsksMutex.Unlock()
-		depthResponse, _, _, err := e.requester.DepthNoRetry(currencyPair)
+		depthResponse, _, httpResponse, err := e.requester.DepthNoRetry(currencyPair)
 		if err != nil {
+			if httpResponse.StatusCode == 403 {
+				log.Printf("occured 403 Forbidden currency pair = %v", currencyPair)
+				time.Sleep(60 * time.Second)
+			}
 			log.Printf("can not get depth currency pair = %v", currencyPair)
 			continue
 		}
