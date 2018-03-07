@@ -214,8 +214,6 @@ func (t TradeCommonResponse) needRetry() (bool) {
 			time.Sleep(restrictionWait * time.Millisecond)
 		} else if t.Error == "insufficient funds" {
 			time.Sleep(insufficientWait * time.Millisecond)
-		} else if t.Error == "trade temporarily unavailable." {
-			time.Sleep(tmpUnavailableWait * time.Millisecond)
 		}
 		return true
 	}

@@ -7,14 +7,10 @@ import (
 	"sync"
 	"strconv"
 	"log"
-	"reflect"
-	"sync/atomic"
-	"time"
 )
 
 const (
 	exchangeName = "zaif"
-	defaultPollingConcurrency = 4
 )
 
 type BoardCursor struct {
@@ -277,7 +273,6 @@ type Exchange struct {
 	streamingCallback exchange.StreamingCallback
 	currencyPairs     []string
 	currencyPairsInfo *currencyPairsInfo
-	pollingFinish     int32
 }
 
 func (e *Exchange) GetName() (string) {
@@ -436,63 +431,7 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 	return nil
 }
 
-func  (e *Exchange) pollingLoop(pollingRequestChan chan string, lastBidsMap map[string][][]float64, lastAsksMap map[string][][]float64, lastBidsAsksMutex *sync.Mutex) {
-	log.Printf("start polling loop")
-	for {
-		currencyPair, ok := <- pollingRequestChan
-		if !ok {
-			log.Printf("finish polling loop")
-			return
-		}
-		lastBidsAsksMutex.Lock()
-		lastBids, bidsOk := lastBidsMap[currencyPair]
-		lastAsks, asksOk := lastAsksMap[currencyPair]
-		lastBidsAsksMutex.Unlock()
-		depthResponse, _, httpResponse, err := e.requester.DepthNoRetry(currencyPair)
-		if err != nil {
-			if httpResponse.StatusCode == 403 {
-				log.Printf("occured 403 Forbidden currency pair = %v", currencyPair)
-			}
-			log.Printf("can not get depth currency pair = %v", currencyPair)
-			continue
-		}
-		if !bidsOk || !asksOk || reflect.DeepEqual(lastBids, depthResponse.Bids) == false || reflect.DeepEqual(lastAsks, depthResponse.Asks) == false {
-			e.currencyPairsInfo.updateDepth(currencyPair, depthResponse.Bids, depthResponse.Asks)
-			err = e.streamingCallback(currencyPair, e)
-			if err != nil {
-				log.Printf("streaming callback error in polling loop (%v)", err)
-			}
-			lastBidsAsksMutex.Lock()
-			lastBidsMap[currencyPair] = depthResponse.Bids
-			lastAsksMap[currencyPair] = depthResponse.Asks
-			lastBidsAsksMutex.Unlock()
-		}
-	}
-}
 
-func  (e *Exchange) pollingRequestLoop() {
-	log.Printf("start polling request loop")
-	atomic.StoreInt32(&e.pollingFinish, 0)
-	lastBidsMap := make(map[string][][]float64)
-	lastAsksMap := make(map[string][][]float64)
-	lastBidsAsksMutex := new(sync.Mutex)
-	pollingRequestChan := make(chan string)
-	for i := 0; i < e.config.PollingConcurrency; i++ {
-		go e.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
-	}
-FINISH:
-	for {
-		log.Printf("start get depth of currency Pairs (%v)", time.Now().UnixNano())
-		for _, currencyPair := range e.currencyPairs {
-			if atomic.LoadInt32(&e.pollingFinish) == 1{
-				break FINISH
-			}
-			pollingRequestChan <- currencyPair
-		}
-	}
-	close(pollingRequestChan)
-	log.Printf("finish polling request loop")
-}
 
 // Initialize is initalize exchange
 func (e *Exchange) Initialize(streamingCallback exchange.StreamingCallback) (error) {
@@ -515,13 +454,12 @@ func (e *Exchange) StartStreamings() (error) {
 			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair)
 		}
 	}
-	go e.pollingRequestLoop()
 	return nil
 }
 
 // StopStreaming is stop streaming
 func (e *Exchange) StopStreamings() (error) {
-	atomic.StoreInt32(&e.pollingFinish, 1)
+
 	// ストリーミングを停止する
 	for _, currencyPair := range e.currencyPairs {
 		currencyPair = strings.ToLower(currencyPair)
@@ -543,7 +481,7 @@ type ExchangeConfig struct {
 	ReadBufSize   int      `json:"readBufSize"  yaml:"readBufSize"  toml:"readBufSize"`
 	WriteBufSize  int      `json:"writeBufSize" yaml:"writeBufSize" toml:"writeBufSize"`
 	CurrencyPairs []string `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
-	PollingConcurrency int `json:"pollingConcurrency" yaml:"pollingConcurrency" toml:"pollingConcurrency"`
+
 }
 
 func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
@@ -551,9 +489,6 @@ func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
 	requesterKeys := make([]*RequesterKey, 0, len(myConfig.Keys))
 	for _, key := range myConfig.Keys {
 		requesterKeys = append(requesterKeys, &RequesterKey{Key : key.Key, Secret:key.Secret})
-	}
-	if myConfig.PollingConcurrency == 0 {
-		myConfig.PollingConcurrency = defaultPollingConcurrency
 	}
 	return &Exchange{
 		config:        myConfig,
@@ -566,7 +501,6 @@ func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
 			Trades:    make(map[string][]*StreamingTradesResponse),
 			mutex:     new(sync.Mutex),
 		},
-		pollingFinish: 0,
 	}, nil
 }
 

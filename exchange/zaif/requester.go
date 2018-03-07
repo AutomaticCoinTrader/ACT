@@ -48,8 +48,7 @@ const (
 const (
 	restrictionWait = 1000
 	insufficientWait = 1000
-	tmpUnavailableWait = 20
-	publicApiGurdTime = 20 // 本来は10
+	publicApiGurdTime = 10
 	tradeApiGurdCount = 50
 )
 
