@@ -216,13 +216,6 @@ func (c *currencyPairsInfo) update(currencyPair string, currencyPairsBids [][]fl
 	c.Trades[currencyPair] = currencyPairsTrades
 }
 
-func (c *currencyPairsInfo) updateDepth(currencyPair string, currencyPairsBids [][]float64, currencyPairsAsks [][]float64) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	c.Bids[currencyPair] = currencyPairsBids
-	c.Asks[currencyPair] = currencyPairsAsks
-}
-
 func (c *currencyPairsInfo) getBids(currencyPair string) ([][]float64) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -430,8 +423,6 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 	}
 	return nil
 }
-
-
 
 // Initialize is initalize exchange
 func (e *Exchange) Initialize(streamingCallback exchange.StreamingCallback) (error) {
