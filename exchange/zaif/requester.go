@@ -131,7 +131,7 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 		if lastTs > 0 {
 			time.Sleep(time.Duration(lastTs-(now.UnixNano()-time.Second.Nanoseconds())) * time.Nanosecond)
 		} else {
-			log.Print("XXX no wait XXX")
+			log.Print("called trade api with no wait")
 		}
 	}
 	r.lastTradeApiHistoryMutex.Unlock()
