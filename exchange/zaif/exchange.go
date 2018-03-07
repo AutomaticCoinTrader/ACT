@@ -451,7 +451,7 @@ func  (e *Exchange) pollingLoop(pollingRequestChan chan string, lastBidsMap map[
 		depthResponse, _, httpResponse, err := e.requester.DepthNoRetry(currencyPair)
 		if err != nil {
 			if httpResponse.StatusCode == 403 {
-				log.Fatal("occured 403 Forbidden currency pair = %v", currencyPair)
+				log.Printf("occured 403 Forbidden currency pair = %v", currencyPair)
 			}
 			log.Printf("can not get depth currency pair = %v", currencyPair)
 			continue
