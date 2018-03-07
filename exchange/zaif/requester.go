@@ -48,8 +48,9 @@ const (
 const (
 	restrictionWait = 1000
 	insufficientWait = 1000
-	publicApiGurdTime = 12 // 本来は10
-	tradeApiGurdCount = 40 // 本来は50
+	tmpUnavailableWait = 20
+	publicApiGurdTime = 20 // 本来は10
+	tradeApiGurdCount = 50
 )
 
 var seq int64
