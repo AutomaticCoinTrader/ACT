@@ -5,16 +5,15 @@ import (
 	"log"
 	"sync/atomic"
 	"time"
-	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/configurator"
-	"github.com/AutomaticCoinTrader/ACT/exchange/zaif"
 	"path"
+	"runtime"
 	"github.com/AutomaticCoinTrader/ACT/utility"
 	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/server"
+	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/configurator"
+	"github.com/AutomaticCoinTrader/ACT/exchange/zaif"
 )
 
-const (
-	defaultPollingConcurrency = 4
-)
+
 
 type currencyPairsInfo struct {
 	Bids      map[string][][]float64
@@ -69,7 +68,7 @@ func (f *Fetcher) pollingRequestLoop() {
 	lastAsksMap := make(map[string][][]float64)
 	lastBidsAsksMutex := new(sync.Mutex)
 	pollingRequestChan := make(chan string)
-	for i := 0; i < f.config.PollingConcurrency; i++ {
+	for i := 0; i < runtime.NumCPU() * 2; i++ {
 		go f.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
 	}
 FINISH:
@@ -103,9 +102,6 @@ func (f *Fetcher) Stop() {
 
 func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher) {
 	requesterKeys := make([]*zaif.RequesterKey, 0)
-	if config.PollingConcurrency == 0 {
-		config.PollingConcurrency = defaultPollingConcurrency
-	}
 	return &Fetcher{
 		requester:     zaif.NewRequester(requesterKeys, config.Retry, config.RetryWait, config.Timeout, config.ReadBufSize, config.WriteBufSize),
 		httpClient:    utility.NewHTTPClient(config.Retry, config.RetryWait, config.Timeout),

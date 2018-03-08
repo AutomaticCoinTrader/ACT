@@ -17,7 +17,6 @@ retryWait: 0
 timeout: 0
 readBufSize: 0
 writeBufSize: 0
-pollingConcurrency: 4
 pollingWait: 32
 pauseWait: 60
 server:
