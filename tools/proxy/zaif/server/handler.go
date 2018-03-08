@@ -14,6 +14,7 @@ func (w *WebsocketServer) handleConnectionBase(writer http.ResponseWriter, reque
 	}
 	// Make sure we close the connection when the function returns
 	defer ws.Close()
+	log.Printf("connected peer address = %v", ws.RemoteAddr().String())
 	cs, ok := w.clients[currencyPair]
 	if !ok {
 		cs = make(map[*websocket.Conn]bool)
