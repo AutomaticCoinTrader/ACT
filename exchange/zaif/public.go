@@ -287,8 +287,65 @@ func (r Requester) StreamingStop(currencyPair string) {
 	client.Stop()
 }
 
-func (r Requester) StreamingStopAll(currencyPair string) {
-	for _, client := range r.wsClients {
-		client.Stop()
+type ProxyStreamingCallback func(currencyPair string, proxyStreamingResponse *PublicDepthReaponse, streamingCallbackData interface{}) (error)
+
+type proxyStreaminCallbackData struct {
+	currencyPair string
+	callback     ProxyStreamingCallback
+	callbackData interface{}
+}
+
+func (r Requester) proxyStreamingCallback(conn *websocket.Conn, userCallbackData interface{}) (error) {
+	proxyStreaminCallbackData := userCallbackData.(*proxyStreaminCallbackData)
+	messageType, message, err := conn.ReadMessage()
+	if err != nil {
+		return errors.Wrap(err, "can not read message of proxy streaming")
 	}
+	if messageType != websocket.TextMessage {
+		log.Printf("unsupported message type (message type = %v, message = %v)", messageType, message)
+		return nil
+	}
+	newRes := new(PublicDepthReaponse)
+	err = json.Unmarshal(message, newRes)
+	if err != nil {
+		log.Printf("can not unmarshal message of proxy streaming (%v)", message)
+		return nil
+	}
+	err = proxyStreaminCallbackData.callback(proxyStreaminCallbackData.currencyPair, newRes, proxyStreaminCallbackData.callbackData)
+	if err != nil {
+		log.Printf("call back error of proxy streaming (%v)", err)
+		return nil
+	}
+	return nil
+}
+
+func (r Requester) ProxyStreamingStart(url string, currencyPair string, callback ProxyStreamingCallback, callbackData interface{}) (error) {
+	_, ok := r.proxyWsClients[currencyPair]
+	if ok {
+		return errors.Errorf("already exists proxy streaming (currency pair = %v)", currencyPair)
+	}
+	log.Printf("start proxy streaming (currency pair = %v)", currencyPair)
+	requestURL := fmt.Sprintf("%v/%v", url, currencyPair)
+	proxyStreaminCallbackData := &proxyStreaminCallbackData{
+		currencyPair: currencyPair,
+		callback:     callback,
+		callbackData: callbackData,
+	}
+	newClient := utility.NewWSClient(r.readBufSize, r.writeBufSize, r.retry, r.retryWait)
+	err := newClient.Start(r.proxyStreamingCallback, proxyStreaminCallbackData, requestURL, nil)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("can not start proxy streaming (url = %v)", requestURL))
+	}
+	r.proxyWsClients[currencyPair] = newClient
+
+	return nil
+}
+
+func (r Requester) ProxyStreamingStop(currencyPair string) {
+	client, ok := r.proxyWsClients[currencyPair]
+	if !ok {
+		log.Printf("not found proxy streaming (currency pair = %v)", currencyPair)
+		return
+	}
+	client.Stop()
 }

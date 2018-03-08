@@ -7,6 +7,7 @@ import (
 	"sync"
 	"strconv"
 	"log"
+	"reflect"
 )
 
 const (
@@ -216,6 +217,13 @@ func (c *currencyPairsInfo) update(currencyPair string, currencyPairsBids [][]fl
 	c.Trades[currencyPair] = currencyPairsTrades
 }
 
+func (c *currencyPairsInfo) updateDepth(currencyPair string, currencyPairsBids [][]float64, currencyPairsAsks [][]float64) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.Bids[currencyPair] = currencyPairsBids
+	c.Asks[currencyPair] = currencyPairsAsks
+}
+
 func (c *currencyPairsInfo) getBids(currencyPair string) ([][]float64) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -261,11 +269,14 @@ func (c *currencyPairsInfo) getTrades(currencyPair string) ([]*StreamingTradesRe
 }
 
 type Exchange struct {
-	config            *ExchangeConfig
-	requester         *Requester
-	streamingCallback exchange.StreamingCallback
-	currencyPairs     []string
-	currencyPairsInfo *currencyPairsInfo
+	config                 *ExchangeConfig
+	requester              *Requester
+	streamingCallback      exchange.StreamingCallback
+	currencyPairs          []string
+	currencyPairsInfo      *currencyPairsInfo
+	proxyLastBidsMap       map[string][][]float64
+	proxyLastAsksMap       map[string][][]float64
+	proxyLastBidsAsksMutex *sync.Mutex
 }
 
 func (e *Exchange) GetName() (string) {
@@ -424,6 +435,25 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 	return nil
 }
 
+func (e *Exchange) exchangeProxyStreamingCallback(currencyPair string, proxyStreamingResponse *PublicDepthReaponse, StreamingCallbackData interface{}) (error) {
+	e.proxyLastBidsAsksMutex.Lock()
+	lastBids, bidsOk := e.proxyLastBidsMap[currencyPair]
+	lastAsks, asksOk := e.proxyLastAsksMap[currencyPair]
+	e.proxyLastBidsAsksMutex.Unlock()
+	if !bidsOk || !asksOk || reflect.DeepEqual(lastBids, proxyStreamingResponse.Bids) == false || reflect.DeepEqual(lastAsks, proxyStreamingResponse.Asks) == false {
+		e.currencyPairsInfo.updateDepth(currencyPair, proxyStreamingResponse.Bids, proxyStreamingResponse.Asks)
+		err := e.streamingCallback(currencyPair, e)
+		if err != nil {
+			return errors.Wrap(err, "streaming callback error")
+		}
+		e.proxyLastBidsAsksMutex.Lock()
+		e.proxyLastBidsMap[currencyPair] = proxyStreamingResponse.Bids
+		e.proxyLastAsksMap[currencyPair] = proxyStreamingResponse.Asks
+		e.proxyLastBidsAsksMutex.Unlock()
+	}
+	return nil
+}
+
 // Initialize is initalize exchange
 func (e *Exchange) Initialize(streamingCallback exchange.StreamingCallback) (error) {
 	e.streamingCallback = streamingCallback
@@ -446,8 +476,13 @@ func (e *Exchange) StartStreamings() (error) {
 		}
 	}
 	if e.config.ProxyURL != "" {
-
-
+		for _, currencyPair := range e.currencyPairs {
+			currencyPair = strings.ToLower(currencyPair)
+			err := e.requester.ProxyStreamingStart(e.config.ProxyURL, currencyPair, e.exchangeProxyStreamingCallback, e)
+			if err != nil {
+				return errors.Wrapf(err, "can not start proxy streaming (currency_pair = %v)", currencyPair)
+			}
+		}
 	}
 
 	return nil
@@ -460,12 +495,18 @@ func (e *Exchange) StopStreamings() (error) {
 		currencyPair = strings.ToLower(currencyPair)
 		e.requester.StreamingStop(currencyPair)
 	}
+	if e.config.ProxyURL != "" {
+		for _, currencyPair := range e.currencyPairs {
+			currencyPair = strings.ToLower(currencyPair)
+			e.requester.ProxyStreamingStop(currencyPair)
+		}
+	}
 	return nil
 }
 
 type ExchangeKeyConfig struct {
-	Key           string `json:"key"          yaml:"key"          toml:"key"`
-	Secret        string `json:"secret"       yaml:"secret"       toml:"secret"`
+	Key    string `json:"key"          yaml:"key"          toml:"key"`
+	Secret string `json:"secret"       yaml:"secret"       toml:"secret"`
 }
 
 type ExchangeConfig struct {
@@ -483,7 +524,7 @@ func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
 	myConfig := config.(*ExchangeConfig)
 	requesterKeys := make([]*RequesterKey, 0, len(myConfig.Keys))
 	for _, key := range myConfig.Keys {
-		requesterKeys = append(requesterKeys, &RequesterKey{Key : key.Key, Secret:key.Secret})
+		requesterKeys = append(requesterKeys, &RequesterKey{Key: key.Key, Secret: key.Secret})
 	}
 	return &Exchange{
 		config:        myConfig,
@@ -496,6 +537,9 @@ func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
 			Trades:    make(map[string][]*StreamingTradesResponse),
 			mutex:     new(sync.Mutex),
 		},
+		proxyLastBidsMap:       make(map[string][][]float64),
+		proxyLastAsksMap:       make(map[string][][]float64),
+		proxyLastBidsAsksMutex: new(sync.Mutex),
 	}, nil
 }
 

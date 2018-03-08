@@ -30,8 +30,6 @@ func (w *WebsocketServer) handleConnectionBase(writer http.ResponseWriter, reque
 		}
 		if messageType != websocket.TextMessage {
 			log.Printf("unsupported message type (message type = %v, message = %v)", messageType, message)
-			delete(cs, ws)
-			break
 		}
 		// nop
 	}

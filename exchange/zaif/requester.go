@@ -23,19 +23,20 @@ type RequesterKey struct {
 }
 
 type Requester struct {
-	httpClient   *utility.HTTPClient
-	wsClients    map[string]*utility.WSClient
-	readBufSize  int
-	writeBufSize int
-	retry        int
-	retryWait    int
-	keys         []*RequesterKey
-	keyIndex     int
-	keysMutex    *sync.Mutex
-	lastPulblicApiNanoTs int64
+	httpClient                *utility.HTTPClient
+	wsClients                 map[string]*utility.WSClient
+	proxyWsClients            map[string]*utility.WSClient
+	readBufSize               int
+	writeBufSize              int
+	retry                     int
+	retryWait                 int
+	keys                      []*RequesterKey
+	keyIndex                  int
+	keysMutex                 *sync.Mutex
+	lastPulblicApiNanoTs      int64
 	lastPulblicApiNanoTsMutex *sync.Mutex
-	lastTradeApiHistory  []int64
-	lastTradeApiHistoryMutex *sync.Mutex
+	lastTradeApiHistory       []int64
+	lastTradeApiHistoryMutex  *sync.Mutex
 }
 
 type urlBuilder int
@@ -46,8 +47,8 @@ const (
 )
 
 const (
-	restrictionWait = 1000
-	insufficientWait = 1000
+	restrictionWait   = 1000
+	insufficientWait  = 1000
 	publicApiGurdTime = 10
 	tradeApiGurdCount = 50
 )
@@ -89,7 +90,7 @@ func (r *Requester) MakePublicRequest(resource string, params string) (*utility.
 			r.lastPulblicApiNanoTs = now.UnixNano()
 			break
 		}
-		time.Sleep(time.Duration(r.lastPulblicApiNanoTs + (publicApiGurdTime*time.Millisecond.Nanoseconds()) - now.UnixNano()) * time.Nanosecond)
+		time.Sleep(time.Duration(r.lastPulblicApiNanoTs+(publicApiGurdTime*time.Millisecond.Nanoseconds())-now.UnixNano()) * time.Nanosecond)
 	}
 	r.lastPulblicApiNanoTsMutex.Unlock()
 	u := Public.buildURL(resource)
@@ -110,7 +111,7 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 		var lastTs int64 = 0
 		now := time.Now()
 		for idx, ts := range r.lastTradeApiHistory {
-			if ts > now.UnixNano() -  time.Second.Nanoseconds() {
+			if ts > now.UnixNano()-time.Second.Nanoseconds() {
 				// １秒以内のものになったらbreak
 				lastIdx = idx
 				lastTs = ts
@@ -165,8 +166,8 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 
 func (r *Requester) getNonce() (string) {
 	now := time.Now()
-	s:= atomic.AddInt64(&seq, 1)
-	return strconv.FormatInt(now.Unix(), 10) + "." + fmt.Sprintf("%06d", now.Nanosecond() / 1000) + fmt.Sprintf("%03d", s % 1000)
+	s := atomic.AddInt64(&seq, 1)
+	return strconv.FormatInt(now.Unix(), 10) + "." + fmt.Sprintf("%06d", now.Nanosecond()/1000) + fmt.Sprintf("%03d", s%1000)
 }
 
 func (r *Requester) unmarshal(requestFunc requestFunc, request *utility.HTTPRequest) (interface{}, *http.Response, error) {
@@ -181,18 +182,18 @@ func (r *Requester) unmarshal(requestFunc requestFunc, request *utility.HTTPRequ
 // NewRequester is create requester
 func NewRequester(keys []*RequesterKey, retry int, retryWait, timeout int, readBufSize int, writeBufSize int) (*Requester) {
 	return &Requester{
-		httpClient:   utility.NewHTTPClient(retry, retryWait, timeout),
-		wsClients:    make(map[string]*utility.WSClient),
-		readBufSize:  readBufSize,
-		writeBufSize: writeBufSize,
-		retry:        retry,
-		retryWait:    retryWait,
-		keys:         keys,
-		keyIndex:     0,
-		keysMutex:    new(sync.Mutex),
-		lastPulblicApiNanoTs: 0,
+		httpClient:                utility.NewHTTPClient(retry, retryWait, timeout),
+		wsClients:                 make(map[string]*utility.WSClient),
+		readBufSize:               readBufSize,
+		writeBufSize:              writeBufSize,
+		retry:                     retry,
+		retryWait:                 retryWait,
+		keys:                      keys,
+		keyIndex:                  0,
+		keysMutex:                 new(sync.Mutex),
+		lastPulblicApiNanoTs:      0,
 		lastPulblicApiNanoTsMutex: new(sync.Mutex),
-		lastTradeApiHistory: make([]int64, 0, tradeApiGurdCount),
-		lastTradeApiHistoryMutex: new(sync.Mutex),
+		lastTradeApiHistory:       make([]int64, 0, tradeApiGurdCount),
+		lastTradeApiHistoryMutex:  new(sync.Mutex),
 	}
 }
