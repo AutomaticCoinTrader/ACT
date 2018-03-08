@@ -166,7 +166,7 @@ func NewHTTPClient(retry int, retryWait int, timeout int) *HTTPClient {
 		retry:     retry,
 		retryWait: retryWait,
 		timeout:   timeout,
-		resolver: dnscache.New(time.Second * 5),
+		resolver: dnscache.New(time.Second * 10),
 		resolverIdx: 0,
 		resolverIdxMutex: new(sync.Mutex),
 	}
