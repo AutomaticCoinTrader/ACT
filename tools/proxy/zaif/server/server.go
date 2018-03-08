@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/configurator"
 	"github.com/gorilla/websocket"
+	"time"
 )
 
 type WebsocketServer struct {
@@ -13,10 +14,33 @@ type WebsocketServer struct {
 	server             *http.Server
 	upgrader           *websocket.Upgrader
 	clients            map[string]map[*websocket.Conn]bool
+	pingStopChan chan bool
+	pingStopCompleteChan chan bool
 }
 
-func (s *WebsocketServer) listenAndServe() {
-	if err := s.server.ListenAndServe(); err != nil {
+
+func (w *WebsocketServer) pingLoop() {
+	for {
+		select {
+		case _, ok := <-w.pingStopChan:
+			if !ok {
+				close(w.pingStopCompleteChan)
+				return
+			}
+		case <-time.After(5 * time.Second):
+			deadline := time.Now()
+			deadline.Add(30 * time.Second)
+			for _, cs := range w.clients {
+				for ws := range cs {
+					ws.WriteControl(websocket.PingMessage, []byte("ping"), deadline)
+				}
+			}
+		}
+	}
+}
+
+func (w *WebsocketServer) listenAndServe() {
+	if err := w.server.ListenAndServe(); err != nil {
 		log.Printf("ListenAndServe returns an error (%v)", err)
 		if err != http.ErrServerClosed {
 			log.Fatalf("HTTPServer closed with error (%v)", err)
@@ -24,8 +48,8 @@ func (s *WebsocketServer) listenAndServe() {
 	}
 }
 
-func (s *WebsocketServer) BroadCast(currencyPair string, message []byte) {
-	cs, ok := s.clients[currencyPair]
+func (w *WebsocketServer) BroadCast(currencyPair string, message []byte) {
+	cs, ok := w.clients[currencyPair]
 	if !ok {
 		return
 	}
@@ -34,13 +58,16 @@ func (s *WebsocketServer) BroadCast(currencyPair string, message []byte) {
 	}
 }
 
-func (s *WebsocketServer) Start() {
+func (w *WebsocketServer) Start() {
 	log.Printf("start http server")
-	go s.listenAndServe()
+	go w.listenAndServe()
+	go w.pingLoop()
 }
 
-func (s *WebsocketServer) Stop() {
-	s.server.Shutdown(context.Background())
+func (w *WebsocketServer) Stop() {
+	close(w.pingStopChan)
+	<-w.pingStopCompleteChan
+	w.server.Shutdown(context.Background())
 	log.Printf("stop http server")
 }
 
@@ -50,6 +77,8 @@ func NewWsServer(config *configurator.ZaifProxyConfig) (*WebsocketServer) {
 		server:             nil,
 		upgrader:           new(websocket.Upgrader),
 		clients:            make(map[string]map[*websocket.Conn]bool),
+		pingStopChan:       make(chan bool),
+		pingStopCompleteChan: make(chan bool),
 	}
 	for _, currencyPair := range config.CurrencyPairs {
 		switch currencyPair {

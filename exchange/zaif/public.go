@@ -255,6 +255,7 @@ func (r Requester) streamingCallback(conn *websocket.Conn, userCallbackData inte
 	return nil
 }
 
+
 func (r Requester) StreamingStart(currencyPair string, callback StreamingCallback, callbackData interface{}) (error) {
 	_, ok := r.wsClients[currencyPair]
 	if ok {

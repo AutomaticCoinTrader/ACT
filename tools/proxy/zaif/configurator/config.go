@@ -9,12 +9,12 @@ type loggerConfig struct {
 }
 
 type ZaifProxyConfig struct {
-	PollingConcurrency int                         `json:"pollingConcurrency" yaml:"pollingConcurrency" toml:"pollingConcurrency"`
 	Retry              int                         `json:"retry"              yaml:"retry"              toml:"retry"`
 	RetryWait          int                         `json:"retryWait"          yaml:"retryWait"          toml:"retryWait"`
 	Timeout            int                         `json:"timeout"            yaml:"timeout"            toml:"timeout"`
 	ReadBufSize        int                         `json:"readBufSize"        yaml:"readBufSize"        toml:"readBufSize"`
 	WriteBufSize       int                         `json:"writeBufSize"       yaml:"writeBufSize"       toml:"writeBufSize"`
+	PollingConcurrency int                         `json:"pollingConcurrency" yaml:"pollingConcurrency" toml:"pollingConcurrency"`
 	CurrencyPairs      []string                    `json:"currencyPairs"      yaml:"currencyPairs"      toml:"currencyPairs"`
 	Server             *serverConfig               `json:"server"             yaml:"server"             toml:"server"`
 	Logger             *loggerConfig               `json:"logger"             yaml:"logger"             toml:"logger"`

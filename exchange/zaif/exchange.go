@@ -445,6 +445,11 @@ func (e *Exchange) StartStreamings() (error) {
 			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair)
 		}
 	}
+	if e.config.ProxyURL != "" {
+
+
+	}
+
 	return nil
 }
 

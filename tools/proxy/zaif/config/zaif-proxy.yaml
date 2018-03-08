@@ -1,0 +1,24 @@
+currencyPairs:
+  - btc_jpy
+  - xem_jpy
+  - mona_jpy
+  - bch_jpy
+  - eth_jpy
+  - zaif_jpy
+  - pepecash_jpy
+  - xem_btc
+  - mona_btc
+  - bch_btc
+  - eth_btc
+  - zaif_btc
+  - pepecash_btc
+retry: 0
+retryWait: 0
+timeout: 0
+readBufSize: 0
+writeBufSize: 0
+pollingConcurrency: 4
+server:
+  addrPort: 127.0.0.1:38080
+logger:
+  output: "stdout"

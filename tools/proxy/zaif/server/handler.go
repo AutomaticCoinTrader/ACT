@@ -6,18 +6,18 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func (s *WebsocketServer) handleConnectionBase(writer http.ResponseWriter, request *http.Request, currencyPair string) {
+func (w *WebsocketServer) handleConnectionBase(writer http.ResponseWriter, request *http.Request, currencyPair string) {
 	// Upgrade initial GET request to a websocket
-	ws, err := s.upgrader.Upgrade(writer, request, nil)
+	ws, err := w.upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// Make sure we close the connection when the function returns
 	defer ws.Close()
-	cs, ok := s.clients[currencyPair]
+	cs, ok := w.clients[currencyPair]
 	if !ok {
 		cs = make(map[*websocket.Conn]bool)
-		s.clients[currencyPair] = cs
+		w.clients[currencyPair] = cs
 	}
 	cs[ws] = true
 	for {
@@ -37,55 +37,55 @@ func (s *WebsocketServer) handleConnectionBase(writer http.ResponseWriter, reque
 	}
 }
 
-func (s *WebsocketServer) btcJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request, "btc_jpy")
+func (w *WebsocketServer) btcJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request, "btc_jpy")
 }
 
-func (s *WebsocketServer) xemJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request,  "xem_jpy")
+func (w *WebsocketServer) xemJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request,  "xem_jpy")
 }
 
-func (s *WebsocketServer) monaJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request,  "mona_jpy")
+func (w *WebsocketServer) monaJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request,  "mona_jpy")
 }
 
-func (s *WebsocketServer) bchJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request,  "bch_jpy")
+func (w *WebsocketServer) bchJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request,  "bch_jpy")
 }
 
-func (s *WebsocketServer) ethJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request,  "eth_jpy")
+func (w *WebsocketServer) ethJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request,  "eth_jpy")
 }
 
-func (s *WebsocketServer) zaifJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request,  "zaif_jpy")
+func (w *WebsocketServer) zaifJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request,  "zaif_jpy")
 }
 
-func (s *WebsocketServer) pepecashJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request,  "pepecash_jpy")
+func (w *WebsocketServer) pepecashJpyHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request,  "pepecash_jpy")
 }
 
-func (s *WebsocketServer) xemBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request,  "xem_btc")
+func (w *WebsocketServer) xemBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request,  "xem_btc")
 }
 
-func (s *WebsocketServer) monaBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request, "mona_btc")
+func (w *WebsocketServer) monaBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request, "mona_btc")
 }
 
-func (s *WebsocketServer) bchBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request,  "bch_btc")
+func (w *WebsocketServer) bchBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request,  "bch_btc")
 }
 
-func (s *WebsocketServer) ethBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request,  "eth_btc")
+func (w *WebsocketServer) ethBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request,  "eth_btc")
 }
 
-func (s *WebsocketServer) zaifBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request, "zaif_btc")
+func (w *WebsocketServer) zaifBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request, "zaif_btc")
 }
 
-func (s *WebsocketServer) pepecashBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
-	s.handleConnectionBase(writer, request,  "pepecash_btc")
+func (w *WebsocketServer) pepecashBtcHandleConnection(writer http.ResponseWriter, request *http.Request) {
+	w.handleConnectionBase(writer, request,  "pepecash_btc")
 }
 
