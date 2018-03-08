@@ -11,6 +11,7 @@ import (
 	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/configurator"
 	"os/signal"
 	"syscall"
+	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/fetcher"
 )
 
 const (
@@ -64,10 +65,8 @@ func main() {
 		return
 
 	}
-
-
-
+	f := fetcher.NewFetcher(newConfig)
+	f.Start()
 	signalWait()
-
-
+	f.Stop()
 }

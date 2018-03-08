@@ -23,7 +23,7 @@ type PublicCurrencyResponse struct {
 // GetCurrencies is get currencies
 func (r *Requester) Currencies(currency string) (*PublicCurrenciesResponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
-		request := r.makePublicRequest(path.Join("currencies", currency), "")
+		request := r.MakePublicRequest(path.Join("currencies", currency), "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 			if err != nil {
@@ -60,7 +60,7 @@ type PublicCurrencyPairResponse struct {
 // CurrencyPairs is get currency pairs
 func (r *Requester) CurrencyPairs(currencyPair string) (*PublicCurrencyPairsResponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
-		request := r.makePublicRequest(path.Join("currency_pairs", currencyPair), "")
+		request := r.MakePublicRequest(path.Join("currency_pairs", currencyPair), "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 			if err != nil {
@@ -85,7 +85,7 @@ type PublicLastPriceResponse struct {
 // LastPricee is get last place
 func (r *Requester) LastPrice(currencyPair string) (*PublicLastPriceResponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
-		request := r.makePublicRequest(path.Join("last_price", currencyPair), "")
+		request := r.MakePublicRequest(path.Join("last_price", currencyPair), "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 			if err != nil {
@@ -116,7 +116,7 @@ type PublicTickerResponse struct {
 // Ticker is get ticker
 func (r *Requester) Ticker(currencyPair string) (*PublicTickerResponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
-		request := r.makePublicRequest(path.Join("ticker", currencyPair), "")
+		request := r.MakePublicRequest(path.Join("ticker", currencyPair), "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 			if err != nil {
@@ -149,7 +149,7 @@ type PublicTradeResponse struct {
 // Trades is get trades
 func (r *Requester) Trades(currencyPair string) (*PublicTradesResponse, *utility.HTTPRequest, *http.Response, error) {
 	for {
-		request := r.makePublicRequest(path.Join("trades", currencyPair), "")
+		request := r.MakePublicRequest(path.Join("trades", currencyPair), "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 			if err != nil {
@@ -174,7 +174,7 @@ type PublicDepthReaponse struct {
 
 // DepthNoRetry is get depth with no retry
 func (r *Requester) DepthNoRetry(currencyPair string) (*PublicDepthReaponse, *utility.HTTPRequest, *http.Response, error) {
-	request := r.makePublicRequest(path.Join("depth", currencyPair), "")
+	request := r.MakePublicRequest(path.Join("depth", currencyPair), "")
 	newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
 		res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 		if err != nil {

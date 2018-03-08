@@ -78,7 +78,7 @@ func (b urlBuilder) getURL() (string) {
 	}
 }
 
-func (r *Requester) makePublicRequest(resource string, params string) (*utility.HTTPRequest) {
+func (r *Requester) MakePublicRequest(resource string, params string) (*utility.HTTPRequest) {
 	// waitを入れる処理
 	r.lastPulblicApiNanoTsMutex.Lock()
 	for {
