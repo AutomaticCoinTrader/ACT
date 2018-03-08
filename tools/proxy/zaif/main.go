@@ -7,11 +7,13 @@ import (
 	"log"
 	"flag"
 	"path"
-	actConfigurator "github.com/AutomaticCoinTrader/ACT/configurator"
-	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/configurator"
 	"os/signal"
 	"syscall"
+	"log/syslog"
+	actConfigurator "github.com/AutomaticCoinTrader/ACT/configurator"
+	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/configurator"
 	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/fetcher"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -40,6 +42,18 @@ Loop:
 	}
 }
 
+func setupLogger(config *configurator.ZaifProxyConfig) (error) {
+	log.SetFlags(log.Ldate|log.Ltime)
+	if config.Logger != nil && config.Logger.Output == "syslog" {
+		logger, err := syslog.New(syslog.LOG_NOTICE|syslog.LOG_USER, "ACT")
+		if err != nil {
+			return errors.Wrapf(err, "can not open syslog", err)
+		}
+		log.SetOutput(logger)
+	}
+	return nil
+}
+
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	wd, err := os.Getwd()
@@ -64,6 +78,11 @@ func main() {
 		log.Printf("can not load config (config dir = %v, reason = %v)", *configDir, err)
 		return
 
+	}
+	err = setupLogger(newConfig)
+	if err != nil {
+		log.Printf("can not setup logger (config dir = %v, reason = %v)", *configDir, err)
+		return
 	}
 	f := fetcher.NewFetcher(newConfig)
 	f.Start()
