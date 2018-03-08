@@ -15,6 +15,7 @@ type ZaifProxyConfig struct {
 	ReadBufSize        int                         `json:"readBufSize"        yaml:"readBufSize"        toml:"readBufSize"`
 	WriteBufSize       int                         `json:"writeBufSize"       yaml:"writeBufSize"       toml:"writeBufSize"`
 	PollingConcurrency int                         `json:"pollingConcurrency" yaml:"pollingConcurrency" toml:"pollingConcurrency"`
+	PollingWait        int64                       `json:"pollingWait"        yaml:"pollingWait"        toml:"pollingWait"`
 	PauseWait          int64                       `json:"pauseWait"          yaml:"pauseWait"          toml:"pauseWait"`
 	CurrencyPairs      []string                    `json:"currencyPairs"      yaml:"currencyPairs"      toml:"currencyPairs"`
 	Server             *serverConfig               `json:"server"             yaml:"server"             toml:"server"`

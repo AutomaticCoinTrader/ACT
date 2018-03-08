@@ -84,7 +84,7 @@ FINISH:
 				atomic.StoreInt32(&f.pausePollingRequest, 0)
 			}
 			pollingRequestChan <- currencyPair
-			time.Sleep(35 * time.Millisecond)
+			time.Sleep(time.Duration(f.config.PollingWait) * time.Millisecond)
 		}
 	}
 	close(pollingRequestChan)

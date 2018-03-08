@@ -18,6 +18,7 @@ timeout: 0
 readBufSize: 0
 writeBufSize: 0
 pollingConcurrency: 4
+pollingWait: 32
 pauseWait: 60
 server:
   addrPort: 127.0.0.1:28888
