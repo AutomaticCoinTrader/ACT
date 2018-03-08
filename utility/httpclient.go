@@ -254,12 +254,12 @@ func (w *WSClient) connect(callback WSCallback, callbackData interface{}, reques
 		if err != nil {
 			if response == nil {
 				log.Printf("can not dial, retry ... (url = %v, header = %v, reason = %v)", requestURL, requestHeaders, err)
-				time.Sleep(500 * time.Millisecond)
+				time.Sleep(1 * time.Second)
 				continue
 			}
 			if response.StatusCode < 200 && response.StatusCode <= 300 {
 				log.Printf("can not dial, retry ... (url = %v, header = %v, reason = %v)", requestURL, requestHeaders, err)
-				time.Sleep(500 * time.Millisecond)
+				time.Sleep(1 * time.Second)
 				continue
 			}
 			log.Printf("can not dial (URL = %v, header = %v)", requestURL, requestHeaders)
