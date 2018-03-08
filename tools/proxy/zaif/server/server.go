@@ -7,6 +7,7 @@ import (
 	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/configurator"
 	"github.com/gorilla/websocket"
 	"time"
+	"sync"
 )
 
 type WebsocketServer struct {
@@ -14,6 +15,7 @@ type WebsocketServer struct {
 	server             *http.Server
 	upgrader           *websocket.Upgrader
 	clients            map[string]map[*websocket.Conn]bool
+	clientsMutex       *sync.Mutex
 	pingStopChan chan bool
 	pingStopCompleteChan chan bool
 }
@@ -49,6 +51,8 @@ func (w *WebsocketServer) listenAndServe() {
 }
 
 func (w *WebsocketServer) BroadCast(currencyPair string, message []byte) {
+	w.clientsMutex.Lock()
+	defer w.clientsMutex.Unlock()
 	cs, ok := w.clients[currencyPair]
 	if !ok {
 		return
@@ -77,6 +81,7 @@ func NewWsServer(config *configurator.ZaifProxyConfig) (*WebsocketServer) {
 		server:             nil,
 		upgrader:           new(websocket.Upgrader),
 		clients:            make(map[string]map[*websocket.Conn]bool),
+		clientsMutex:       new(sync.Mutex),
 		pingStopChan:       make(chan bool),
 		pingStopCompleteChan: make(chan bool),
 	}

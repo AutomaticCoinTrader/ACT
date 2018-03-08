@@ -15,18 +15,22 @@ func (w *WebsocketServer) handleConnectionBase(writer http.ResponseWriter, reque
 	// Make sure we close the connection when the function returns
 	defer ws.Close()
 	log.Printf("connected peer address = %v", ws.RemoteAddr().String())
+	w.clientsMutex.Lock()
 	cs, ok := w.clients[currencyPair]
 	if !ok {
 		cs = make(map[*websocket.Conn]bool)
 		w.clients[currencyPair] = cs
 	}
 	cs[ws] = true
+	w.clientsMutex.Unlock()
 	for {
 		// Read in a new message as JSON and map it to a Message object
 		messageType, message, err := ws.ReadMessage()
 		if err != nil {
 			log.Printf("can not read message (error = %v)", err)
+			w.clientsMutex.Lock()
 			delete(cs, ws)
+			w.clientsMutex.Unlock()
 			break
 		}
 		if messageType != websocket.TextMessage {
