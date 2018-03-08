@@ -517,7 +517,7 @@ type ExchangeConfig struct {
 	ReadBufSize   int                  `json:"readBufSize"   yaml:"readBufSize"   toml:"readBufSize"`
 	WriteBufSize  int                  `json:"writeBufSize"  yaml:"writeBufSize"  toml:"writeBufSize"`
 	CurrencyPairs []string             `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
-	ProxyURL      string               `json:"proxy"         yaml:"proxy"         toml:"proxy"`
+	ProxyURL      string               `json:"proxyUrl"      yaml:"proxyUrl"      toml:"proxyUrl"`
 }
 
 func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
