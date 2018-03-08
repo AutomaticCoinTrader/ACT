@@ -31,18 +31,19 @@ func (c *currencyPairsInfo) updateDepth(currencyPair string, currencyPairsBids [
 }
 
 type Fetcher struct {
-	config *configurator.ZaifProxyConfig
-	requester *zaif.Requester
-	httpClient *utility.HTTPClient
-	pollingFinish     int32
-	currencyPairsInfo *currencyPairsInfo
-	websocketServer   *server.WebsocketServer
+	config              *configurator.ZaifProxyConfig
+	requester           *zaif.Requester
+	httpClient          *utility.HTTPClient
+	pollingFinish       int32
+	currencyPairsInfo   *currencyPairsInfo
+	websocketServer     *server.WebsocketServer
+	pausePollingRequest int32
 }
 
-func  (f *Fetcher) pollingLoop(pollingRequestChan chan string, lastBidsMap map[string][][]float64, lastAsksMap map[string][][]float64, lastBidsAsksMutex *sync.Mutex) {
+func (f *Fetcher) pollingLoop(pollingRequestChan chan string, lastBidsMap map[string][][]float64, lastAsksMap map[string][][]float64, lastBidsAsksMutex *sync.Mutex) {
 	log.Printf("start polling loop")
 	for {
-		currencyPair, ok := <- pollingRequestChan
+		currencyPair, ok := <-pollingRequestChan
 		if !ok {
 			log.Printf("finish polling loop")
 			return
@@ -50,17 +51,18 @@ func  (f *Fetcher) pollingLoop(pollingRequestChan chan string, lastBidsMap map[s
 		request := f.requester.MakePublicRequest(path.Join("depth", currencyPair), "")
 		res, resBody, err := f.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 		if err != nil {
-			if res.StatusCode == 403 {
+			log.Printf("can not get depcth (url = %v)", request.URL)
+			if res != nil && res.StatusCode == 403 {
 				log.Printf("occured 403 Forbidden currency pair = %v", currencyPair)
-			} else {
-				log.Printf("can not get depcth (url = %v)", request.URL)
+				atomic.StoreInt32(&f.pausePollingRequest, 1)
 			}
+			continue
 		}
 		f.websocketServer.BroadCast(currencyPair, resBody)
 	}
 }
 
-func  (f *Fetcher) pollingRequestLoop() {
+func (f *Fetcher) pollingRequestLoop() {
 	log.Printf("start polling request loop")
 	atomic.StoreInt32(&f.pollingFinish, 0)
 	lastBidsMap := make(map[string][][]float64)
@@ -74,16 +76,20 @@ FINISH:
 	for {
 		log.Printf("start get depth of currency Pairs (%v)", time.Now().UnixNano())
 		for _, currencyPair := range f.config.CurrencyPairs {
-			if atomic.LoadInt32(&f.pollingFinish) == 1{
+			if atomic.LoadInt32(&f.pollingFinish) == 1 {
 				break FINISH
 			}
+			if atomic.LoadInt32(&f.pausePollingRequest) == 1 {
+				time.Sleep(time.Duration(f.config.PauseWait) * time.Second)
+				atomic.StoreInt32(&f.pausePollingRequest, 0)
+			}
 			pollingRequestChan <- currencyPair
+			time.Sleep(35 * time.Millisecond)
 		}
 	}
 	close(pollingRequestChan)
 	log.Printf("finish polling request loop")
 }
-
 
 func (f *Fetcher) Start() {
 	go f.pollingRequestLoop()
@@ -101,9 +107,9 @@ func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher) {
 		config.PollingConcurrency = defaultPollingConcurrency
 	}
 	return &Fetcher{
-		requester:  zaif.NewRequester(requesterKeys, config.Retry, config.RetryWait, config.Timeout, config.ReadBufSize, config.WriteBufSize),
-		httpClient:   utility.NewHTTPClient(config.Retry, config.RetryWait, config.Timeout),
-		config: config,
+		requester:     zaif.NewRequester(requesterKeys, config.Retry, config.RetryWait, config.Timeout, config.ReadBufSize, config.WriteBufSize),
+		httpClient:    utility.NewHTTPClient(config.Retry, config.RetryWait, config.Timeout),
+		config:        config,
 		pollingFinish: 0,
 		currencyPairsInfo: &currencyPairsInfo{
 			Bids:      make(map[string][][]float64),
@@ -112,5 +118,6 @@ func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher) {
 			mutex:     new(sync.Mutex),
 		},
 		websocketServer: server.NewWsServer(config),
+		pausePollingRequest: 0,
 	}
 }

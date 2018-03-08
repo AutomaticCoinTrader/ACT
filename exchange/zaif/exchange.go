@@ -441,6 +441,7 @@ func (e *Exchange) exchangeProxyStreamingCallback(currencyPair string, proxyStre
 	lastAsks, asksOk := e.proxyLastAsksMap[currencyPair]
 	e.proxyLastBidsAsksMutex.Unlock()
 	if !bidsOk || !asksOk || reflect.DeepEqual(lastBids, proxyStreamingResponse.Bids) == false || reflect.DeepEqual(lastAsks, proxyStreamingResponse.Asks) == false {
+		log.Printf("proxy data")
 		e.currencyPairsInfo.updateDepth(currencyPair, proxyStreamingResponse.Bids, proxyStreamingResponse.Asks)
 		err := e.streamingCallback(currencyPair, e)
 		if err != nil {

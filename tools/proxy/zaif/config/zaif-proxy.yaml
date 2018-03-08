@@ -18,7 +18,8 @@ timeout: 0
 readBufSize: 0
 writeBufSize: 0
 pollingConcurrency: 4
+pauseWait: 60
 server:
-  addrPort: 127.0.0.1:38080
+  addrPort: 127.0.0.1:28888
 logger:
   output: "stdout"

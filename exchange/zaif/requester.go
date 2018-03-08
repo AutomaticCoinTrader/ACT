@@ -23,20 +23,20 @@ type RequesterKey struct {
 }
 
 type Requester struct {
-	httpClient                *utility.HTTPClient
-	wsClients                 map[string]*utility.WSClient
-	proxyWsClients            map[string]*utility.WSClient
-	readBufSize               int
-	writeBufSize              int
-	retry                     int
-	retryWait                 int
-	keys                      []*RequesterKey
-	keyIndex                  int
-	keysMutex                 *sync.Mutex
-	lastPulblicApiNanoTs      int64
-	lastPulblicApiNanoTsMutex *sync.Mutex
-	lastTradeApiHistory       []int64
-	lastTradeApiHistoryMutex  *sync.Mutex
+	httpClient            *utility.HTTPClient
+	wsClients             map[string]*utility.WSClient
+	proxyWsClients        map[string]*utility.WSClient
+	readBufSize           int
+	writeBufSize          int
+	retry                 int
+	retryWait             int
+	keys                  []*RequesterKey
+	keyIndex              int
+	keysMutex             *sync.Mutex
+	publicApiHistory      []int64
+	publicApiHistoryMutex *sync.Mutex
+	tradeApiHistory       []int64
+	tradeApiHistoryMutex  *sync.Mutex
 }
 
 type urlBuilder int
@@ -47,10 +47,10 @@ const (
 )
 
 const (
-	restrictionWait   = 1000
-	insufficientWait  = 1000
-	publicApiGurdTime = 10
-	tradeApiGurdCount = 50
+	restrictionWait    = 1000
+	insufficientWait   = 1000
+	publicApiGurdCount = 100
+	tradeApiGurdCount  = 50
 )
 
 var seq int64
@@ -80,37 +80,14 @@ func (b urlBuilder) getURL() (string) {
 }
 
 func (r *Requester) MakePublicRequest(resource string, params string) (*utility.HTTPRequest) {
-	// waitを入れる処理
-	r.lastPulblicApiNanoTsMutex.Lock()
-	for {
-		// waitを入れる処理
-		// ４０３ Forbiddenを緩和する
-		now := time.Now()
-		if now.UnixNano() >= r.lastPulblicApiNanoTs+(publicApiGurdTime*time.Millisecond.Nanoseconds()) {
-			r.lastPulblicApiNanoTs = now.UnixNano()
-			break
-		}
-		time.Sleep(time.Duration(r.lastPulblicApiNanoTs+(publicApiGurdTime*time.Millisecond.Nanoseconds())-now.UnixNano()) * time.Nanosecond)
-	}
-	r.lastPulblicApiNanoTsMutex.Unlock()
-	u := Public.buildURL(resource)
-	if params != "" {
-		u += "?" + params
-	}
-	return &utility.HTTPRequest{
-		URL: u,
-	}
-}
-
-func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTTPRequest) {
-	r.lastTradeApiHistoryMutex.Lock()
+	r.publicApiHistoryMutex.Lock()
 	for {
 		// waitを入れる処理
 		// ４０３ Forbiddenを緩和する
 		lastIdx := -1
 		var lastTs int64 = 0
 		now := time.Now()
-		for idx, ts := range r.lastTradeApiHistory {
+		for idx, ts := range r.publicApiHistory {
 			if ts > now.UnixNano()-time.Second.Nanoseconds() {
 				// １秒以内のものになったらbreak
 				lastIdx = idx
@@ -118,15 +95,15 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 				break;
 			}
 		}
-		if lastIdx == -1 && len(r.lastTradeApiHistory) > 0 {
+		if lastIdx == -1 && len(r.publicApiHistory) > 0 {
 			// 全部ふるいから消す
-			r.lastTradeApiHistory = make([]int64, 0, tradeApiGurdCount)
+			r.publicApiHistory = make([]int64, 0, publicApiGurdCount)
 		} else if lastIdx > 0 {
 			// 古いやつだけ消す
-			r.lastTradeApiHistory = r.lastTradeApiHistory[lastIdx:]
+			r.publicApiHistory = r.publicApiHistory[lastIdx:]
 		}
-		if len(r.lastTradeApiHistory) < tradeApiGurdCount {
-			r.lastTradeApiHistory = append(r.lastTradeApiHistory, now.UnixNano())
+		if len(r.publicApiHistory) < publicApiGurdCount {
+			r.publicApiHistory = append(r.publicApiHistory, now.UnixNano())
 			break
 		}
 		if lastTs > 0 {
@@ -135,7 +112,53 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 			log.Print("called trade api with no wait")
 		}
 	}
-	r.lastTradeApiHistoryMutex.Unlock()
+	r.publicApiHistoryMutex.Unlock()
+	u := Public.buildURL(resource)
+	if params != "" {
+		u += "?" + params
+	}
+	headers := make(map[string]string)
+	headers["Connection"] = "close"
+	return &utility.HTTPRequest{
+		Headers: headers,
+		URL:     u,
+	}
+}
+
+func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTTPRequest) {
+	r.tradeApiHistoryMutex.Lock()
+	for {
+		// waitを入れる処理
+		// ４０３ Forbiddenを緩和する
+		lastIdx := -1
+		var lastTs int64 = 0
+		now := time.Now()
+		for idx, ts := range r.tradeApiHistory {
+			if ts > now.UnixNano()-time.Second.Nanoseconds() {
+				// １秒以内のものになったらbreak
+				lastIdx = idx
+				lastTs = ts
+				break;
+			}
+		}
+		if lastIdx == -1 && len(r.tradeApiHistory) > 0 {
+			// 全部ふるいから消す
+			r.tradeApiHistory = make([]int64, 0, tradeApiGurdCount)
+		} else if lastIdx > 0 {
+			// 古いやつだけ消す
+			r.tradeApiHistory = r.tradeApiHistory[lastIdx:]
+		}
+		if len(r.tradeApiHistory) < tradeApiGurdCount {
+			r.tradeApiHistory = append(r.tradeApiHistory, now.UnixNano())
+			break
+		}
+		if lastTs > 0 {
+			time.Sleep(time.Duration(lastTs-(now.UnixNano()-time.Second.Nanoseconds())) * time.Nanosecond)
+		} else {
+			log.Print("called trade api with no wait")
+		}
+	}
+	r.tradeApiHistoryMutex.Unlock()
 	u := Trade.getURL()
 	values := url.Values{}
 	values.Set("nonce", r.getNonce())
@@ -153,6 +176,7 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 	mac.Write([]byte(body))
 	sign := hex.EncodeToString(mac.Sum(nil))
 	headers := make(map[string]string)
+	headers["Connection"] = "close"
 	headers["Conent-Type"] = "application/x-www-form-urlencoded"
 	headers["Key"] = key
 	headers["Sign"] = sign
@@ -182,18 +206,18 @@ func (r *Requester) unmarshal(requestFunc requestFunc, request *utility.HTTPRequ
 // NewRequester is create requester
 func NewRequester(keys []*RequesterKey, retry int, retryWait, timeout int, readBufSize int, writeBufSize int) (*Requester) {
 	return &Requester{
-		httpClient:                utility.NewHTTPClient(retry, retryWait, timeout),
-		wsClients:                 make(map[string]*utility.WSClient),
-		readBufSize:               readBufSize,
-		writeBufSize:              writeBufSize,
-		retry:                     retry,
-		retryWait:                 retryWait,
-		keys:                      keys,
-		keyIndex:                  0,
-		keysMutex:                 new(sync.Mutex),
-		lastPulblicApiNanoTs:      0,
-		lastPulblicApiNanoTsMutex: new(sync.Mutex),
-		lastTradeApiHistory:       make([]int64, 0, tradeApiGurdCount),
-		lastTradeApiHistoryMutex:  new(sync.Mutex),
+		httpClient:            utility.NewHTTPClient(retry, retryWait, timeout),
+		wsClients:             make(map[string]*utility.WSClient),
+		readBufSize:           readBufSize,
+		writeBufSize:          writeBufSize,
+		retry:                 retry,
+		retryWait:             retryWait,
+		keys:                  keys,
+		keyIndex:              0,
+		keysMutex:             new(sync.Mutex),
+		publicApiHistory:      make([]int64, 0, publicApiGurdCount),
+		publicApiHistoryMutex: new(sync.Mutex),
+		tradeApiHistory:       make([]int64, 0, tradeApiGurdCount),
+		tradeApiHistoryMutex:  new(sync.Mutex),
 	}
 }

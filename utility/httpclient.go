@@ -13,6 +13,9 @@ import (
 	"time"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
+	"github.com/viki-org/dnscache"
+	"strings"
+	"sync"
 )
 
 type RequestMethod int
@@ -40,15 +43,30 @@ type HTTPClient struct {
 	retry     int
 	retryWait int
 	timeout   int
+	resolver  *dnscache.Resolver
+	resolverIdx int
+	resolverIdxMutex *sync.Mutex
 }
 
 func (c *HTTPClient) newHTTPTransport() (transport *http.Transport) {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
-		Dial: (&net.Dialer{
-			Timeout:   300 * time.Second,
-			KeepAlive: 300 * time.Second,
-		}).Dial,
+		Dial: func(network string, address string) (net.Conn, error) {
+			separator := strings.LastIndex(address, ":")
+			ips, _ := c.resolver.Fetch(address[:separator])
+			c.resolverIdxMutex.Lock()
+			c.resolverIdx += 1
+			if len(ips) <= c.resolverIdx {
+				c.resolverIdx = 0
+			}
+			resolverIds := c.resolverIdx
+			c.resolverIdxMutex.Unlock()
+			ip := ips[resolverIds]
+			return (&net.Dialer{
+				Timeout:   300 * time.Second,
+				KeepAlive: 300 * time.Second,
+			}).Dial("tcp", ip.String() + address[separator:])
+		},
 		TLSHandshakeTimeout:   300 * time.Second,
 		ExpectContinueTimeout: 300 * time.Second,
 	}
@@ -128,11 +146,11 @@ func (c *HTTPClient) DoRequest(requestMethod RequestMethod, request *HTTPRequest
 	case HTTPMethodPATCH:
 		request.RequestMethodString = "PATCH"
 	default:
-		return nil, nil, errors.Wrap(err, fmt.Sprintf("unsupported request method (url = %v, method = %v)", request.URL, requestMethod))
+		return nil, nil, errors.Wrapf(err, "unsupported request method (url = %v, method = %v)", request.URL, requestMethod)
 	}
 	res, resBody, err := c.retryRequest(request, noRetry)
 	if err != nil {
-		return res, resBody, errors.Wrap(err, fmt.Sprintf("request is failure (url = %v, method = %v)", request.URL, request.RequestMethod))
+		return res, resBody, errors.Wrapf(err,"request is failure (url = %v, method = %v)", request.URL, request.RequestMethod)
 	}
 	return res, resBody, err
 }
@@ -148,6 +166,9 @@ func NewHTTPClient(retry int, retryWait int, timeout int) *HTTPClient {
 		retry:     retry,
 		retryWait: retryWait,
 		timeout:   timeout,
+		resolver: dnscache.New(time.Second * 5),
+		resolverIdx: 0,
+		resolverIdxMutex: new(sync.Mutex),
 	}
 }
 
