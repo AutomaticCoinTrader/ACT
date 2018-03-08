@@ -208,6 +208,7 @@ func NewRequester(keys []*RequesterKey, retry int, retryWait, timeout int, readB
 	return &Requester{
 		httpClient:            utility.NewHTTPClient(retry, retryWait, timeout),
 		wsClients:             make(map[string]*utility.WSClient),
+		proxyWsClients:        make(map[string]*utility.WSClient),
 		readBufSize:           readBufSize,
 		writeBufSize:          writeBufSize,
 		retry:                 retry,

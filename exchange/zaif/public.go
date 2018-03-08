@@ -319,13 +319,13 @@ func (r Requester) proxyStreamingCallback(conn *websocket.Conn, userCallbackData
 	return nil
 }
 
-func (r Requester) ProxyStreamingStart(url string, currencyPair string, callback ProxyStreamingCallback, callbackData interface{}) (error) {
+func (r Requester) ProxyStreamingStart(addrPort string, currencyPair string, callback ProxyStreamingCallback, callbackData interface{}) (error) {
 	_, ok := r.proxyWsClients[currencyPair]
 	if ok {
 		return errors.Errorf("already exists proxy streaming (currency pair = %v)", currencyPair)
 	}
 	log.Printf("start proxy streaming (currency pair = %v)", currencyPair)
-	requestURL := fmt.Sprintf("%v/%v", url, currencyPair)
+	requestURL := fmt.Sprintf("ws://%v/%v", addrPort, currencyPair)
 	proxyStreaminCallbackData := &proxyStreaminCallbackData{
 		currencyPair: currencyPair,
 		callback:     callback,

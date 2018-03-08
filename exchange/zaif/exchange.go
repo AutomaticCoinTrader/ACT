@@ -441,7 +441,7 @@ func (e *Exchange) exchangeProxyStreamingCallback(currencyPair string, proxyStre
 	lastAsks, asksOk := e.proxyLastAsksMap[currencyPair]
 	e.proxyLastBidsAsksMutex.Unlock()
 	if !bidsOk || !asksOk || reflect.DeepEqual(lastBids, proxyStreamingResponse.Bids) == false || reflect.DeepEqual(lastAsks, proxyStreamingResponse.Asks) == false {
-		log.Printf("proxy data")
+		log.Printf("proxy data currency pair = %v", currencyPair)
 		e.currencyPairsInfo.updateDepth(currencyPair, proxyStreamingResponse.Bids, proxyStreamingResponse.Asks)
 		err := e.streamingCallback(currencyPair, e)
 		if err != nil {
@@ -476,10 +476,10 @@ func (e *Exchange) StartStreamings() (error) {
 			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair)
 		}
 	}
-	if e.config.ProxyURL != "" {
+	if e.config.ProxyAddrPort != "" {
 		for _, currencyPair := range e.currencyPairs {
 			currencyPair = strings.ToLower(currencyPair)
-			err := e.requester.ProxyStreamingStart(e.config.ProxyURL, currencyPair, e.exchangeProxyStreamingCallback, e)
+			err := e.requester.ProxyStreamingStart(e.config.ProxyAddrPort, currencyPair, e.exchangeProxyStreamingCallback, e)
 			if err != nil {
 				return errors.Wrapf(err, "can not start proxy streaming (currency_pair = %v)", currencyPair)
 			}
@@ -496,7 +496,7 @@ func (e *Exchange) StopStreamings() (error) {
 		currencyPair = strings.ToLower(currencyPair)
 		e.requester.StreamingStop(currencyPair)
 	}
-	if e.config.ProxyURL != "" {
+	if e.config.ProxyAddrPort != "" {
 		for _, currencyPair := range e.currencyPairs {
 			currencyPair = strings.ToLower(currencyPair)
 			e.requester.ProxyStreamingStop(currencyPair)
@@ -518,7 +518,7 @@ type ExchangeConfig struct {
 	ReadBufSize   int                  `json:"readBufSize"   yaml:"readBufSize"   toml:"readBufSize"`
 	WriteBufSize  int                  `json:"writeBufSize"  yaml:"writeBufSize"  toml:"writeBufSize"`
 	CurrencyPairs []string             `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
-	ProxyURL      string               `json:"proxyUrl"      yaml:"proxyUrl"      toml:"proxyUrl"`
+	ProxyAddrPort string               `json:"proxyAddrPort" yaml:"proxyAddrPort" toml:"proxyAddrPort"`
 }
 
 func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
