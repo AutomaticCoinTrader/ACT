@@ -18,7 +18,7 @@ type BoardCursor interface {
 	Next() (price float64, amount float64, ok bool)
 	Reset()
 	Len() int
-	PriceAll() []float64
+	All() [][]float64
 }
 
 type TradesCursor interface {

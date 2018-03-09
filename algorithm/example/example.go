@@ -54,7 +54,7 @@ func (i *internalTradeExample) Update(currencyPair string, ex exchange.Exchange,
 	if err != nil {
 		return err
 	}
-	bytes, err := json.Marshal(boardCursor.PriceAll())
+	bytes, err := json.Marshal(boardCursor.All())
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (i *internalTradeExample) Update(currencyPair string, ex exchange.Exchange,
 	if err != nil {
 		return err
 	}
-	bytes, err = json.Marshal(boardCursor.PriceAll())
+	bytes, err = json.Marshal(boardCursor.All())
 	if err != nil {
 		return err
 	}
