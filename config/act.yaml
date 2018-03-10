@@ -25,7 +25,20 @@ exchanges:
     readBufSize: 0
     writeBufSize: 0
     proxysAddrPort:
-    - 127.0.0.1:28888
+      127.0.0.1:28888:
+      - btc_jpy
+      - xem_jpy
+      - mona_jpy
+      - bch_jpy
+      - eth_jpy
+      - zaif_jpy
+      - pepecash_jpy
+      - xem_btc
+      - mona_btc
+      - bch_btc
+      - eth_btc
+      - zaif_btc
+      - pepecash_btc
   coincheck:
     apikey: "key"
     apisecret: "secret"
