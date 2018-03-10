@@ -243,14 +243,6 @@ type Config struct {
 }
 
 func NewIntegrator(config *Config, configDir string) (*Integrator, error) {
-	ntf, err := notifier.NewMailNotifier(config.Notifier)
-	if err != nil {
-		return nil, errors.Wrapf(err, "can not create notifier (config dir = %v, reason = %v)", configDir, err)
-	}
-	rbt, err := robot.NewRobot(config.Robot, configDir, ntf)
-	if err != nil {
-		return nil, errors.Wrapf(err, "can not create robot (config dir = %v, reason = %v)", configDir, err)
-	}
 	log.SetFlags(log.Ldate|log.Ltime)
 	if config.Logger != nil && config.Logger.Output == "syslog" {
 		logger, err := syslog.New(syslog.LOG_NOTICE|syslog.LOG_USER, "ACT")
@@ -258,6 +250,14 @@ func NewIntegrator(config *Config, configDir string) (*Integrator, error) {
 			return nil, errors.Wrapf(err, "can not open syslog", err)
 		}
 		log.SetOutput(logger)
+	}
+	ntf, err := notifier.NewMailNotifier(config.Notifier)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not create notifier (config dir = %v, reason = %v)", configDir, err)
+	}
+	rbt, err := robot.NewRobot(config.Robot, configDir, ntf)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not create robot (config dir = %v, reason = %v)", configDir, err)
 	}
 	return &Integrator{
 		config:                  config,
