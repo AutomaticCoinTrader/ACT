@@ -471,10 +471,10 @@ func (e *Exchange) StartStreamings() (error) {
 			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair)
 		}
 	}
-	if e.config.ProxyAddrPort != "" {
+	for _, addrPort :=  range e.config.ProxysAddrPort  {
 		for _, currencyPair := range e.currencyPairs {
 			currencyPair = strings.ToLower(currencyPair)
-			err := e.requester.ProxyStreamingStart(e.config.ProxyAddrPort, currencyPair, e.exchangeProxyStreamingCallback, e)
+			err := e.requester.ProxyStreamingStart(addrPort, currencyPair, e.exchangeProxyStreamingCallback, e)
 			if err != nil {
 				return errors.Wrapf(err, "can not start proxy streaming (currency_pair = %v)", currencyPair)
 			}
@@ -491,10 +491,10 @@ func (e *Exchange) StopStreamings() (error) {
 		currencyPair = strings.ToLower(currencyPair)
 		e.requester.StreamingStop(currencyPair)
 	}
-	if e.config.ProxyAddrPort != "" {
+	for _, addrPort :=  range e.config.ProxysAddrPort {
 		for _, currencyPair := range e.currencyPairs {
 			currencyPair = strings.ToLower(currencyPair)
-			e.requester.ProxyStreamingStop(currencyPair)
+			e.requester.ProxyStreamingStop(addrPort, currencyPair)
 		}
 	}
 	return nil
@@ -506,14 +506,14 @@ type ExchangeKeyConfig struct {
 }
 
 type ExchangeConfig struct {
-	Keys          []*ExchangeKeyConfig `json:"keys"          yaml:"keys"          toml:"keys"`
-	Retry         int                  `json:"retry"         yaml:"retry"         toml:"retry"`
-	RetryWait     int                  `json:"retryWait"     yaml:"retryWait"     toml:"retryWait"`
-	Timeout       int                  `json:"timeout"       yaml:"timeout"       toml:"timeout"`
-	ReadBufSize   int                  `json:"readBufSize"   yaml:"readBufSize"   toml:"readBufSize"`
-	WriteBufSize  int                  `json:"writeBufSize"  yaml:"writeBufSize"  toml:"writeBufSize"`
-	CurrencyPairs []string             `json:"currencyPairs" yaml:"currencyPairs" toml:"currencyPairs"`
-	ProxyAddrPort string               `json:"proxyAddrPort" yaml:"proxyAddrPort" toml:"proxyAddrPort"`
+	Keys           []*ExchangeKeyConfig `json:"keys"           yaml:"keys"           toml:"keys"`
+	Retry          int                  `json:"retry"          yaml:"retry"          toml:"retry"`
+	RetryWait      int                  `json:"retryWait"      yaml:"retryWait"      toml:"retryWait"`
+	Timeout        int                  `json:"timeout"        yaml:"timeout"        toml:"timeout"`
+	ReadBufSize    int                  `json:"readBufSize"    yaml:"readBufSize"    toml:"readBufSize"`
+	WriteBufSize   int                  `json:"writeBufSize"   yaml:"writeBufSize"   toml:"writeBufSize"`
+	CurrencyPairs  []string             `json:"currencyPairs"  yaml:"currencyPairs"  toml:"currencyPairs"`
+	ProxysAddrPort []string             `json:"proxysAddrPort" yaml:"proxysAddrPort" toml:"proxysAddrPort"`
 }
 
 func NewZaifExchange(config interface{}) (exchange.Exchange, error) {

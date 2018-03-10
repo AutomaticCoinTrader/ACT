@@ -320,7 +320,8 @@ func (r Requester) proxyStreamingCallback(conn *websocket.Conn, userCallbackData
 }
 
 func (r Requester) ProxyStreamingStart(addrPort string, currencyPair string, callback ProxyStreamingCallback, callbackData interface{}) (error) {
-	_, ok := r.proxyWsClients[currencyPair]
+	clientId := addrPort + "@" + currencyPair
+	_, ok := r.proxyWsClients[clientId]
 	if ok {
 		return errors.Errorf("already exists proxy streaming (currency pair = %v)", currencyPair)
 	}
@@ -336,13 +337,14 @@ func (r Requester) ProxyStreamingStart(addrPort string, currencyPair string, cal
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("can not start proxy streaming (url = %v)", requestURL))
 	}
-	r.proxyWsClients[currencyPair] = newClient
+	r.proxyWsClients[clientId] = newClient
 
 	return nil
 }
 
-func (r Requester) ProxyStreamingStop(currencyPair string) {
-	client, ok := r.proxyWsClients[currencyPair]
+func (r Requester) ProxyStreamingStop(addrPort string, currencyPair string) {
+	clientId := addrPort + "@" + currencyPair
+	client, ok := r.proxyWsClients[clientId]
 	if !ok {
 		log.Printf("not found proxy streaming (currency pair = %v)", currencyPair)
 		return
