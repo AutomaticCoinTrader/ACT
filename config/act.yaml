@@ -24,7 +24,8 @@ exchanges:
     timeout: 0
     readBufSize: 0
     writeBufSize: 0
-    proxyAddrPort: 127.0.0.1:28888
+    proxysAddrPort:
+    - 127.0.0.1:28888
   coincheck:
     apikey: "key"
     apisecret: "secret"
