@@ -471,8 +471,8 @@ func (e *Exchange) StartStreamings() (error) {
 			return errors.Wrapf(err, "can not start streaming (currency_pair = %v)", currencyPair)
 		}
 	}
-	for _, addrPort :=  range e.config.ProxysAddrPort  {
-		for _, currencyPair := range e.currencyPairs {
+	for addrPort, currencyPairs :=  range e.config.ProxysAddrPort  {
+		for _, currencyPair := range currencyPairs {
 			currencyPair = strings.ToLower(currencyPair)
 			err := e.requester.ProxyStreamingStart(addrPort, currencyPair, e.exchangeProxyStreamingCallback, e)
 			if err != nil {
@@ -491,8 +491,8 @@ func (e *Exchange) StopStreamings() (error) {
 		currencyPair = strings.ToLower(currencyPair)
 		e.requester.StreamingStop(currencyPair)
 	}
-	for _, addrPort :=  range e.config.ProxysAddrPort {
-		for _, currencyPair := range e.currencyPairs {
+	for addrPort, currencyPairs :=  range e.config.ProxysAddrPort {
+		for _, currencyPair := range currencyPairs {
 			currencyPair = strings.ToLower(currencyPair)
 			e.requester.ProxyStreamingStop(addrPort, currencyPair)
 		}
@@ -513,7 +513,7 @@ type ExchangeConfig struct {
 	ReadBufSize    int                  `json:"readBufSize"    yaml:"readBufSize"    toml:"readBufSize"`
 	WriteBufSize   int                  `json:"writeBufSize"   yaml:"writeBufSize"   toml:"writeBufSize"`
 	CurrencyPairs  []string             `json:"currencyPairs"  yaml:"currencyPairs"  toml:"currencyPairs"`
-	ProxysAddrPort []string             `json:"proxysAddrPort" yaml:"proxysAddrPort" toml:"proxysAddrPort"`
+	ProxysAddrPort map[string][]string  `json:"proxysAddrPort" yaml:"proxysAddrPort" toml:"proxysAddrPort"`
 }
 
 func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
