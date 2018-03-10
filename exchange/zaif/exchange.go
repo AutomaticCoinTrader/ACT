@@ -270,9 +270,6 @@ type Exchange struct {
 	streamingCallback      exchange.StreamingCallback
 	currencyPairs          []string
 	currencyPairsInfo      *currencyPairsInfo
-	proxyLastBidsMap       map[string][][]float64
-	proxyLastAsksMap       map[string][][]float64
-	proxyLastBidsAsksMutex *sync.Mutex
 }
 
 func (e *Exchange) GetName() (string) {
@@ -422,7 +419,6 @@ func (e *Exchange) GetTradeFeeRate(currencyPair string) (float64) {
 }
 
 func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingResponse *StreamingResponse, StreamingCallbackData interface{}) (error) {
-
 	e.currencyPairsInfo.update(currencyPair, streamingResponse.Bids, streamingResponse.Asks, streamingResponse.LastPrice.Price, streamingResponse.Trades)
 	err := e.streamingCallback(currencyPair, e)
 	if err != nil {
@@ -432,20 +428,10 @@ func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingRespo
 }
 
 func (e *Exchange) exchangeProxyStreamingCallback(currencyPair string, proxyStreamingResponse *PublicDepthReaponse, StreamingCallbackData interface{}) (error) {
-	e.proxyLastBidsAsksMutex.Lock()
-	lastBids, bidsOk := e.proxyLastBidsMap[currencyPair]
-	lastAsks, asksOk := e.proxyLastAsksMap[currencyPair]
-	e.proxyLastBidsAsksMutex.Unlock()
-	if !bidsOk || !asksOk || reflect.DeepEqual(lastBids, proxyStreamingResponse.Bids) == false || reflect.DeepEqual(lastAsks, proxyStreamingResponse.Asks) == false {
-		e.currencyPairsInfo.updateDepth(currencyPair, proxyStreamingResponse.Bids, proxyStreamingResponse.Asks)
-		err := e.streamingCallback(currencyPair, e)
-		if err != nil {
-			return errors.Wrap(err, "streaming callback error")
-		}
-		e.proxyLastBidsAsksMutex.Lock()
-		e.proxyLastBidsMap[currencyPair] = proxyStreamingResponse.Bids
-		e.proxyLastAsksMap[currencyPair] = proxyStreamingResponse.Asks
-		e.proxyLastBidsAsksMutex.Unlock()
+	e.currencyPairsInfo.updateDepth(currencyPair, proxyStreamingResponse.Bids, proxyStreamingResponse.Asks)
+	err := e.streamingCallback(currencyPair, e)
+	if err != nil {
+		return errors.Wrap(err, "streaming callback error")
 	}
 	return nil
 }
@@ -533,9 +519,6 @@ func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
 			Trades:    make(map[string][]*StreamingTradesResponse),
 			mutex:     new(sync.Mutex),
 		},
-		proxyLastBidsMap:       make(map[string][][]float64),
-		proxyLastAsksMap:       make(map[string][][]float64),
-		proxyLastBidsAsksMutex: new(sync.Mutex),
 	}, nil
 }
 
