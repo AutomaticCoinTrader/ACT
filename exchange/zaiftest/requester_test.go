@@ -44,7 +44,7 @@ func callback(currencyPair string, streamingResponse *zaif.StreamingResponse, st
 	return nil
 }
 
-func retryCallback(price *float64, amount *float64, err error, errMsg string, retryCallbackData interface{}) (bool) {
+func retryCallback(price *float64, amount *float64, errMsg string, retryCallbackData interface{}) (bool) {
 	return true
 }
 
