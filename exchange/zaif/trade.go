@@ -623,7 +623,7 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 			if err != nil {
 				log.Printf("error occured currency pair = %v (%v)", tradeParams.CurrencyPair, err)
 			}
-			retry := retryCallback(&tradeParams.Price, &tradeParams.Amount, retryCallbackData)
+			retry := retryCallback(&tradeParams.Price, &tradeParams.Amount, err, newRes.(*TradeResponse).Error, retryCallbackData)
 			if !retry {
 				if err != nil {
 					return nil, request, response, err
