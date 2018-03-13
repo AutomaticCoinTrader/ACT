@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	actConfigPrefix string = "act"
+	actConfigPrefix = "act"
 )
 
 func signalWait() {

@@ -113,7 +113,7 @@ func (c *HTTPClient) retryRequest(request *HTTPRequest, noRetry bool) (*http.Res
 		res, resBody, err := c.methodFuncBase(request.RequestMethodString, request)
 		if !noRetry && err != nil {
 			log.Printf("request is failure, retry... (url = %v, method = %v, reason = %v)", request.URL, request.RequestMethod, err)
-			if (c.retryWait != 0) {
+			if c.retryWait != 0 {
 				time.Sleep(time.Duration(c.retryWait) * time.Millisecond)
 			}
 			continue
