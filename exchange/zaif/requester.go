@@ -91,7 +91,7 @@ func (r *Requester) MakePublicRequest(resource string, params string) (*utility.
 				// １秒以内のものになったらbreak
 				lastIdx = idx
 				lastTs = ts
-				break;
+				break
 			}
 		}
 		if lastIdx == -1 && len(r.publicApiHistory) > 0 {
@@ -137,7 +137,7 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 				// １秒以内のものになったらbreak
 				lastIdx = idx
 				lastTs = ts
-				break;
+				break
 			}
 		}
 		if lastIdx == -1 && len(r.tradeApiHistory) > 0 {
