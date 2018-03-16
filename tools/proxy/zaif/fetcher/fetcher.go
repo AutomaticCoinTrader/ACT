@@ -6,7 +6,6 @@ import (
 	"sync/atomic"
 	"time"
 	"path"
-	"runtime"
 	"github.com/AutomaticCoinTrader/ACT/utility"
 	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/server"
 	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/configurator"
@@ -68,7 +67,7 @@ func (f *Fetcher) pollingRequestLoop() {
 	lastAsksMap := make(map[string][][]float64)
 	lastBidsAsksMutex := new(sync.Mutex)
 	pollingRequestChan := make(chan string)
-	for i := 0; i < runtime.NumCPU() * 2; i++ {
+	for i := 0; i < len(f.config.CurrencyPairs) * 2; i++ {
 		go f.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
 	}
 FINISH:
