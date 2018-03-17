@@ -557,7 +557,7 @@ func (t *TradeParams) fixupPriceAndAmount(r *Requester) {
 	priceUnit := r.GetMinPriceUnit(t.CurrencyPair)
 	amountUnit := r.GetMinAmountUnit(t.CurrencyPair)
 
-	fixedPrice := math.Floor((float64(int64((t.Price/priceUnit) + (priceUnit/100000000)))*priceUnit)*100000000) / 100000000
+	fixedPrice := math.Floor((float64(int64((t.Price/priceUnit) + 0.000000001))*priceUnit)*100000000) / 100000000
 	if fixedPrice != t.Price {
 		if t.Action == "bid" {
 			t.Price = math.Floor((fixedPrice+priceUnit)*100000000) / 100000000
@@ -565,7 +565,7 @@ func (t *TradeParams) fixupPriceAndAmount(r *Requester) {
 			t.Price = fixedPrice
 		}
 	}
-	fixedAmount := math.Floor((float64(int64((t.Amount/amountUnit) + (amountUnit/10000)))*amountUnit)*10000) / 10000
+	fixedAmount := math.Floor((float64(int64((t.Amount/amountUnit) + 0.000000001))*amountUnit)*10000) / 10000
 	if fixedAmount != t.Amount {
 		t.Amount = fixedAmount
 	}
