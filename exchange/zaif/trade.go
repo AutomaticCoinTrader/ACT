@@ -565,7 +565,7 @@ func (t *TradeParams) fixupPriceAndAmount(r *Requester) {
 			t.Price = fixedPrice
 		}
 	}
-	fixedAmount := math.Floor((float64(int64((t.Amount/amountUnit) + 0.000000001))*amountUnit)*10000) / 10000
+	fixedAmount := math.Floor((float64(int64((t.Amount/amountUnit) + 0.00001))*amountUnit)*10000) / 10000
 	if fixedAmount != t.Amount {
 		t.Amount = fixedAmount
 	}
