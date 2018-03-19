@@ -175,7 +175,7 @@ func (o *ActiveOrderCursor) Reset() {
 }
 
 func (o *ActiveOrderCursor) Len() int {
-	return len(o.keys)
+	return len(o.keys) + len(o.keysToken)
 }
 
 func newActiveOrderCursor(values map[string]TradeActiveOrderRecordResponse, valuesToken map[string]TradeActiveOrderRecordResponse) (*ActiveOrderCursor) {
