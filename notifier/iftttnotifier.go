@@ -41,6 +41,6 @@ func (n *IFTTTNotifier) Notify(msg string) error {
 func NewIFTTTNotifier(config *IFTTTNotifierConfig) (*IFTTTNotifier, error) {
 	return &IFTTTNotifier{
 		Key:        config.Key,
-		httpClient: utility.NewHTTPClient(10, 1000, 60),
+		httpClient: utility.NewHTTPClient(10, 1000, 60, nil),
 	}, nil
 }

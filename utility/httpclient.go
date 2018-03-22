@@ -43,12 +43,13 @@ type HTTPClient struct {
 	retry     int
 	retryWait int
 	timeout   int
+	localAddr *net.TCPAddr
 	resolver  *dnscache.Resolver
 	resolverIdx int
 	resolverIdxMutex *sync.Mutex
 }
 
-func (c *HTTPClient) newHTTPTransport() (transport *http.Transport) {
+func (c *HTTPClient) newHTTPTransport(localAddr *net.TCPAddr) (transport *http.Transport) {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		Dial: func(network string, address string) (net.Conn, error) {
@@ -63,6 +64,7 @@ func (c *HTTPClient) newHTTPTransport() (transport *http.Transport) {
 			c.resolverIdxMutex.Unlock()
 			ip := ips[resolverIds]
 			return (&net.Dialer{
+				LocalAddr: localAddr,
 				Timeout:   300 * time.Second,
 				KeepAlive: 300 * time.Second,
 			}).Dial("tcp", ip.String() + address[separator:])
@@ -73,7 +75,7 @@ func (c *HTTPClient) newHTTPTransport() (transport *http.Transport) {
 }
 
 func (c *HTTPClient) newHTTPClient(scheme string, host string, timeout int) *http.Client {
-	transport := c.newHTTPTransport()
+	transport := c.newHTTPTransport(c.localAddr)
 	if scheme == "https" {
 		transport.TLSClientConfig = &tls.Config{ServerName: host}
 	}
@@ -155,21 +157,29 @@ func (c *HTTPClient) DoRequest(requestMethod RequestMethod, request *HTTPRequest
 	return res, resBody, err
 }
 
-func NewHTTPClient(retry int, retryWait int, timeout int) *HTTPClient {
+func NewHTTPClient(retry int, retryWait int, timeout int, localAddr *net.IPAddr) *HTTPClient {
 	if retry == 0 {
 		retry = 200000
 	}
 	if timeout == 0 {
 		timeout = 300
 	}
-	return &HTTPClient{
-		retry:     retry,
-		retryWait: retryWait,
-		timeout:   timeout,
-		resolver: dnscache.New(time.Second * 10),
-		resolverIdx: 0,
+	newHTTPClient := &HTTPClient{
+		retry:            retry,
+		retryWait:        retryWait,
+		timeout:          timeout,
+		resolver:         dnscache.New(time.Second * 10),
+		resolverIdx:      0,
 		resolverIdxMutex: new(sync.Mutex),
 	}
+	if localAddr == nil {
+		newHTTPClient.localAddr = nil
+	} else {
+		newHTTPClient.localAddr = &net.TCPAddr{
+			IP: localAddr.IP,
+		}
+	}
+	return newHTTPClient
 }
 
 type WSCallback func(conn *websocket.Conn, data interface{}) error

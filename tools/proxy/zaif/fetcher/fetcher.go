@@ -10,6 +10,8 @@ import (
 	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/server"
 	"github.com/AutomaticCoinTrader/ACT/tools/proxy/zaif/configurator"
 	"github.com/AutomaticCoinTrader/ACT/exchange/zaif"
+	"net"
+	"github.com/pkg/errors"
 )
 
 
@@ -99,11 +101,15 @@ func (f *Fetcher) Stop() {
 	atomic.StoreInt32(&f.pollingFinish, 1)
 }
 
-func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher) {
+func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher, error) {
 	requesterKeys := make([]*zaif.RequesterKey, 0)
+	localAddr, err := net.ResolveIPAddr("ip", config.ClientBindAddress)
+	if err != nil {
+		return nil, errors.Wrap(err, "can not resolve ip address")
+	}
 	return &Fetcher{
 		requester:     zaif.NewRequester(requesterKeys, config.Retry, config.RetryWait, config.Timeout, config.ReadBufSize, config.WriteBufSize),
-		httpClient:    utility.NewHTTPClient(config.Retry, config.RetryWait, config.Timeout),
+		httpClient:    utility.NewHTTPClient(config.Retry, config.RetryWait, config.Timeout, localAddr),
 		config:        config,
 		pollingFinish: 0,
 		currencyPairsInfo: &currencyPairsInfo{
@@ -114,5 +120,5 @@ func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher) {
 		},
 		websocketServer: server.NewWsServer(config),
 		pausePollingRequest: 0,
-	}
+	}, nil
 }

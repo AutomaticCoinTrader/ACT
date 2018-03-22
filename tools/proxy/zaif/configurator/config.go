@@ -12,6 +12,7 @@ type ZaifProxyConfig struct {
 	Retry              int                         `json:"retry"              yaml:"retry"              toml:"retry"`
 	RetryWait          int                         `json:"retryWait"          yaml:"retryWait"          toml:"retryWait"`
 	Timeout            int                         `json:"timeout"            yaml:"timeout"            toml:"timeout"`
+	ClientBindAddress  string					   `json:"clientBindAddress"  yaml:"clientBindAddress"  toml:"clientBindAddress"`
 	ReadBufSize        int                         `json:"readBufSize"        yaml:"readBufSize"        toml:"readBufSize"`
 	WriteBufSize       int                         `json:"writeBufSize"       yaml:"writeBufSize"       toml:"writeBufSize"`
 	PollingWait        int64                       `json:"pollingWait"        yaml:"pollingWait"        toml:"pollingWait"`

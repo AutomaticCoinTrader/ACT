@@ -84,7 +84,11 @@ func main() {
 		log.Printf("can not setup logger (config dir = %v, reason = %v)", *configDir, err)
 		return
 	}
-	f := fetcher.NewFetcher(newConfig)
+	f, err:= fetcher.NewFetcher(newConfig)
+	if err != nil {
+		log.Printf("can not create fetcher (config dir = %v, reason = %v)", *configDir, err)
+		return
+	}
 	f.Start()
 	signalWait()
 	f.Stop()

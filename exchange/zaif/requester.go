@@ -205,7 +205,7 @@ func (r *Requester) unmarshal(requestFunc requestFunc, request *utility.HTTPRequ
 // NewRequester is create requester
 func NewRequester(keys []*RequesterKey, retry int, retryWait, timeout int, readBufSize int, writeBufSize int) (*Requester) {
 	return &Requester{
-		httpClient:            utility.NewHTTPClient(retry, retryWait, timeout),
+		httpClient:            utility.NewHTTPClient(retry, retryWait, timeout, nil),
 		wsClients:             make(map[string]*utility.WSClient),
 		proxyWsClients:        make(map[string]*utility.WSClient),
 		readBufSize:           readBufSize,
