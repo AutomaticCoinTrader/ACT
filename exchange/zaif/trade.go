@@ -749,7 +749,7 @@ type TradeWithdrawResponse struct {
 	TradeCommonResponse
 }
 
-// TradeCancelOrder is cancel order
+// TradeWithdraw is withdraw
 func (r *Requester) TradeWithdraw(tradeWithdrawParams *TradeWithdrawParams) (*TradeWithdrawResponse, *utility.HTTPRequest, *http.Response, error) {
 	tradeWithdrawParams.fixupFee(r)
 	params, err := query.Values(tradeWithdrawParams)
