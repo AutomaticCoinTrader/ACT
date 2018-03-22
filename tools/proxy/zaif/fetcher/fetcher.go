@@ -72,9 +72,12 @@ func (f *Fetcher) pollingRequestLoop() {
 	for i := 0; i < len(f.config.CurrencyPairs) * 2; i++ {
 		go f.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
 	}
+	fetchCount := uint64(0)
 FINISH:
 	for {
-		log.Printf("start get depth of currency Pairs (%v)", time.Now().UnixNano())
+		if fetchCount % 20 == 0 {
+			log.Printf("start get depth of currency Pairs (fetch count = %v, time = %v)", fetchCount, time.Now().UnixNano())
+		}
 		for _, currencyPair := range f.config.CurrencyPairs {
 			if atomic.LoadInt32(&f.pollingFinish) == 1 {
 				break FINISH
@@ -86,6 +89,7 @@ FINISH:
 			pollingRequestChan <- currencyPair
 			time.Sleep(time.Duration(f.config.PollingWait) * time.Millisecond)
 		}
+		fetchCount += 1
 	}
 	close(pollingRequestChan)
 	log.Printf("finish polling request loop")
