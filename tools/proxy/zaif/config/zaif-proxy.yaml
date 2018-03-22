@@ -18,7 +18,7 @@ timeout: 0
 clientBindAddress: 127.0.0.1
 readBufSize: 0
 writeBufSize: 0
-pollingWait: 33
+pollingWait: 34
 pauseWait: 60
 server:
   addrPort: 127.0.0.1:28888
