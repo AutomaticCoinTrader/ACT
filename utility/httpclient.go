@@ -71,6 +71,8 @@ func (c *HTTPClient) newHTTPTransport(localAddr *net.TCPAddr) (transport *http.T
 		},
 		TLSHandshakeTimeout:   300 * time.Second,
 		ExpectContinueTimeout: 300 * time.Second,
+		MaxIdleConns: 500,
+		MaxIdleConnsPerHost: 50,
 	}
 }
 
