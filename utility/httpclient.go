@@ -39,14 +39,21 @@ type HTTPRequest struct {
 	Body                string
 }
 
+type clientCache struct {
+	client    *http.Client
+	tlsClient *http.Client
+}
+
 type HTTPClient struct {
-	retry     int
-	retryWait int
-	timeout   int
-	localAddr *net.TCPAddr
-	resolver  *dnscache.Resolver
-	resolverIdx int
-	resolverIdxMutex *sync.Mutex
+	retry             int
+	retryWait         int
+	timeout           int
+	localAddr         *net.TCPAddr
+	resolver          *dnscache.Resolver
+	resolverIdx       int
+	resolverIdxMutex  *sync.Mutex
+	clientsCache      map[string]*clientCache
+	clientsCacheMutex *sync.Mutex
 }
 
 func (c *HTTPClient) newHTTPTransport(localAddr *net.TCPAddr) (transport *http.Transport) {
@@ -67,24 +74,44 @@ func (c *HTTPClient) newHTTPTransport(localAddr *net.TCPAddr) (transport *http.T
 				LocalAddr: localAddr,
 				Timeout:   300 * time.Second,
 				KeepAlive: 300 * time.Second,
-			}).Dial("tcp", ip.String() + address[separator:])
+			}).Dial("tcp", ip.String()+address[separator:])
 		},
 		TLSHandshakeTimeout:   300 * time.Second,
 		ExpectContinueTimeout: 300 * time.Second,
-		MaxIdleConns: 500,
-		MaxIdleConnsPerHost: 50,
+		MaxIdleConns:          500,
+		MaxIdleConnsPerHost:   50,
 	}
 }
 
 func (c *HTTPClient) newHTTPClient(scheme string, host string, timeout int) *http.Client {
+	c.clientsCacheMutex.Lock()
+	defer c.clientsCacheMutex.Unlock()
+	clients, ok := c.clientsCache[host]
+	if ok {
+		if scheme == "https" {
+			if clients.tlsClient != nil {
+				return clients.tlsClient
+			}
+		} else {
+			if clients.client != nil {
+				return clients.client
+			}
+		}
+	}
 	transport := c.newHTTPTransport(c.localAddr)
 	if scheme == "https" {
 		transport.TLSClientConfig = &tls.Config{ServerName: host}
 	}
-	return &http.Client{
+	newHttpClient := &http.Client{
 		Transport: transport,
 		Timeout:   time.Duration(timeout) * time.Second,
 	}
+	if scheme == "https" {
+		c.clientsCache[host].tlsClient = newHttpClient
+	} else {
+		c.clientsCache[host].client = newHttpClient
+	}
+	return newHttpClient
 }
 
 func (c *HTTPClient) methodFuncBase(method string, request *HTTPRequest) (*http.Response, []byte, error) {
@@ -154,7 +181,7 @@ func (c *HTTPClient) DoRequest(requestMethod RequestMethod, request *HTTPRequest
 	}
 	res, resBody, err := c.retryRequest(request, noRetry)
 	if err != nil {
-		return res, resBody, errors.Wrapf(err,"request is failure (url = %v, method = %v)", request.URL, request.RequestMethod)
+		return res, resBody, errors.Wrapf(err, "request is failure (url = %v, method = %v)", request.URL, request.RequestMethod)
 	}
 	return res, resBody, err
 }
@@ -167,12 +194,14 @@ func NewHTTPClient(retry int, retryWait int, timeout int, localAddr *net.IPAddr)
 		timeout = 300
 	}
 	newHTTPClient := &HTTPClient{
-		retry:            retry,
-		retryWait:        retryWait,
-		timeout:          timeout,
-		resolver:         dnscache.New(time.Second * 10),
-		resolverIdx:      0,
-		resolverIdxMutex: new(sync.Mutex),
+		retry:             retry,
+		retryWait:         retryWait,
+		timeout:           timeout,
+		resolver:          dnscache.New(time.Second * 10),
+		resolverIdx:       0,
+		resolverIdxMutex:  new(sync.Mutex),
+		clientsCache:      make(map[string]*clientCache),
+		clientsCacheMutex: new(sync.Mutex),
 	}
 	if localAddr == nil {
 		newHTTPClient.localAddr = nil
