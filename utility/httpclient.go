@@ -39,9 +39,14 @@ type HTTPRequest struct {
 	Body                string
 }
 
+type client struct {
+	httpClient    *http.Client
+	requestMutex  *sync.Mutex
+}
+
 type clientCache struct {
-	client    *http.Client
-	tlsClient *http.Client
+	client    *client
+	tlsClient *client
 }
 
 type HTTPClient struct {
@@ -60,7 +65,12 @@ func (c *HTTPClient) newHTTPTransport(localAddr *net.TCPAddr) (transport *http.T
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		Dial: func(network string, address string) (net.Conn, error) {
+			ipv6 := false
+			if strings.LastIndex(address, ".") == -1 {
+				ipv6 = true
+			}
 			separator := strings.LastIndex(address, ":")
+			fmt.Println(address[:separator])
 			ips, _ := c.resolver.Fetch(address[:separator])
 			c.resolverIdxMutex.Lock()
 			c.resolverIdx += 1
@@ -70,20 +80,27 @@ func (c *HTTPClient) newHTTPTransport(localAddr *net.TCPAddr) (transport *http.T
 			resolverIds := c.resolverIdx
 			c.resolverIdxMutex.Unlock()
 			ip := ips[resolverIds]
+			ipStr := ip.String()
+			if strings.LastIndex(ipStr, ".") == -1 {
+				ipv6 = true
+			}
+			if ipv6 {
+				ipStr = "[" + ipStr + "]"
+			}
 			return (&net.Dialer{
 				LocalAddr: localAddr,
 				Timeout:   300 * time.Second,
 				KeepAlive: 300 * time.Second,
-			}).Dial("tcp", ip.String()+address[separator:])
+			}).Dial("tcp", ipStr+address[separator:])
 		},
 		TLSHandshakeTimeout:   300 * time.Second,
 		ExpectContinueTimeout: 300 * time.Second,
-		MaxIdleConns:          500,
+		MaxIdleConns:          1000,
 		MaxIdleConnsPerHost:   50,
 	}
 }
 
-func (c *HTTPClient) newHTTPClient(scheme string, host string, timeout int) *http.Client {
+func (c *HTTPClient) newClient(scheme string, host string, timeout int) *client {
 	c.clientsCacheMutex.Lock()
 	defer c.clientsCacheMutex.Unlock()
 	clients, ok := c.clientsCache[host]
@@ -97,6 +114,8 @@ func (c *HTTPClient) newHTTPClient(scheme string, host string, timeout int) *htt
 				return clients.client
 			}
 		}
+	} else {
+		c.clientsCache[host] = &clientCache{}
 	}
 	transport := c.newHTTPTransport(c.localAddr)
 	if scheme == "https" {
@@ -106,16 +125,21 @@ func (c *HTTPClient) newHTTPClient(scheme string, host string, timeout int) *htt
 		Transport: transport,
 		Timeout:   time.Duration(timeout) * time.Second,
 	}
-	if scheme == "https" {
-		c.clientsCache[host].tlsClient = newHttpClient
-	} else {
-		c.clientsCache[host].client = newHttpClient
+	newClinet := &client{
+		httpClient: newHttpClient,
+		requestMutex: new(sync.Mutex),
 	}
-	return newHttpClient
+	if scheme == "https" {
+		c.clientsCache[host].tlsClient = newClinet
+	} else {
+		c.clientsCache[host].client = newClinet
+	}
+	return newClinet
 }
 
+
 func (c *HTTPClient) methodFuncBase(method string, request *HTTPRequest) (*http.Response, []byte, error) {
-	httpClient := c.newHTTPClient(request.ParsedURL.Scheme, request.ParsedURL.Host, c.timeout)
+	client := c.newClient(request.ParsedURL.Scheme, request.ParsedURL.Host, c.timeout)
 	req, err := http.NewRequest(method, request.URL, bytes.NewBufferString(request.Body))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request (url = %v, method = %v, request body = %v,)", request.URL, request.RequestMethod, request.Body))
@@ -123,15 +147,20 @@ func (c *HTTPClient) methodFuncBase(method string, request *HTTPRequest) (*http.
 	for k, v := range request.Headers {
 		req.Header.Set(k, v)
 	}
-	res, err := httpClient.Do(req)
+	client.requestMutex.Lock()
+	res, err := client.httpClient.Do(req)
 	if err != nil {
+		client.requestMutex.Unlock()
 		return res, nil, errors.Wrap(err, fmt.Sprintf("request of HTTPMethodGET is failure (url = %v, method = %v, request body = %v)", request.URL, request.RequestMethod, request.Body))
 	}
-	defer res.Body.Close()
+	client.requestMutex.Unlock()
 	resBody, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		res.Body.Close()
 		return res, resBody, errors.Wrap(err, fmt.Sprintf("can not read response (url = %v, method = %v, request body = %v)", request.URL, request.RequestMethod, request.Body))
 	}
+	res.Body.Close()
+
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return res, resBody, errors.Errorf("unexpected status code (url = %v, method = %v, request body = %v, status = %v, body = %v)", request.URL, request.RequestMethod, request.Body, res.StatusCode, string(resBody))
 	}
