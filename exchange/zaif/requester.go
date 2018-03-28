@@ -117,7 +117,7 @@ func (r *Requester) MakePublicRequest(resource string, params string) (*utility.
 		u += "?" + params
 	}
 	headers := make(map[string]string)
-	headers["Connection"] = "close"
+	headers["Connection"] = "keep-alive"
 	return &utility.HTTPRequest{
 		Headers: headers,
 		URL:     u,
@@ -175,7 +175,7 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 	mac.Write([]byte(body))
 	sign := hex.EncodeToString(mac.Sum(nil))
 	headers := make(map[string]string)
-	headers["Connection"] = "close"
+	headers["Connection"] = "keep-alive"
 	headers["Conent-Type"] = "application/x-www-form-urlencoded"
 	headers["Key"] = key
 	headers["Sign"] = sign
