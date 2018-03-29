@@ -33,7 +33,9 @@ func (c *currencyPairsInfo) updateDepth(currencyPair string, currencyPairsBids [
 type Fetcher struct {
 	config              *configurator.ZaifProxyConfig
 	requester           *zaif.Requester
-	httpClient          *utility.HTTPClient
+	httpClients         []*utility.HTTPClient
+	httpClientsIdx      int
+	httpClientsMutex    *sync.Mutex
 	pollingFinish       int32
 	currencyPairsInfo   *currencyPairsInfo
 	websocketServer     *server.WebsocketServer
@@ -48,8 +50,16 @@ func (f *Fetcher) pollingLoop(pollingRequestChan chan string, lastBidsMap map[st
 			log.Printf("finish polling loop")
 			return
 		}
+		// select httpClient
+		f.httpClientsMutex.Lock()
+		httpClient := f.httpClients[f.httpClientsIdx]
+		f.httpClientsIdx += 1
+		if f.httpClientsIdx >= len(f.httpClients) {
+			f.httpClientsIdx = 0
+		}
+		f.httpClientsMutex.Unlock()
 		request := f.requester.MakePublicRequest(path.Join("depth", currencyPair), "")
-		res, resBody, err := f.httpClient.DoRequest(utility.HTTPMethodGET, request, true)
+		res, resBody, err := httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 		if err != nil {
 			log.Printf("can not get depcth (url = %v)", request.URL)
 			if res != nil && res.StatusCode == 403 {
@@ -106,14 +116,24 @@ func (f *Fetcher) Stop() {
 }
 
 func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher, error) {
-	requesterKeys := make([]*zaif.RequesterKey, 0)
-	localAddr, err := net.ResolveIPAddr("ip", config.ClientBindAddress)
-	if err != nil {
-		return nil, errors.Wrap(err, "can not resolve ip address")
+	dummyRequesterKeys := make([]*zaif.RequesterKey, 0)
+
+	httpClients := make([]*utility.HTTPClient, 0)
+	for _, clientBindAddress := range config.ClientBindAddresses {
+		localAddr, err := net.ResolveIPAddr("ip", clientBindAddress)
+		if err != nil {
+			return nil, errors.Wrap(err, "can not resolve ip address")
+		}
+		httpClient := utility.NewHTTPClient(config.Retry, config.RetryWait, config.Timeout, localAddr)
+		httpClients = append(httpClients, httpClient)
 	}
 	return &Fetcher{
-		requester:     zaif.NewRequester(requesterKeys, config.Retry, config.RetryWait, config.Timeout, config.ReadBufSize, config.WriteBufSize),
-		httpClient:    utility.NewHTTPClient(config.Retry, config.RetryWait, config.Timeout, localAddr),
+		requester:     zaif.NewRequester(dummyRequesterKeys, config.Retry, config.RetryWait, config.Timeout, config.ReadBufSize, config.WriteBufSize),
+
+		httpClients:   httpClients,
+		httpClientsIdx: 0,
+		httpClientsMutex: new(sync.Mutex),
+
 		config:        config,
 		pollingFinish: 0,
 		currencyPairsInfo: &currencyPairsInfo{

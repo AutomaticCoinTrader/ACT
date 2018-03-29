@@ -15,7 +15,8 @@ currencyPairs:
 retry: 0
 retryWait: 0
 timeout: 0
-clientBindAddress: 127.0.0.1
+clientBindAddresses:
+- 127.0.0.1
 readBufSize: 0
 writeBufSize: 0
 pollingWait: 34
