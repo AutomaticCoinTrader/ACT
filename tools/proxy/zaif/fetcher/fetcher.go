@@ -117,7 +117,6 @@ func (f *Fetcher) Stop() {
 
 func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher, error) {
 	dummyRequesterKeys := make([]*zaif.RequesterKey, 0)
-
 	httpClients := make([]*utility.HTTPClient, 0)
 	for _, clientBindAddress := range config.ClientBindAddresses {
 		localAddr, err := net.ResolveIPAddr("ip", clientBindAddress)
@@ -129,11 +128,9 @@ func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher, error) {
 	}
 	return &Fetcher{
 		requester:     zaif.NewRequester(dummyRequesterKeys, config.Retry, config.RetryWait, config.Timeout, config.ReadBufSize, config.WriteBufSize),
-
 		httpClients:   httpClients,
 		httpClientsIdx: 0,
 		httpClientsMutex: new(sync.Mutex),
-
 		config:        config,
 		pollingFinish: 0,
 		currencyPairsInfo: &currencyPairsInfo{

@@ -70,7 +70,6 @@ func (c *HTTPClient) newHTTPTransport(localAddr *net.TCPAddr) (transport *http.T
 				ipv6 = true
 			}
 			separator := strings.LastIndex(address, ":")
-			fmt.Println(address[:separator])
 			ips, _ := c.resolver.Fetch(address[:separator])
 			c.resolverIdxMutex.Lock()
 			c.resolverIdx += 1
