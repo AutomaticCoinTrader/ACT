@@ -4,6 +4,9 @@ import (
 	"testing"
 	"github.com/AutomaticCoinTrader/ACT/utility"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"time"
 )
 
 func TestHttpClient(t *testing.T) {
@@ -302,30 +305,36 @@ func TestHttpsClient2(t *testing.T) {
 
 }
 
-func TestHttpClientConcurrent(t *testing.T) {
-	httpClient := utility.NewHTTPClient(3, 1, 1, nil)
+var sampleHandler = http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Connection", "keep-alive")
+	fmt.Fprintf(w, "test")
+})
 
+func TestHttpClientConcurrent(t *testing.T) {
+	ts := httptest.NewServer(sampleHandler)
+	defer ts.Close()
+	httpClient := utility.NewHTTPClient(3, 1, 1, nil)
 	finishChans := make([]chan bool, 0)
-	for i := 0; i < 32; i++ {
+	t1 := time.Now()
+	for i := 0; i < 5000; i++ {
 		finishCh := make(chan bool)
 		finishChans = append(finishChans, finishCh)
-		go concurrencyRequest(httpClient, t, i, finishCh)
+		go concurrencyRequest(ts, httpClient, t, i, finishCh)
 	}
 	for _, finishChan := range finishChans {
-		_, ok := <-finishChan
-		if !ok {
-			continue
-		}
+		<-finishChan
 	}
+	t2 := time.Now()
+	fmt.Printf("elapsed = %v", t2.UnixNano() - t1.UnixNano())
 }
 
-func concurrencyRequest(httpClient *utility.HTTPClient, t *testing.T, idx int, finishChan chan bool) {
+func concurrencyRequest(ts *httptest.Server, httpClient *utility.HTTPClient, t *testing.T, idx int, finishChan chan bool) {
 	headers := make(map[string]string)
 	headers["Connection"] = "keep-alive"
 	headers["X-idx"] = fmt.Sprintf("%v", idx)
 	request := &utility.HTTPRequest{
 		Headers: headers,
-		URL:     "http://www.google.com/",
+		URL:     ts.URL,
 	}
 	_, _, err := httpClient.DoRequest(utility.HTTPMethodGET, request, false)
 	if err != nil {

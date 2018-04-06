@@ -39,16 +39,6 @@ type HTTPRequest struct {
 	Body                string
 }
 
-type client struct {
-	httpClient    *http.Client
-	requestMutex  *sync.Mutex
-}
-
-type clientCache struct {
-	client    *client
-	tlsClient *client
-}
-
 type HTTPClient struct {
 	retry             int
 	retryWait         int
@@ -57,12 +47,12 @@ type HTTPClient struct {
 	resolver          *dnscache.Resolver
 	resolverIdx       int
 	resolverIdxMutex  *sync.Mutex
-	clientsCache      map[string]*clientCache
+	clientsCache      map[string]*http.Client
 	clientsCacheMutex *sync.Mutex
 }
 
-func (c *HTTPClient) newHTTPTransport(localAddr *net.TCPAddr) (transport *http.Transport) {
-	return &http.Transport{
+func (c *HTTPClient) newHTTPTransport(scheme string, host string) (*http.Transport) {
+	newTransport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		Dial: func(network string, address string) (net.Conn, error) {
 			ipv6 := false
@@ -87,58 +77,41 @@ func (c *HTTPClient) newHTTPTransport(localAddr *net.TCPAddr) (transport *http.T
 				ipStr = "[" + ipStr + "]"
 			}
 			return (&net.Dialer{
-				LocalAddr: localAddr,
+				LocalAddr: c.localAddr,
 				Timeout:   300 * time.Second,
 				KeepAlive: 300 * time.Second,
 			}).Dial("tcp", ipStr+address[separator:])
 		},
 		TLSHandshakeTimeout:   300 * time.Second,
 		ExpectContinueTimeout: 300 * time.Second,
-		MaxIdleConns:          1000,
-		MaxIdleConnsPerHost:   50,
+		MaxIdleConns:          5000,
+		MaxIdleConnsPerHost:   100,
 	}
+	if scheme == "https" {
+		newTransport.TLSClientConfig = &tls.Config{ServerName: host}
+	}
+	return newTransport
 }
 
-func (c *HTTPClient) newClient(scheme string, host string, timeout int) *client {
+func (c *HTTPClient) newClient(scheme string, host string) (*http.Client) {
 	c.clientsCacheMutex.Lock()
 	defer c.clientsCacheMutex.Unlock()
-	clients, ok := c.clientsCache[host]
+	cachedHttpClient, ok := c.clientsCache[scheme+host]
 	if ok {
-		if scheme == "https" {
-			if clients.tlsClient != nil {
-				return clients.tlsClient
-			}
-		} else {
-			if clients.client != nil {
-				return clients.client
-			}
-		}
-	} else {
-		c.clientsCache[host] = &clientCache{}
+		return cachedHttpClient
 	}
-	transport := c.newHTTPTransport(c.localAddr)
-	if scheme == "https" {
-		transport.TLSClientConfig = &tls.Config{ServerName: host}
-	}
+	transport := c.newHTTPTransport(scheme, host)
 	newHttpClient := &http.Client{
 		Transport: transport,
-		Timeout:   time.Duration(timeout) * time.Second,
+		Timeout:   time.Duration(c.timeout) * time.Second,
 	}
-	newClinet := &client{
-		httpClient: newHttpClient,
-		requestMutex: new(sync.Mutex),
-	}
-	if scheme == "https" {
-		c.clientsCache[host].tlsClient = newClinet
-	} else {
-		c.clientsCache[host].client = newClinet
-	}
-	return newClinet
+	c.clientsCache[scheme+host] = newHttpClient
+	return newHttpClient
 }
 
 
 func (c *HTTPClient) methodFuncBase(method string, request *HTTPRequest) (*http.Response, []byte, error) {
-	client := c.newClient(request.ParsedURL.Scheme, request.ParsedURL.Host, c.timeout)
+	client := c.newClient(request.ParsedURL.Scheme, request.ParsedURL.Host)
 	req, err := http.NewRequest(method, request.URL, bytes.NewBufferString(request.Body))
 	if err != nil {
 		return nil, nil, errors.Wrap(err, fmt.Sprintf("can not create request (url = %v, method = %v, request body = %v,)", request.URL, request.RequestMethod, request.Body))
@@ -146,13 +119,10 @@ func (c *HTTPClient) methodFuncBase(method string, request *HTTPRequest) (*http.
 	for k, v := range request.Headers {
 		req.Header.Set(k, v)
 	}
-	client.requestMutex.Lock()
-	res, err := client.httpClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
-		client.requestMutex.Unlock()
 		return res, nil, errors.Wrap(err, fmt.Sprintf("request of HTTPMethodGET is failure (url = %v, method = %v, request body = %v)", request.URL, request.RequestMethod, request.Body))
 	}
-	client.requestMutex.Unlock()
 	resBody, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		res.Body.Close()
@@ -228,7 +198,7 @@ func NewHTTPClient(retry int, retryWait int, timeout int, localAddr *net.IPAddr)
 		resolver:          dnscache.New(time.Second * 10),
 		resolverIdx:       0,
 		resolverIdxMutex:  new(sync.Mutex),
-		clientsCache:      make(map[string]*clientCache),
+		clientsCache:      make(map[string]*http.Client),
 		clientsCacheMutex: new(sync.Mutex),
 	}
 	if localAddr == nil {
