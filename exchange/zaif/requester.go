@@ -117,7 +117,7 @@ func (r *Requester) MakePublicRequest(resource string, params string) (*utility.
 		u += "?" + params
 	}
 	headers := make(map[string]string)
-	headers["Connection"] = "close"
+	headers["Connection"] = "keep-alive"
 	return &utility.HTTPRequest{
 		Headers: headers,
 		URL:     u,
