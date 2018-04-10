@@ -40,6 +40,8 @@ type Fetcher struct {
 	currencyPairsInfo   *currencyPairsInfo
 	websocketServer     *server.WebsocketServer
 	pausePollingRequest int32
+	fetchFailCount      uint64
+	fetchRequestCount   uint64
 }
 
 func (f *Fetcher) pollingLoop(pollingRequestChan chan string, lastBidsMap map[string][][]float64, lastAsksMap map[string][][]float64, lastBidsAsksMutex *sync.Mutex) {
@@ -61,7 +63,10 @@ func (f *Fetcher) pollingLoop(pollingRequestChan chan string, lastBidsMap map[st
 		request := f.requester.MakePublicRequest(path.Join("depth", currencyPair), "")
 		res, resBody, err := httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 		if err != nil {
-			log.Printf("can not get depcth (url = %v)", request.URL)
+			fetchFailCount := atomic.AddUint64(f.fetchFailCount, 1)
+			if fetchFailCount % 100 == 0 {
+				log.Printf("fetch fail count = %v", fetchFailCount)
+			}
 			if res != nil && res.StatusCode == 403 {
 				log.Printf("occured 403 Forbidden currency pair = %v", currencyPair)
 				atomic.StoreInt32(&f.pausePollingRequest, 1)
@@ -86,15 +91,15 @@ func (f *Fetcher) pollingRequestLoop() {
 	for i := 0; i < len(f.config.CurrencyPairs) * Concurrency; i++ {
 		go f.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
 	}
-	fetchCount := uint64(0)
 FINISH:
 	for {
-		if fetchCount % 20 == 0 {
-			log.Printf("start get depth of currency Pairs (fetch count = %v, time = %v)", fetchCount, time.Now().UnixNano())
-		}
 		for _, currencyPair := range f.config.CurrencyPairs {
 			if atomic.LoadInt32(&f.pollingFinish) == 1 {
 				break FINISH
+			}
+			fetchRequestCount := atomic.AddUint64(f.fetchRequestCount, 1) 
+			if fetchRequestCount % 100 == 0 {
+				log.Printf("start get depth of currency Pairs (fetch request count = %v)", fetchRequestCount)
 			}
 			pollingRequestChan <- currencyPair
 		}
@@ -103,7 +108,6 @@ FINISH:
 			time.Sleep(time.Duration(f.config.PauseWait) * time.Second)
 			atomic.StoreInt32(&f.pausePollingRequest, 0)
 		}
-		fetchCount += 1
 	}
 	close(pollingRequestChan)
 	log.Printf("finish polling request loop")
@@ -145,5 +149,7 @@ func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher, error) {
 		},
 		websocketServer: server.NewWsServer(config),
 		pausePollingRequest: 0,
+		fetchRequestCount: 0,
+		fetchFailCount: 0,
 	}, nil
 }
