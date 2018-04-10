@@ -38,8 +38,9 @@ type Fetcher struct {
 	currencyPairsInfo   *currencyPairsInfo
 	websocketServer     *server.WebsocketServer
 	pausePollingRequest int32
-	fetchFailCount      uint64
 	fetchRequestCount   uint64
+	fetchSuccessCount   uint64
+	fetchFailCount      uint64
 }
 
 func (f *Fetcher) pollingLoop(pollingRequestChan chan string, lastBidsMap map[string][][]float64, lastAsksMap map[string][][]float64, lastBidsAsksMutex *sync.Mutex) {
@@ -61,15 +62,14 @@ func (f *Fetcher) pollingLoop(pollingRequestChan chan string, lastBidsMap map[st
 		request := f.requester.MakePublicRequest(path.Join("depth", currencyPair), "")
 		res, resBody, err := httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 		if err != nil {
-			fetchFailCount := atomic.AddUint64(&f.fetchFailCount, 1)
-			if fetchFailCount % 100 == 0 {
-				log.Printf("fetch fail count = %v", fetchFailCount)
-			}
+			atomic.AddUint64(&f.fetchFailCount, 1)
 			if res != nil && res.StatusCode == 403 {
 				log.Printf("occured 403 Forbidden currency pair = %v", currencyPair)
 				atomic.StoreInt32(&f.pausePollingRequest, 1)
 			}
 			continue
+		} else {
+			atomic.AddUint64(&f.fetchSuccessCount, 1)
 		}
 		f.websocketServer.BroadCast(currencyPair, resBody)
 	}
@@ -95,10 +95,7 @@ FINISH:
 			if atomic.LoadInt32(&f.pollingFinish) == 1 {
 				break FINISH
 			}
-			fetchRequestCount := atomic.AddUint64(&f.fetchRequestCount, 1) 
-			if fetchRequestCount % 100 == 0 {
-				log.Printf("fetch request count = %v", fetchRequestCount)
-			}
+			atomic.AddUint64(&f.fetchRequestCount, 1)
 			pollingRequestChan <- currencyPair
 		}
 		time.Sleep(time.Duration(f.config.PollingWait) * time.Millisecond)
@@ -111,14 +108,26 @@ FINISH:
 	log.Printf("finish polling request loop")
 }
 
+func (f *Fetcher) pollingReportLoop() {
+	for {
+		if atomic.LoadInt32(&f.pollingFinish) == 1 {
+			return
+		}
+		log.Printf("fetch request count = %v, success count = %v, fail count = %v", atomic.LoadUint64(&f.fetchRequestCount), atomic.LoadUint64(&f.fetchSuccessCount), atomic.LoadUint64(&f.fetchFailCount))
+		time.Sleep(time.Second)
+	}
+}
+
 func (f *Fetcher) Start() {
 	go f.pollingRequestLoop()
+	go f.pollingReportLoop()
 	f.websocketServer.Start()
 }
 
 func (f *Fetcher) Stop() {
 	f.websocketServer.Stop()
 	atomic.StoreInt32(&f.pollingFinish, 1)
+	time.Sleep(time.Second)
 }
 
 func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher, error) {
@@ -148,6 +157,7 @@ func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher, error) {
 		websocketServer: server.NewWsServer(config),
 		pausePollingRequest: 0,
 		fetchRequestCount: 0,
+		fetchSuccessCount: 0,
 		fetchFailCount: 0,
 	}, nil
 }
