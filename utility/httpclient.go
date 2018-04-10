@@ -105,7 +105,7 @@ func (c *HTTPClient) newClient(scheme string, host string) (*http.Client) {
 	transport := c.newHTTPTransport(scheme, host)
 	newHttpClient := &http.Client{
 		Transport: transport,
-		Timeout:   time.Duration(c.timeout) * time.Second,
+		Timeout:   time.Duration(c.timeout) * time.Millisecond,
 	}
 	c.clientsCache[scheme+host] = newHttpClient
 	return newHttpClient
@@ -188,10 +188,10 @@ func (c *HTTPClient) DoRequest(requestMethod RequestMethod, request *HTTPRequest
 
 func NewHTTPClient(retry int, retryWait int, timeout int, localAddr *net.IPAddr) *HTTPClient {
 	if retry == 0 {
-		retry = 200000
+		retry = 100
 	}
 	if timeout == 0 {
-		timeout = 300
+		timeout = 60000
 	}
 	newHTTPClient := &HTTPClient{
 		retry:             retry,
