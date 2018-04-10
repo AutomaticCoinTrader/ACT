@@ -96,12 +96,12 @@ FINISH:
 			if atomic.LoadInt32(&f.pollingFinish) == 1 {
 				break FINISH
 			}
-			if atomic.LoadInt32(&f.pausePollingRequest) == 1 {
-				time.Sleep(time.Duration(f.config.PauseWait) * time.Second)
-				atomic.StoreInt32(&f.pausePollingRequest, 0)
-			}
 			pollingRequestChan <- currencyPair
-			time.Sleep(time.Duration(f.config.PollingWait) * time.Millisecond)
+		}
+		time.Sleep(time.Duration(f.config.PollingWait) * time.Millisecond)
+		if atomic.LoadInt32(&f.pausePollingRequest) == 1 {
+			time.Sleep(time.Duration(f.config.PauseWait) * time.Second)
+			atomic.StoreInt32(&f.pausePollingRequest, 0)
 		}
 		fetchCount += 1
 	}
