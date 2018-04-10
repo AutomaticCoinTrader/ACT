@@ -14,8 +14,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-
-
 type currencyPairsInfo struct {
 	Bids      map[string][][]float64
 	Asks      map[string][][]float64
