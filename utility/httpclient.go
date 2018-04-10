@@ -87,7 +87,7 @@ func (c *HTTPClient) newHTTPTransport(scheme string, host string) (*http.Transpo
 		ResponseHeaderTimeout: 10 * time.Second,
 		ExpectContinueTimeout: 10 * time.Second,
 		MaxIdleConns:          5000,
-		MaxIdleConnsPerHost:   100,
+		MaxIdleConnsPerHost:   1250,
 	}
 	if scheme == "https" {
 		newTransport.TLSClientConfig = &tls.Config{ServerName: host}
