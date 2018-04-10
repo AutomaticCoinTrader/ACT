@@ -79,7 +79,11 @@ func (f *Fetcher) pollingRequestLoop() {
 	lastAsksMap := make(map[string][][]float64)
 	lastBidsAsksMutex := new(sync.Mutex)
 	pollingRequestChan := make(chan string)
-	for i := 0; i < len(f.config.CurrencyPairs) * i.config.Currency; i++ {
+	Concurrency := 50
+	if i.config.Concurrency != 0 {
+		Concurrency = i.config.Concurrency
+	}
+	for i := 0; i < len(f.config.CurrencyPairs) * Concurrency; i++ {
 		go f.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
 	}
 	fetchCount := uint64(0)
