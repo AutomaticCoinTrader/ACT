@@ -78,12 +78,14 @@ func (c *HTTPClient) newHTTPTransport(scheme string, host string) (*http.Transpo
 			}
 			return (&net.Dialer{
 				LocalAddr: c.localAddr,
-				Timeout:   300 * time.Second,
-				KeepAlive: 300 * time.Second,
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+				//DualStack: true,
 			}).Dial("tcp", ipStr+address[separator:])
 		},
-		TLSHandshakeTimeout:   300 * time.Second,
-		ExpectContinueTimeout: 300 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ResponseHeaderTimeout: 10 * time.Second,
+		ExpectContinueTimeout: 10 * time.Second,
 		MaxIdleConns:          5000,
 		MaxIdleConnsPerHost:   100,
 	}
