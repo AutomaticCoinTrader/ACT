@@ -79,7 +79,7 @@ func (f *Fetcher) pollingRequestLoop() {
 	lastAsksMap := make(map[string][][]float64)
 	lastBidsAsksMutex := new(sync.Mutex)
 	pollingRequestChan := make(chan string)
-	for i := 0; i < len(f.config.CurrencyPairs) * 2; i++ {
+	for i := 0; i < len(f.config.CurrencyPairs) * i.config.Currency; i++ {
 		go f.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
 	}
 	fetchCount := uint64(0)
