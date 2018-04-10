@@ -20,4 +20,5 @@ type ZaifProxyConfig struct {
 	CurrencyPairs       []string      `json:"currencyPairs"      yaml:"currencyPairs"      toml:"currencyPairs"`
 	Server              *serverConfig `json:"server"             yaml:"server"             toml:"server"`
 	Logger              *loggerConfig `json:"logger"             yaml:"logger"             toml:"logger"`
+	Concurrency         int           `json:"concurrency"        yaml:"concurrency"        toml:"concurrency"`
 }
