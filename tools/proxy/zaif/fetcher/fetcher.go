@@ -80,8 +80,8 @@ func (f *Fetcher) pollingRequestLoop() {
 	lastBidsAsksMutex := new(sync.Mutex)
 	pollingRequestChan := make(chan string)
 	Concurrency := 50
-	if i.config.Concurrency != 0 {
-		Concurrency = i.config.Concurrency
+	if f.config.Concurrency != 0 {
+		Concurrency = f.config.Concurrency
 	}
 	for i := 0; i < len(f.config.CurrencyPairs) * Concurrency; i++ {
 		go f.pollingLoop(pollingRequestChan, lastBidsMap, lastAsksMap, lastBidsAsksMutex)
