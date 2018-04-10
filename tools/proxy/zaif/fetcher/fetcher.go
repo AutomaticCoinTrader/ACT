@@ -99,7 +99,7 @@ FINISH:
 			}
 			fetchRequestCount := atomic.AddUint64(&f.fetchRequestCount, 1) 
 			if fetchRequestCount % 100 == 0 {
-				log.Printf("start get depth of currency Pairs (fetch request count = %v)", fetchRequestCount)
+				log.Printf("fetch request count = %v", fetchRequestCount)
 			}
 			pollingRequestChan <- currencyPair
 		}
