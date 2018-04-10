@@ -63,7 +63,7 @@ func (f *Fetcher) pollingLoop(pollingRequestChan chan string, lastBidsMap map[st
 		request := f.requester.MakePublicRequest(path.Join("depth", currencyPair), "")
 		res, resBody, err := httpClient.DoRequest(utility.HTTPMethodGET, request, true)
 		if err != nil {
-			fetchFailCount := atomic.AddUint64(f.fetchFailCount, 1)
+			fetchFailCount := atomic.AddUint64(&f.fetchFailCount, 1)
 			if fetchFailCount % 100 == 0 {
 				log.Printf("fetch fail count = %v", fetchFailCount)
 			}
@@ -97,7 +97,7 @@ FINISH:
 			if atomic.LoadInt32(&f.pollingFinish) == 1 {
 				break FINISH
 			}
-			fetchRequestCount := atomic.AddUint64(f.fetchRequestCount, 1) 
+			fetchRequestCount := atomic.AddUint64(&f.fetchRequestCount, 1) 
 			if fetchRequestCount % 100 == 0 {
 				log.Printf("start get depth of currency Pairs (fetch request count = %v)", fetchRequestCount)
 			}
