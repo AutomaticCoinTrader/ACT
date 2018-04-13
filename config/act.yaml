@@ -20,7 +20,7 @@ exchanges:
     - zaif_btc
     - pepecash_btc
     retry: 0
-    retryWait: 
+    retryWait: 20
     timeout: 0
     readBufSize: 0
     writeBufSize: 0
