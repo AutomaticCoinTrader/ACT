@@ -30,7 +30,7 @@ func (c *currencyPairsInfo) updateDepth(currencyPair string, currencyPairsBids [
 
 type Fetcher struct {
 	config              *configurator.ZaifProxyConfig
-	requester           *zaif.Requester
+	requester           *zaif.Requester  //requesterでhttpリクエストを投げているのではなく、httpリクエストを生成する為に再利用している
 	httpClients         []*utility.HTTPClient
 	httpClientsIdx      int
 	httpClientsMutex    *sync.Mutex
@@ -132,6 +132,7 @@ func (f *Fetcher) Stop() {
 
 func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher, error) {
 	dummyRequesterKeys := make([]*zaif.RequesterKey, 0)
+	dummyBindAddresses := []string{"127.0.0.1"}
 	httpClients := make([]*utility.HTTPClient, 0)
 	for _, clientBindAddress := range config.ClientBindAddresses {
 		localAddr, err := net.ResolveIPAddr("ip", clientBindAddress)
@@ -141,8 +142,12 @@ func NewFetcher(config *configurator.ZaifProxyConfig) (*Fetcher, error) {
 		httpClient := utility.NewHTTPClient(config.Retry, config.RetryWait, config.Timeout, localAddr)
 		httpClients = append(httpClients, httpClient)
 	}
+	newRequester, err := zaif.NewRequester(dummyRequesterKeys, dummyBindAddresses, config.Retry, config.RetryWait, config.Timeout, config.ReadBufSize, config.WriteBufSize)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not create requester")
+	}
 	return &Fetcher{
-		requester:     zaif.NewRequester(dummyRequesterKeys, config.Retry, config.RetryWait, config.Timeout, config.ReadBufSize, config.WriteBufSize),
+		requester:     newRequester,
 		httpClients:   httpClients,
 		httpClientsIdx: 0,
 		httpClientsMutex: new(sync.Mutex),

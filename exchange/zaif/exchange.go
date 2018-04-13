@@ -498,6 +498,7 @@ type ExchangeConfig struct {
 	ReadBufSize    int                  `json:"readBufSize"    yaml:"readBufSize"    toml:"readBufSize"`
 	WriteBufSize   int                  `json:"writeBufSize"   yaml:"writeBufSize"   toml:"writeBufSize"`
 	CurrencyPairs  []string             `json:"currencyPairs"  yaml:"currencyPairs"  toml:"currencyPairs"`
+	BindAddresses  []string             `json:"bindAddresses"  yaml:"bindAddresses"  toml:"bindAddresses"`
 	ProxysAddrPort map[string][]string  `json:"proxysAddrPort" yaml:"proxysAddrPort" toml:"proxysAddrPort"`
 }
 
@@ -507,9 +508,13 @@ func NewZaifExchange(config interface{}) (exchange.Exchange, error) {
 	for _, key := range myConfig.Keys {
 		requesterKeys = append(requesterKeys, &RequesterKey{Key: key.Key, Secret: key.Secret})
 	}
+	newRequester, err := NewRequester(requesterKeys, myConfig.BindAddresses, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize)
+	if err != nil {
+		return nil, errors.Wrap(err, "can not create requester")
+	}
 	return &Exchange{
 		config:        myConfig,
-		requester:     NewRequester(requesterKeys, myConfig.Retry, myConfig.RetryWait, myConfig.Timeout, myConfig.ReadBufSize, myConfig.WriteBufSize),
+		requester: newRequester,
 		currencyPairs: myConfig.CurrencyPairs,
 		currencyPairsInfo: &currencyPairsInfo{
 			Bids:      make(map[string][][]float64),

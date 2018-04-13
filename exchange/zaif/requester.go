@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"sync"
 	"log"
+	"net"
 )
 
 type RequesterKey struct {
@@ -23,7 +24,9 @@ type RequesterKey struct {
 }
 
 type Requester struct {
-	httpClient            *utility.HTTPClient
+	httpClients           []*utility.HTTPClient
+	httpClientsIndex      int
+	httpClientsMutex      *sync.Mutex
 	wsClients             map[string]*utility.WSClient
 	proxyWsClients        map[string]*utility.WSClient
 	readBufSize           int
@@ -202,10 +205,23 @@ func (r *Requester) unmarshal(requestFunc requestFunc, request *utility.HTTPRequ
 	return newRes, res, err
 }
 
+func (r *Requester) getHttpClient() (*utility.HTTPClient) {
+	r.httpClientsMutex.Lock()
+	defer r.httpClientsMutex.Unlock()
+	httpClient := r.httpClients[r.httpClientsIndex]
+	r.httpClientsIndex += 1
+	if r.httpClientsIndex >= len(r.httpClients) {
+		r.httpClientsIndex = 0
+	}
+	return httpClient
+}
+
 // NewRequester is create requester
-func NewRequester(keys []*RequesterKey, retry int, retryWait, timeout int, readBufSize int, writeBufSize int) (*Requester) {
-	return &Requester{
-		httpClient:            utility.NewHTTPClient(retry, retryWait, timeout, nil),
+func NewRequester(keys []*RequesterKey, bindAddresses []string, retry int, retryWait, timeout int, readBufSize int, writeBufSize int) (*Requester, error) {
+	requester := &Requester{
+		httpClients:           make([]*utility.HTTPClient, 0),
+		httpClientsIndex:      0,
+		httpClientsMutex:      new(sync.Mutex),
 		wsClients:             make(map[string]*utility.WSClient),
 		proxyWsClients:        make(map[string]*utility.WSClient),
 		readBufSize:           readBufSize,
@@ -220,4 +236,16 @@ func NewRequester(keys []*RequesterKey, retry int, retryWait, timeout int, readB
 		tradeApiHistory:       make([]int64, 0, tradeApiGurdCount),
 		tradeApiHistoryMutex:  new(sync.Mutex),
 	}
+	if bindAddresses == nil || len(bindAddresses) == 0 {
+		requester.httpClients = append(requester.httpClients, utility.NewHTTPClient(retry, retryWait, timeout, nil), )
+	} else {
+		for _, addr := range bindAddresses {
+			localAddr, err := net.ResolveIPAddr("ip", addr)
+			if err != nil {
+				return nil, errors.Wrap(err, "can not resolve ip address")
+			}
+			requester.httpClients = append(requester.httpClients, utility.NewHTTPClient(retry, retryWait, timeout, localAddr))
+		}
+	}
+	return requester, nil
 }

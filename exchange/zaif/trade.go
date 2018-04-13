@@ -260,7 +260,8 @@ func (r *Requester) GetInfo() (*TradeGetInfoResponse, *utility.HTTPRequest, *htt
 	for {
 		request := r.makeTradeRequest("get_info", "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get info (url = %v)", request.URL))
 			}
@@ -315,7 +316,8 @@ func (r *Requester) GetInfo2() (*TradeGetInfo2Response, *utility.HTTPRequest, *h
 	for {
 		request := r.makeTradeRequest("get_info2", "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get info2 (url = %v)", request.URL))
 			}
@@ -344,7 +346,8 @@ func (r *Requester) GetPersonalInfo() (*TradeGetPersonalInfoResponse, *utility.H
 	for {
 		request := r.makeTradeRequest("get_personal_info", "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get personal info (url = %v)", request.URL))
 			}
@@ -378,7 +381,8 @@ func (r *Requester) GetIDInfo() (*TradeGetIDInfoResponse, *utility.HTTPRequest, 
 	for {
 		request := r.makeTradeRequest("get_id_info", "")
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get id info (url = %v)", request.URL))
 			}
@@ -443,7 +447,8 @@ func (r *Requester) TradeHistory(tradeHistoryParams *TradeHistoryParams) (*Trade
 	for {
 		request := r.makeTradeRequest("trade_history", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get trade history (url = %v, params = %v)", request.URL, params.Encode()))
 			}
@@ -504,7 +509,8 @@ func (r *Requester) TradeActiveOrder(tradeActiveOrderParams *TradeActiveOrderPar
 	for {
 		request := r.makeTradeRequest("active_orders", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get active order (url = %v, params = %v)", request.URL, params.Encode()))
 			}
@@ -529,7 +535,8 @@ func (r *Requester) TradeActiveOrderBoth(tradeActiveOrderParams *TradeActiveOrde
 	for {
 		request := r.makeTradeRequest("active_orders", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get active order with both (url = %v, params = %v)", request.URL, params.Encode()))
 			}
@@ -605,7 +612,8 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 		request := r.makeTradeRequest("trade", params.Encode())
 		log.Printf("try trade action = %v, currency pair = %v, price = %v, amount = %v, params = %v", tradeParams.Action, tradeParams.CurrencyPair, tradeParams.Price, tradeParams.Amount, params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not trade (url = %v, params = %v)", request.URL, params.Encode()))
 			}
@@ -686,7 +694,8 @@ func (r *Requester) TradeCancelOrder(tradeCancelOrderParams *TradeCancelOrderPar
 	for {
 		request := r.makeTradeRequest("cancel_order", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not cancel order (url = %v, params = %v)", request.URL, params.Encode()))
 			}
@@ -759,7 +768,8 @@ func (r *Requester) TradeWithdraw(tradeWithdrawParams *TradeWithdrawParams) (*Tr
 	for {
 		request := r.makeTradeRequest("withdraw", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not Withdraw (url = %v, params = %v)", request.URL, params.Encode()))
 			}
@@ -817,7 +827,8 @@ func (r *Requester) TradeDepositHistory(tradeDepositHistoryParams *TradeDepositH
 	for {
 		request := r.makeTradeRequest("deposit_history", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get deposit history (url = %v, params = %v)", request.URL, params.Encode()))
 			}
@@ -875,7 +886,8 @@ func (r *Requester) TradeWithdrawHistory(tradeWithdrawHistoryParams *TradeWithdr
 	for {
 		request := r.makeTradeRequest("withdraw_history", params.Encode())
 		newRes, response, err := r.unmarshal(func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error) {
-			res, resBody, err := r.httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
+			httpClient := r.getHttpClient()
+			res, resBody, err := httpClient.DoRequest(utility.HTTPMethdoPOST, request, true)
 			if err != nil {
 				return nil, res, resBody, errors.Wrap(err, fmt.Sprintf("can not get withdraw history (url = %v, params = %v)", request.URL, params.Encode()))
 			}
