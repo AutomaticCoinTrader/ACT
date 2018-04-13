@@ -269,6 +269,7 @@ func (r *Requester) GetInfo() (*TradeGetInfoResponse, *utility.HTTPRequest, *htt
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeGetInfoResponse).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry get info (err: %v)", err)
 			continue
 		}
@@ -325,6 +326,7 @@ func (r *Requester) GetInfo2() (*TradeGetInfo2Response, *utility.HTTPRequest, *h
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeGetInfo2Response).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry get info 2 (err: %v)", err)
 			continue
 		}
@@ -355,6 +357,7 @@ func (r *Requester) GetPersonalInfo() (*TradeGetPersonalInfoResponse, *utility.H
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeGetPersonalInfoResponse).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry get personal info (err: %v)", err)
 			continue
 		}
@@ -390,6 +393,7 @@ func (r *Requester) GetIDInfo() (*TradeGetIDInfoResponse, *utility.HTTPRequest, 
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeGetIDInfoResponse).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry get id info (err: %v)", err)
 			continue
 		}
@@ -456,6 +460,7 @@ func (r *Requester) TradeHistory(tradeHistoryParams *TradeHistoryParams) (*Trade
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeHistoryResponse).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry get trade history (err: %v)", err)
 			continue
 		}
@@ -518,6 +523,7 @@ func (r *Requester) TradeActiveOrder(tradeActiveOrderParams *TradeActiveOrderPar
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeActiveOrderResponse).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry active order (err: %v)", err)
 			continue
 		}
@@ -544,6 +550,7 @@ func (r *Requester) TradeActiveOrderBoth(tradeActiveOrderParams *TradeActiveOrde
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeActiveOrderBothResponse).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry active order both (err: %v)", err)
 			continue
 		}
@@ -635,6 +642,7 @@ func (r *Requester) tradeBase(tradeParams *TradeParams, retryCallback exchange.R
 					return newRes.(*TradeResponse), request, response, nil
 				}
 			}
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry trade action = %v, currency pair = %v", tradeParams.Action, tradeParams.CurrencyPair)
 			continue
 		}
@@ -703,6 +711,7 @@ func (r *Requester) TradeCancelOrder(tradeCancelOrderParams *TradeCancelOrderPar
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeCancelOrderResponse).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry cancel (err: %v)", err)
 			continue
 		}
@@ -777,6 +786,7 @@ func (r *Requester) TradeWithdraw(tradeWithdrawParams *TradeWithdrawParams) (*Tr
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeWithdrawResponse).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry widthrow (err: %v)", err)
 			continue
 		}
@@ -836,6 +846,7 @@ func (r *Requester) TradeDepositHistory(tradeDepositHistoryParams *TradeDepositH
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeDepositHistoryResponse).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry deposit (err: %v)", err)
 			continue
 		}
@@ -895,6 +906,7 @@ func (r *Requester) TradeWithdrawHistory(tradeWithdrawHistoryParams *TradeWithdr
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil || newRes.(*TradeWithdrawHistoryResponse).needRetry() {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry width history (err: %v)", err)
 			continue
 		}

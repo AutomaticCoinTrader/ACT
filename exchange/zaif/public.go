@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"encoding/json"
 	"log"
+	"time"
 )
 
 // PublicCurrenciesResponse is response of currencies
@@ -34,6 +35,7 @@ func (r *Requester) Currencies(currency string) (*PublicCurrenciesResponse, *uti
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry currencies (currency = %v, err: %v)", currency, err)
 			continue
 		}
@@ -72,6 +74,7 @@ func (r *Requester) CurrencyPairs(currencyPair string) (*PublicCurrencyPairsResp
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry currency pairs (currency pair = %v, err: %v)", currencyPair, err)
 			continue
 		}
@@ -98,6 +101,7 @@ func (r *Requester) LastPrice(currencyPair string) (*PublicLastPriceResponse, *u
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry last price (currency pair = %v, err: %v)", currencyPair, err)
 			continue
 		}
@@ -130,6 +134,7 @@ func (r *Requester) Ticker(currencyPair string) (*PublicTickerResponse, *utility
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry ticker (currency pair = %v, err: %v)", currencyPair, err)
 			continue
 		}
@@ -164,6 +169,7 @@ func (r *Requester) Trades(currencyPair string) (*PublicTradesResponse, *utility
 			return newRes, res, resBody, err
 		}, request)
 		if err != nil {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry terades (currency pair = %v, err: %v)", currencyPair, err)
 			continue
 		}
@@ -201,6 +207,7 @@ func (r *Requester) Depth(currencyPair string) (*PublicDepthReaponse, *utility.H
 	for {
 		newRes, request, response, err := r.DepthNoRetry(currencyPair)
 		if err != nil {
+			time.Sleep(time.Duration(r.retryWait) * time.Millisecond)
 			log.Printf("retry depth (currency pair = %v, err: %v)", currencyPair, err)
 			continue
 		}
