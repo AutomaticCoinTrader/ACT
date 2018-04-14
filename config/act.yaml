@@ -24,7 +24,7 @@ exchanges:
     timeout: 0
     readBufSize: 0
     writeBufSize: 0
-    BindAddresses:
+    bindAddresses:
       - 127.0.0.1
     proxysAddrPort:
       127.0.0.1:28888:
