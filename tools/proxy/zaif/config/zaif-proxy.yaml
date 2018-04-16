@@ -13,10 +13,14 @@ currencyPairs:
   - zaif_btc
   - pepecash_btc
 retry: 0
-retryWait: 0
+retryWait: 19
 timeout: 0
 clientBindAddresses:
 - 127.0.0.1
+- 127.0.0.2
+- 127.0.0.3
+- 127.0.0.4
+- 127.0.0.5
 readBufSize: 0
 writeBufSize: 0
 pollingWait: 34
