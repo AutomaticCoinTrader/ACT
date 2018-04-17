@@ -86,7 +86,7 @@ func (c *HTTPClient) newHTTPTransport(scheme string, host string) (*http.Transpo
 		TLSHandshakeTimeout:   30 * time.Second,
 		ResponseHeaderTimeout: 30 * time.Second,
 		ExpectContinueTimeout: 30 * time.Second,
-		MaxIdleConns:          1000,
+		MaxIdleConns:          5000,
 		MaxIdleConnsPerHost:   100,
 	}
 	if scheme == "https" {
