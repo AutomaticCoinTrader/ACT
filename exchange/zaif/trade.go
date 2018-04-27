@@ -570,11 +570,11 @@ type TradeParams struct {
 func (t *TradeParams) fixupPriceAndAmount(r *Requester) {
 	priceUnit := r.GetMinPriceUnit(t.CurrencyPair)
 	amountUnit := r.GetMinAmountUnit(t.CurrencyPair)
-	fixedPrice := math.Floor((float64(int64((t.Price/priceUnit) + 0.0000000001))*priceUnit)*1000000000) / 1000000000
+	fixedPrice := math.Floor((float64(int64((t.Price/priceUnit) + 0.00000000001))*priceUnit)*10000000000) / 10000000000
 	if fixedPrice != t.Price {
 		t.Price = fixedPrice
 	}
-	fixedAmount := math.Floor((float64(int64((t.Amount/amountUnit) + 0.000001))*amountUnit)*100000) / 100000
+	fixedAmount := math.Floor((float64(int64((t.Amount/amountUnit) + 0.0000001))*amountUnit)*1000000) / 1000000
 	if fixedAmount != t.Amount {
 		t.Amount = fixedAmount
 	}
