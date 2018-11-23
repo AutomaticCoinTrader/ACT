@@ -83,19 +83,19 @@ func (r *Requester) getPricePrec(currencyPair string) (int) {
 func (r *Requester) GetMinAmountUnit(currencyPair string) (float64) {
 	switch currencyPair {
 	case "btc_jpy":
-		return 0.0001
+		return 0.001
 	case "xem_jpy":
 		return 0.1
 	case "mona_jpy":
 		return 1
 	case "bch_jpy":
-		return 0.0001
+		return 0.001
 	case "eth_jpy":
-		return 0.0001
+		return 0.001
 	case "zaif_jpy":
 		return 0.1
 	case "pepecash_jpy":
-		return 0.0001
+		return 0.1
 	case "xem_btc":
 		return 1
 	case "mona_btc":
@@ -116,19 +116,19 @@ func (r *Requester) GetMinAmountUnit(currencyPair string) (float64) {
 func (r *Requester) getAmountPrec(currencyPair string) (int) {
 	switch currencyPair {
 	case "btc_jpy":
-		return 4
+		return 3
 	case "xem_jpy":
 		return 1
 	case "mona_jpy":
 		return 0
 	case "bch_jpy":
-		return 4
+		return 3
 	case "eth_jpy":
-		return 4
+		return 3
 	case "zaif_jpy":
 		return 1
 	case "pepecash_jpy":
-		return 4
+		return 1
 	case "xem_btc":
 		return 0
 	case "mona_btc":
