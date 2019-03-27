@@ -208,7 +208,9 @@ type TradeCommonResponse struct {
 func (t TradeCommonResponse) needRetry() (bool) {
 	if t.Success == 0 {
 		log.Printf(" error message (%v)", t.Error)
-		if t.Error == "order not found" {
+		if t.Error == "order is too new" {
+			return false
+		} else if t.Error == "order not found" {
 			return false
 		} else if t.Error == "time wait restriction, please try later." {
 			time.Sleep(restrictionWait * time.Millisecond)
