@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 	"strconv"
+	"math"
 	"log"
 )
 
@@ -415,6 +416,18 @@ func (e *Exchange) GetMinAmountUnit(currencyPair string) (float64) {
 
 func (e *Exchange) GetTradeFeeRate(currencyPair string) (float64) {
 	return e.requester.GetTradeFeeRate(currencyPair)
+}
+
+func (e *Exchange) FixPrice(currencyPair string, price float64) (float64) {
+        priceUnit := e.requester.GetMinPriceUnit(currencyPair)
+        fixedPrice := math.Floor((float64(int64((price/priceUnit) + 0.00000000001))*priceUnit)*10000000000) / 10000000000
+        return fixedPrice
+}
+
+func (e *Exchange) FixAmount(currencyPair string, amount float64) (float64) {
+	amountUnit := e.requester.GetMinAmountUnit(currencyPair)
+	fixedAmount := math.Floor((float64(int64((amount/amountUnit) + 0.0000001))*amountUnit)*1000000) / 1000000
+        return fixedAmount
 }
 
 func (e *Exchange) exchangeStreamingCallback(currencyPair string, streamingResponse *StreamingResponse, StreamingCallbackData interface{}) (error) {

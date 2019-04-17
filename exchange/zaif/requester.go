@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"net/http"
 	"encoding/json"
-	"sync/atomic"
 	"sync"
 	"log"
 	"net"
@@ -56,6 +55,7 @@ const (
 )
 
 var seq int64
+var nonceMutex *sync.Mutex
 
 type requestFunc func(request *utility.HTTPRequest) (interface{}, *http.Response, []byte, error)
 
@@ -191,9 +191,11 @@ func (r *Requester) makeTradeRequest(method string, params string) (*utility.HTT
 }
 
 func (r *Requester) getNonce() (string) {
+	nonceMutex.Lock()
+	defer nonceMutex.Unlock()
 	now := time.Now()
-	s := atomic.AddInt64(&seq, 1)
-	return strconv.FormatInt(now.Unix(), 10) + "." + fmt.Sprintf("%06d", now.Nanosecond()/1000) + fmt.Sprintf("%03d", s%1000)
+	seq += 1
+	return strconv.FormatInt(now.Unix(), 10) + "." + fmt.Sprintf("%06d", now.Nanosecond()/1000) + fmt.Sprintf("%03d", seq%1000)
 }
 
 func (r *Requester) unmarshal(requestFunc requestFunc, request *utility.HTTPRequest) (interface{}, *http.Response, error) {
@@ -248,4 +250,8 @@ func NewRequester(keys []*RequesterKey, bindAddresses []string, retry int, retry
 		}
 	}
 	return requester, nil
+}
+
+func init() {
+	nonceMutex = new(sync.Mutex)
 }
