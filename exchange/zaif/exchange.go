@@ -242,6 +242,24 @@ func (c *currencyPairsInfo) getAsks(currencyPair string) ([][]float64) {
 	}
 }
 
+func (c *currencyPairsInfo) getBidsNoLock(currencyPair string) ([][]float64) {
+	bids, ok := c.Bids[currencyPair]
+	if ok {
+		return bids
+	} else {
+		return [][]float64{}
+	}
+}
+
+func (c *currencyPairsInfo) getAsksNoLock(currencyPair string) ([][]float64) {
+	asks, ok := c.Asks[currencyPair]
+	if ok {
+		return asks
+	} else {
+		return [][]float64{}
+	}
+}
+
 func (c *currencyPairsInfo) getLastPrice(currencyPair string) (float64) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -359,6 +377,19 @@ func (e *Exchange) GetBuyBoardCursor(currencyPair string) (exchange.BoardCursor,
 		index:  0,
 		values: e.currencyPairsInfo.getBids(currencyPair),
 	}, nil
+}
+
+func (e *Exchange) GetSellBuyBoardCursor(currencyPair string) (exchange.BoardCursor, exchange.BoardCursor, error) {
+        e.currencyPairsInfo.mutex.Lock()
+        defer e.currencyPairsInfo.mutex.Unlock()
+	return &BoardCursor{
+		index:  0,
+		values: e.currencyPairsInfo.getAsksNoLock(currencyPair),
+	}, &BoardCursor{
+		index:  0,
+		values: e.currencyPairsInfo.getBidsNoLock(currencyPair),
+	}, nil
+
 }
 
 func (e *Exchange) GetTradesCursor(currencyPair string) (exchange.TradesCursor, error) {

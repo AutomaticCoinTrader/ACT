@@ -161,7 +161,7 @@ func (r *Requester) GetTradeFeeRate(currencyPair string) (float64) {
 	case "zaif_jpy":
 		return 0.1
 	case "pepecash_jpy":
-		return 0.1
+		return 0.01
 	case "xem_btc":
 		return 0.1
 	case "mona_btc":
@@ -173,7 +173,7 @@ func (r *Requester) GetTradeFeeRate(currencyPair string) (float64) {
 	case "zaif_btc":
 		return 0.1
 	case "pepecash_btc":
-		return 0.1
+		return 0.01
 	default:
 		return -1
 	}

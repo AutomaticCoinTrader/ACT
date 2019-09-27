@@ -41,6 +41,7 @@ type Exchange interface {
 	GetLastPrice(currencyPair string) (float64, error)
 	GetSellBoardCursor(currencyPair string) (BoardCursor, error)
 	GetBuyBoardCursor(currencyPair string) (BoardCursor, error)
+	GetSellBuyBoardCursor(currencyPair string) (BoardCursor, BoardCursor, error)
 	GetTradesCursor(currencyPair string) (TradesCursor, error)
 	GetOrderHistoryCursor(count int64) (OrderCursor, error)
 	GetActiveOrderCursor() (OrderCursor, error)
